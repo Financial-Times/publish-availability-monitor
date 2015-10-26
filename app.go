@@ -70,11 +70,13 @@ func main() {
 		return
 	}
 
-	messageConsumer := consumer.NewConsumer(appConfig.QueueConf)
-	err = messageConsumer.Consume(PublishMessageListener{}, 8)
-	if err != nil {
-		log.Printf("Cannot start listening for messages: [%v]", err.Error())
-		return
+	iterator := consumer.NewIterator(appConfig.QueueConf)
+
+	for {
+		msgs, _ := iterator.NextMessages()
+		for _, m := range msgs {
+			PublishMessageListener{}.OnMessage(m)
+		}
 	}
 
 	/*
