@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/Financial-Times/go-message-queue-consumer"
+	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 )
 
 type Interval struct {
@@ -53,8 +53,14 @@ func main() {
 	}
 	log.Printf("INFO - AppConfig: %#v", *appConfig)
 	//TODO handle err
-	myConsumer := consumer.NewConsumer(appConfig.QueueConf)
-	err = myConsumer.Consume(PublishMessageListener{}, 8)
+	iterator := consumer.NewIterator(appConfig.QueueConf)
+
+	for {
+		msgs, _ := iterator.NextMessages()
+		for _, m := range msgs {
+			PublishMessageListener{}.OnMessage(m)
+		}
+	}
 
 	if err != nil {
 		fmt.Println(err.Error)
