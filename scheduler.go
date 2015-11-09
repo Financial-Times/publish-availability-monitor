@@ -13,9 +13,10 @@ func scheduleChecks(eomFile EomFile, publishDate time.Time, tid string, isMarked
 			log.Printf("Cannot parse url [%v], error: [%v]", conf.Endpoint, err.Error())
 			continue
 		}
-		if conf.ContentType != "" && conf.ContentType != eomFile.Type {
+		if (exclusiveType[eomFile.Type] || conf.ContentType != "") && conf.ContentType != eomFile.Type {
 			continue
 		}
+
 		var publishMetric = PublishMetric{
 			eomFile.UUID,
 			false,
@@ -85,4 +86,9 @@ func scheduleCheck(check PublishCheck) {
 		}
 	}
 
+}
+
+//contains eom types which exclude metrics with different contentTypes
+var exclusiveType = map[string]bool{
+	"EOM::WebContainer": true,
 }
