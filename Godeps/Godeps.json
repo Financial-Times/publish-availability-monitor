@@ -1,0 +1,46 @@
+{
+	"ImportPath": "github.com/Financial-Times/publish-availability-monitor",
+	"GoVersion": "go1.5",
+	"Deps": [
+		{
+			"ImportPath": "github.com/Financial-Times/go-fthealth",
+			"Rev": "a11dea7609b5d03cece9342b6bd74624e4ff0b13"
+		},
+		{
+			"ImportPath": "github.com/Financial-Times/message-queue-gonsumer/consumer",
+			"Comment": "0.0.1",
+			"Rev": "d4a5b7931e111f238e4ca1f7664f596b24c838dc"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Rev": "1c83b3eabd45b6d76072b66b746c20815fb2872d"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Rev": "ad4d7a5882b961e07e2626045eb995c022ac6664"
+		},
+		{
+			"ImportPath": "github.com/kr/pretty",
+			"Comment": "go.weekly.2011-12-22-27-ge6ac2fc",
+			"Rev": "e6ac2fc51e89a3249e82157fa0bb7a18ef9dd5bb"
+		},
+		{
+			"ImportPath": "github.com/kr/text",
+			"Rev": "bb797dc4fb8320488f47bf11de07a733d7233e1f"
+		},
+		{
+			"ImportPath": "github.com/satori/go.uuid",
+			"Rev": "afe1e2ddf0f05b7c29d388a3f8e76cb15c2231ca"
+		},
+		{
+			"ImportPath": "github.com/willf/bitset",
+			"Comment": "v1.0.0-19-g28a4168",
+			"Rev": "28a4168144bb8ac95454e1f51c84da1933681ad4"
+		},
+		{
+			"ImportPath": "launchpad.net/xmlpath",
+			"Comment": "4",
+			"Rev": "gustavo@niemeyer.net-20130614043138-kasci7s9kddz0e5v"
+		}
+	]
+}
