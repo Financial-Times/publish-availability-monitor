@@ -1,7 +1,11 @@
+machine:
+  environment:
+    GO15VENDOREXPERIMENT: 1
+dependencies:
+  pre:
+    - go get github.com/axw/gocov/gocov; go get github.com/matm/gocov-html
 test:
   override:
-    - gocov test > coverage-main-pkg.json
-    - cd content && gocov test > coverage-content-subpkg.json
+    - gocov test ./... > coverage.json
   post:
-    - gocov-html coverage-main-pkg.json > $CIRCLE_ARTIFACTS/coverage-main-pkg.html
-    - gocov-html content/coverage-content-subpkg.json > $CIRCLE_ARTIFACTS/coverage-content-subpkg.html
+    - gocov-html coverage.json > $CIRCLE_ARTIFACTS/coverage.html
