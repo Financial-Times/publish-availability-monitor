@@ -5,6 +5,12 @@
 Monitors publish availability and collects related metrics. Collected metrics are sent to various systems (ex. Splunk).
 
 # Usage
+It requires go1.5.
+
+The dependencies are managed by [Godep](https://github.com/tools/godep).
+
+`export GO15VENDOREXPERIMENT=1`
+
 `go get github.com/Financial-Times/publish-availability-monitor`
 
 `publish-availability-monitor -config=int-config.json`
