@@ -15,10 +15,12 @@ const titleXPath = "/doc/lead/lead-headline/headline/ln"
 const channelXPath = "/props/productInfo/name"
 const webTypeXPath = "//ObjectMetadata/FTcom/DIFTcomWebType"
 const filePathXPath = "//ObjectMetadata/EditorialNotes/ObjectLocation"
+const sourceXPath = "//ObjectMetadata/EditorialNotes/Sources/Source/SourceCode"
 
 const expectedWebChannel = "FTcom"
 const expectedWebTypePrefix = "digitalList"
 const expectedFilePathSuffix = ".xml"
+const expectedSourceCode = "FT"
 
 // EomFile models Methode content
 type EomFile struct {
@@ -104,7 +106,8 @@ func isListValid(eomfile EomFile) bool {
 func isCompoundStoryValid(eomfile EomFile) bool {
 	return isSupportedFileType(eomfile) &&
 		isWebChannel(eomfile) &&
-		hasTitle(eomfile)
+		hasTitle(eomfile) &&
+		isSupportedSourceCode(eomfile)
 }
 
 func isSupportedFileType(eomfile EomFile) bool {
@@ -185,3 +188,21 @@ func isImageValid(eomfile EomFile) bool {
 	return true
 }
 
+func isSupportedSourceCode(eomfile EomFile) bool {
+	attributes := eomfile.Attributes
+	path := xmlpath.MustCompile(sourceXPath)
+	root, err := xmlpath.Parse(strings.NewReader(attributes))
+	if err != nil {
+		warnLogger.Printf("Cannot parse XML attribute of eomfile, error: [%v]", err.Error())
+		return false
+	}
+	sourceCode, ok := path.String(root)
+	if !ok {
+		warnLogger.Printf("Cannot match node in XML using xpath [%v]", sourceXPath)
+		return false
+	}
+	if sourceCode == expectedSourceCode {
+		return true
+	}
+	return false
+}
