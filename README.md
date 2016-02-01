@@ -19,9 +19,11 @@ With Docker:
 If you want a new puppet module version:
 * manually increment the version in `puppet/ft-publish_availability_monitor/Modulefile`
 * create a `git tag <version>` corresponding to the module version
+The preferrable way for the second step is to create a github release with the module version (this will automatically create the git tag, as well).
 
 # Build and deploy
 ### UCS
+* prepare a new puppet module (follow the steps above)
 * build puppet module using the Jenkins job `publish-availability-monitor-build`
 * deploy the puppet module using the Jenkins job `publish-availability-monitor-deploy`
 

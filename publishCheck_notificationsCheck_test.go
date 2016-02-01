@@ -21,12 +21,12 @@ func TestCheckBatchOfNotifications_ResponseBatchOfNotificationsIsEmpty_NotFinish
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(buildResponse(200, testResponse)),
 	}
-	if finished, _ := notificationsCheck.checkBatchOfNotifications("dummy-url", "tid_0123wxyZ"); finished {
+	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", newPublishMetricBuilder().build()); result.operationFinished {
 		t.Error("Expected failure")
 	}
 }
 
-func TestCheckBatchOfNotifications_ResponseDoesNotContainTID_NotFinished(t *testing.T) {
+func TestCheckBatchOfNotifications_ResponseDoesNotContainUUID_NotFinished(t *testing.T) {
 	testResponse := `{
 			"requestUrl": "http://api.ft.com/content/notifications?since=2015-11-09T00:00:00.000Z",
 			"notifications": [
@@ -34,7 +34,8 @@ func TestCheckBatchOfNotifications_ResponseDoesNotContainTID_NotFinished(t *test
 						"type": "http://www.ft.com/thing/ThingChangeType/UPDATE",
 						"id": "http://www.ft.com/thing/1cb14245-5185-4ed5-9188-4d2a86085599",
 						"apiUrl": "http://api.ft.com/content/1cb14245-5185-4ed5-9188-4d2a86085599",
-						"publishReference": "tid_0123wxyz"
+						"publishReference": "tid_0123wxyz",
+						"lastModified": "2015-12-08T16:16:47.391Z"
 					}
 				],
 			"links": [
@@ -47,21 +48,23 @@ func TestCheckBatchOfNotifications_ResponseDoesNotContainTID_NotFinished(t *test
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(buildResponse(200, testResponse)),
 	}
-	if finished, _ := notificationsCheck.checkBatchOfNotifications("dummy-url", "tid_0123wxyZ"); finished {
+	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", newPublishMetricBuilder().withUUID("1cb14245-5185-4ed5-9188-4d2a86085598").withTID("tid_0123wxyz").build()); result.operationFinished {
 		t.Error("Expected failure")
 	}
 }
 
-func TestCheckBatchOfNotifications_ResponseDoesContainTID_Finished(t *testing.T) {
-	currentTID := "tid_0123wxyZ"
+// fallback to tid check in case of lastModified field parsing error
+func TestCheckBatchOfNotifications_ResponseDoesContainUUIDLastModifiedFieldIsUnparseableTIDsDiffer_NotFinished(t *testing.T) {
+	currentUUID := "1cb14245-5185-4ed5-9188-4d2a86085599"
 	testResponse := fmt.Sprintf(`{
 			"requestUrl": "http://api.ft.com/content/notifications?since=2015-11-09T00:00:00.000Z",
 			"notifications": [
 					{
 						"type": "http://www.ft.com/thing/ThingChangeType/UPDATE",
-						"id": "http://www.ft.com/thing/1cb14245-5185-4ed5-9188-4d2a86085599",
-						"apiUrl": "http://api.ft.com/content/1cb14245-5185-4ed5-9188-4d2a86085599",
-						"publishReference": "%s"
+						"id": "http://www.ft.com/thing/%s",
+						"apiUrl": "http://api.ft.com/content/%s",
+						"publishReference": "tid_0123wxyZ",
+						"lastModified": "2015-12-08T1616:47.391Z"
 					}
 				],
 			"links": [
@@ -70,16 +73,189 @@ func TestCheckBatchOfNotifications_ResponseDoesContainTID_Finished(t *testing.T)
 						"rel": "next"
 					}
 			]
-		}`, currentTID)
+		}`, currentUUID, currentUUID)
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(buildResponse(200, testResponse)),
 	}
-	if finished, _ := notificationsCheck.checkBatchOfNotifications("dummy-url", currentTID); !finished {
+	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", newPublishMetricBuilder().withUUID(currentUUID).withTID("tid_0123wxyz").build()); result.operationFinished {
+		t.Error("Expected failure")
+	}
+}
+
+// fallback to tid check in case of lastModified field parsing error
+func TestCheckBatchOfNotifications_ResponseDoesContainUUIDLastModifiedFieldIsUnparseableTIDsMatch_Finished(t *testing.T) {
+	currentUUID := "1cb14245-5185-4ed5-9188-4d2a86085599"
+	currentTID := "tid_0123wxyZ"
+	testResponse := fmt.Sprintf(`{
+			"requestUrl": "http://api.ft.com/content/notifications?since=2015-11-09T00:00:00.000Z",
+			"notifications": [
+					{
+						"type": "http://www.ft.com/thing/ThingChangeType/UPDATE",
+						"id": "http://www.ft.com/thing/%s",
+						"apiUrl": "http://api.ft.com/content/%s",
+						"publishReference": "%s",
+						"lastModified": "2015-12-08T1616:47.391Z"
+					}
+				],
+			"links": [
+					{
+						"href": "http://api.ft.com/content/notifications?since=2015-11-09T14:09:08.705Z",
+						"rel": "next"
+					}
+			]
+		}`, currentUUID, currentUUID, currentTID)
+	notificationsCheck := &NotificationsCheck{
+		mockHTTPCaller(buildResponse(200, testResponse)),
+	}
+	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", newPublishMetricBuilder().withUUID(currentUUID).withTID(currentTID).build()); !result.operationFinished {
 		t.Error("Expected success")
 	}
 }
 
-func TestIsCurrentOperationFinished_FirstBatchOfNotificationsContainsTID_Finished(t *testing.T) {
+func TestCheckBatchOfNotifications_ResponseDoesContainUUIDLastModifiedFieldIsAfterCurrentPublishedDate_IgnoreCheck(t *testing.T) {
+	currentUUID := "1cb14245-5185-4ed5-9188-4d2a86085599"
+	currentPublishedDate, err := time.Parse(dateLayout, "2015-12-08T16:16:47.391Z")
+	if err != nil {
+		t.Error("Error in setting up test data")
+		return
+	}
+	testResponse := fmt.Sprintf(`{
+			"requestUrl": "http://api.ft.com/content/notifications?since=2015-11-09T00:00:00.000Z",
+			"notifications": [
+					{
+						"type": "http://www.ft.com/thing/ThingChangeType/UPDATE",
+						"id": "http://www.ft.com/thing/%s",
+						"apiUrl": "http://api.ft.com/content/%s",
+						"lastModified": "2015-12-08T16:16:48.391Z"
+					}
+				],
+			"links": [
+					{
+						"href": "http://api.ft.com/content/notifications?since=2015-11-09T14:09:08.705Z",
+						"rel": "next"
+					}
+			]
+		}`, currentUUID, currentUUID)
+	notificationsCheck := &NotificationsCheck{
+		mockHTTPCaller(buildResponse(200, testResponse)),
+	}
+	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", newPublishMetricBuilder().withUUID(currentUUID).withPublishDate(currentPublishedDate).build()); !result.ignoreCheck {
+		t.Error("Expected ignoreCheck to be [true].")
+	}
+}
+
+func TestCheckBatchOfNotifications_ResponseDoesContainUUIDLastModifiedFieldEqualsCurrentPublishedDate_Finished(t *testing.T) {
+	currentUUID := "1cb14245-5185-4ed5-9188-4d2a86085599"
+	currentPublishedDate, err := time.Parse(dateLayout, "2015-12-08T16:16:47.391Z")
+	if err != nil {
+		t.Error("Error in setting up test data")
+		return
+	}
+	testResponse := fmt.Sprintf(`{
+			"requestUrl": "http://api.ft.com/content/notifications?since=2015-11-09T00:00:00.000Z",
+			"notifications": [
+					{
+						"type": "http://www.ft.com/thing/ThingChangeType/UPDATE",
+						"id": "http://www.ft.com/thing/%s",
+						"apiUrl": "http://api.ft.com/content/%s",
+						"lastModified": "2015-12-08T16:16:47.391Z"
+					}
+				],
+			"links": [
+					{
+						"href": "http://api.ft.com/content/notifications?since=2015-11-09T14:09:08.705Z",
+						"rel": "next"
+					}
+			]
+		}`, currentUUID, currentUUID)
+	notificationsCheck := &NotificationsCheck{
+		mockHTTPCaller(buildResponse(200, testResponse)),
+	}
+	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", newPublishMetricBuilder().withUUID(currentUUID).withPublishDate(currentPublishedDate).build()); !result.operationFinished {
+		t.Error("Expected success.")
+	}
+}
+
+func TestCheckBatchOfNotifications_ResponseDoesContainUUIDLastModifiedFieldBeforeCurrentPublishedDate_NotFinished(t *testing.T) {
+	currentUUID := "1cb14245-5185-4ed5-9188-4d2a86085599"
+	currentPublishedDate, err := time.Parse(dateLayout, "2015-12-08T16:16:47.391Z")
+	if err != nil {
+		t.Error("Error in setting up test data")
+		return
+	}
+	testResponse := fmt.Sprintf(`{
+			"requestUrl": "http://api.ft.com/content/notifications?since=2015-11-09T00:00:00.000Z",
+			"notifications": [
+					{
+						"type": "http://www.ft.com/thing/ThingChangeType/UPDATE",
+						"id": "http://www.ft.com/thing/%s",
+						"apiUrl": "http://api.ft.com/content/%s",
+						"lastModified": "2015-12-08T16:16:46.391Z"
+					}
+				],
+			"links": [
+					{
+						"href": "http://api.ft.com/content/notifications?since=2015-11-09T14:09:08.705Z",
+						"rel": "next"
+					}
+			]
+		}`, currentUUID, currentUUID)
+	notificationsCheck := &NotificationsCheck{
+		mockHTTPCaller(buildResponse(200, testResponse)),
+	}
+	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", newPublishMetricBuilder().withUUID(currentUUID).withPublishDate(currentPublishedDate).build()); result.operationFinished {
+		t.Error("Expected failure.")
+	}
+}
+
+func TestCheckBatchOfNotifications_ResponseIsNotEmptyDoesNotContainUUID_NextNotificationsURLIsSet(t *testing.T) {
+	currentUUID := "1cb14245-5185-4ed5-9188-4d2a86085598"
+	nextNotificationsURL := "http://api.ft.com/content/notifications?since=2015-11-09T14:09:08.705Z"
+	testResponse := fmt.Sprintf(`{
+			"requestUrl": "http://api.ft.com/content/notifications?since=2015-11-09T00:00:00.000Z",
+			"notifications": [
+					{
+						"type": "http://www.ft.com/thing/ThingChangeType/UPDATE",
+						"id": "http://www.ft.com/thing/1cb14245-5185-4ed5-9188-4d2a86085599",
+						"apiUrl": "http://api.ft.com/content/1cb14245-5185-4ed5-9188-4d2a86085599",
+						"lastModified": "2015-12-08T16:16:46.391Z"
+					}
+				],
+			"links": [
+					{
+						"href": "%s",
+						"rel": "next"
+					}
+			]
+		}`, nextNotificationsURL)
+	notificationsCheck := &NotificationsCheck{
+		mockHTTPCaller(buildResponse(200, testResponse)),
+	}
+	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", newPublishMetricBuilder().withUUID(currentUUID).build()); result.nextNotificationsURL != nextNotificationsURL {
+		t.Error("Expected success.")
+	}
+}
+
+func TestCheckBatchOfNotifications_ResponseBatchOfNotificationsIsEmpty_NextNotificationsURLIsEmptyString(t *testing.T) {
+	testResponse := fmt.Sprint(`{
+			"requestUrl": "http://api.ft.com/content/notifications?since=2015-11-09T00:00:00.000Z",
+			"notifications": [],
+			"links": [
+					{
+						"href": "http://api.ft.com/content/notifications?since=2015-11-09T14:09:08.705Z",
+						"rel": "next"
+					}
+			]
+		}`)
+	notificationsCheck := &NotificationsCheck{
+		mockHTTPCaller(buildResponse(200, testResponse)),
+	}
+	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", newPublishMetricBuilder().build()); result.nextNotificationsURL != "" {
+		t.Error("Expected empty string.")
+	}
+}
+
+func TestIsCurrentOperationFinished_FirstBatchOfNotificationsContainsUUIDAndTID_Finished(t *testing.T) {
 	testTID := "tid_0123wxyz"
 	testResponse := fmt.Sprintf(
 		`{
@@ -109,7 +285,8 @@ func TestIsCurrentOperationFinished_FirstBatchOfNotificationsContainsTID_Finishe
 	}
 }
 
-func TestIsCurrentOperationFinished_FirstBatchOfNotificationsDoesNotContainTIDSecondBatchIsEmpty_NotFinished(t *testing.T) {
+func TestIsCurrentOperationFinished_FirstBatchOfNotificationsDoesNotContainUUIDSecondBatchIsEmpty_NotFinished(t *testing.T) {
+	currentUUID := "1cb14245-5185-4ed5-9188-4d2a86085598"
 	testResponse1 := `{
 			"requestUrl": "http://api.ft.com/content/notifications?since=2015-11-09T00:00:00.000Z",
 			"notifications": [
@@ -140,20 +317,21 @@ func TestIsCurrentOperationFinished_FirstBatchOfNotificationsDoesNotContainTIDSe
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(buildResponse(200, testResponse1), buildResponse(200, testResponse2)),
 	}
-	if finished, _ := notificationsCheck.isCurrentOperationFinished(newPublishMetricBuilder().withTID("tid_0123wxyZ").build()); finished {
+	if finished, _ := notificationsCheck.isCurrentOperationFinished(newPublishMetricBuilder().withTID("tid_0123wxyZ").withUUID(currentUUID).build()); finished {
 		t.Error("Expected failure")
 	}
 }
 
-func TestIsCurrentOperationFinished_FirstBatchOfNotificationsDoesNotContainTIDButSecondDoes_Finished(t *testing.T) {
+func TestIsCurrentOperationFinished_FirstBatchOfNotificationsDoesNotContainUUIDButSecondDoes_Finished(t *testing.T) {
 	currentTID := "tid_0123wxyZ"
+	currentUUID := "1cb14245-5185-4ed5-9188-4d2a86085599"
 	testResponse1 := `{
 			"requestUrl": "http://api.ft.com/content/notifications?since=2015-11-09T00:00:00.000Z",
 			"notifications": [
 					{
 						"type": "http://www.ft.com/thing/ThingChangeType/UPDATE",
-						"id": "http://www.ft.com/thing/1cb14245-5185-4ed5-9188-4d2a86085599",
-						"apiUrl": "http://api.ft.com/content/1cb14245-5185-4ed5-9188-4d2a86085599",
+						"id": "http://www.ft.com/thing/1cb14245-5185-4ed5-9188-4d2a86085598",
+						"apiUrl": "http://api.ft.com/content/1cb14245-5185-4ed5-9188-4d2a86085598",
 						"publishReference": "tid_0123wxyz"
 					}
 				],
@@ -186,7 +364,7 @@ func TestIsCurrentOperationFinished_FirstBatchOfNotificationsDoesNotContainTIDBu
 		mockHTTPCaller(buildResponse(200, testResponse1), buildResponse(200, testResponse2)),
 	}
 
-	if finished, _ := notificationsCheck.isCurrentOperationFinished(newPublishMetricBuilder().withTID(currentTID).build()); !finished {
+	if finished, _ := notificationsCheck.isCurrentOperationFinished(newPublishMetricBuilder().withTID(currentTID).withUUID(currentUUID).build()); !finished {
 		t.Error("Expected success")
 	}
 }

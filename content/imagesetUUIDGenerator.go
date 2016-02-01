@@ -15,7 +15,7 @@ func GenerateImageSetUUID(imageUUID UUID) (UUID, error) {
 	uuidBits := toBitSet(imageUUID.lsb)
 	uuidBits.InPlaceSymmetricDifference(&magic) //XOR
 
-	lsb, err := strconv.ParseInt(strings.TrimSuffix(uuidBits.DumpAsBits(), "."), 2, 64)
+	lsb, err := strconv.ParseUint(strings.TrimSuffix(uuidBits.DumpAsBits(), "."), 2, 64)
 	return UUID{imageUUID.msb, uint64(lsb)}, err
 }
 

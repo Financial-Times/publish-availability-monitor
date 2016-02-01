@@ -165,7 +165,8 @@ func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateEqualsCurrentPu
 	}
 }
 
-func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsNull_Finished(t *testing.T) {
+// fallback to publish reference check if last modified date is not valid
+func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsNullCurrentTIDAndPubReferenceMatch_Finished(t *testing.T) {
 	currentTid := "tid_1234"
 	publishDate, err := time.Parse(time.RFC3339Nano, "2016-01-08T14:22:06.271Z")
 	if err != nil {
@@ -182,7 +183,8 @@ func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsNull_Finished
 	}
 }
 
-func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsEmptyString_Finished(t *testing.T) {
+// fallback to publish reference check if last modified date is not valid
+func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsEmptyStringCurrentTIDAndPubReferenceMatch_Finished(t *testing.T) {
 	currentTid := "tid_1234"
 	publishDate, err := time.Parse(time.RFC3339Nano, "2016-01-08T14:22:06.271Z")
 	if err != nil {
