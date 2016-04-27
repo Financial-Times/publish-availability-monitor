@@ -299,8 +299,6 @@ func TestIsCurrentOperationFinished_FirstBatchOfNotificationsDoesNotContainUUIDS
 				],
 			"links": [
 					{
-						"href": "http://api.ft.com/content/notifications?since=2015-11-09T14:09:08.705Z",
-						"rel": "next"
 					}
 			]
 		}`
@@ -400,5 +398,34 @@ func TestAdjustNextNotificationsURL_CurrentHostAndPortDiffers_Success(t *testing
 
 	if actual != expected {
 		t.Error("Expected success")
+	}
+}
+
+func TestShouldSkipCheck_ContentIsNotMarkedAsDeleted_CheckNotSkipped(t *testing.T) {
+	pm := newPublishMetricBuilder().withMarkedDeleted(false).build()
+	notificationsCheck := NotificationsCheck{}
+
+	if notificationsCheck.shouldSkipCheck(pm) {
+		t.Errorf("Expected failure")
+	}
+}
+
+func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsExist_CheckNotSkipped(t *testing.T) {
+	pm := newPublishMetricBuilder().withMarkedDeleted(true).withEndpoint("http://notifications-endpoint:8080/content/notifications").build()
+	notificationsCheck := NotificationsCheck{
+		mockHTTPCaller(buildResponse(200, `[{"id": "foobar", "lastModified" : "foobaz", "publishReference" : "unitTestRef" }]`)),
+	}
+	if notificationsCheck.shouldSkipCheck(pm) {
+		t.Errorf("Expected failure")
+	}
+}
+
+func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsDoesNotExist_CheckSkipped(t *testing.T) {
+	pm := newPublishMetricBuilder().withMarkedDeleted(true).withEndpoint("http://notifications-endpoint:8080/content/notifications").build()
+	notificationsCheck := NotificationsCheck{
+		mockHTTPCaller(buildResponse(200, `[]`)),
+	}
+	if !notificationsCheck.shouldSkipCheck(pm) {
+		t.Errorf("Expected success")
 	}
 }

@@ -207,6 +207,9 @@ type link struct {
 }
 
 func (n NotificationsCheck) isCurrentOperationFinished(pm PublishMetric) (operationFinished, ignoreCheck bool) {
+	if n.shouldSkipCheck(pm) {
+		return false, true
+	}
 	notificationsURL := buildNotificationsURL(pm)
 	var err error
 	for {
@@ -220,6 +223,35 @@ func (n NotificationsCheck) isCurrentOperationFinished(pm PublishMetric) (operat
 			return false, false
 		}
 	}
+}
+
+func (n NotificationsCheck) shouldSkipCheck(pm PublishMetric) bool {
+	if !pm.isMarkedDeleted {
+		return false
+	}
+	url := pm.endpoint.String() + "/" + pm.UUID
+	resp, err := n.httpCaller.doCall(url)
+	if err != nil {
+		warnLogger.Printf("Checking %s. Error calling URL: [%v] : [%v]", loggingContextForCheck(pm.config.Alias, pm.UUID, pm.tid), url, err.Error())
+		return false
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return false
+	}
+
+	var notifications []notifications
+	err = json.NewDecoder(resp.Body).Decode(&notifications)
+	if err != nil {
+		return false
+	}
+	//ignore check if there are no previous notifications for this UUID
+	if len(notifications) == 0 {
+		return true
+	}
+
+	return false
 }
 
 // Bundles the result of a single check of batch of notifications
