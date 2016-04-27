@@ -299,6 +299,8 @@ func TestIsCurrentOperationFinished_FirstBatchOfNotificationsDoesNotContainUUIDS
 				],
 			"links": [
 					{
+						"href": "http://api.ft.com/content/notifications?since=2015-11-09T14:09:08.705Z",
+ 						"rel": "next"
 					}
 			]
 		}`
