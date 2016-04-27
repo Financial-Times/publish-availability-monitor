@@ -190,12 +190,12 @@ func (s S3Check) isCurrentOperationFinished(pm PublishMetric) (operationFinished
 
 // ignore unused field (e.g. requestUrl)
 type notificationsContent struct {
-	Notifications []notifications
+	Notifications []notification
 	Links         []link
 }
 
 // ignore unused fields (e.g. type, apiUrl)
-type notifications struct {
+type notification struct {
 	PublishReference string
 	LastModified     string
 	ID               string
@@ -241,7 +241,7 @@ func (n NotificationsCheck) shouldSkipCheck(pm PublishMetric) bool {
 		return false
 	}
 
-	var notifications []notifications
+	var notifications []notification
 	err = json.NewDecoder(resp.Body).Decode(&notifications)
 	if err != nil {
 		return false
