@@ -193,6 +193,14 @@ func handleMessage(msg consumer.Message) {
 
 	if isMessagePastPublishSLA(publishDate, appConfig.Threshold) {
 		infoLogger.Printf("Message [%v] with UUID [%v] is past publish SLA, skipping.", tid, uuid)
+		// push a "not OK" metric
+		metricSink <- PublishMetric{
+			UUID:            uuid,
+			publishOK:       false,
+			publishDate:     publishDate,
+			publishInterval: Interval{appConfig.Threshold, appConfig.Threshold},
+			config:          MetricConfig{Alias: "any"},
+			tid:             tid}
 		return
 	}
 
