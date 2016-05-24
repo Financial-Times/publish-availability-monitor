@@ -29,7 +29,7 @@ type Post struct {
 	UUID string `json:"uuid"`
 }
 
-func (wordPressMessage WordPressMessage) IsValid() bool {
+func (wordPressMessage WordPressMessage) IsValid(extValEndpoint string) bool {
 	if wordPressMessage.Status == "error" && wordPressMessage.Error != notFoundError {
 		//it's an error which we do not understand
 		return false

@@ -47,5 +47,9 @@
 	},
 	"healthConfig": {
 		"failureThreshold" : 2
+	},
+	"validationEndpoints": {
+		"EOM::CompoundStory": "METHODE_ARTICLE_TRANSFORMER_URL",
+		"EOM::Story": "METHODE_ARTICLE_TRANSFORMER_URL"
 	}
 }

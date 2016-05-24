@@ -1,7 +1,10 @@
 package content
 
 import (
+	"bytes"
 	"encoding/base64"
+	"encoding/json"
+	"net/http"
 	"strings"
 
 	"launchpad.net/xmlpath"
@@ -33,7 +36,7 @@ type EomFile struct {
 	SystemAttributes string `json:"systemAttributes"`
 }
 
-func (eomfile EomFile) IsValid() bool {
+func (eomfile EomFile) IsValid(externalValidationEndpoint string) bool {
 	contentUUID := eomfile.UUID
 	if !isUUIDValid(contentUUID) {
 		warnLogger.Printf("Eomfile invalid: invalid UUID: [%s]", contentUUID)
@@ -45,9 +48,9 @@ func (eomfile EomFile) IsValid() bool {
 	case webContainer:
 		return isListValid(eomfile)
 	case compoundStory:
-		return isCompoundStoryValid(eomfile)
+		return isCompoundStoryValid(eomfile) && isExternalValidationSuccessful(eomfile, externalValidationEndpoint)
 	case story:
-		return isStoryValid(eomfile)
+		return isStoryValid(eomfile) && isExternalValidationSuccessful(eomfile, externalValidationEndpoint)
 	case image:
 		return isImageValid(eomfile)
 	default:
@@ -100,11 +103,10 @@ func isCompoundStoryValid(eomfile EomFile) bool {
 }
 
 func isStoryValid(eomfile EomFile) bool {
-
 	return isSupportedFileType(eomfile) &&
-	isWebChannel(eomfile) &&
-	hasTitle(eomfile) &&
-	isSupportedStorySourceCode(eomfile);
+		isWebChannel(eomfile) &&
+		hasTitle(eomfile) &&
+		isSupportedStorySourceCode(eomfile)
 }
 
 func isSupportedFileType(eomfile EomFile) bool {
@@ -188,7 +190,7 @@ func getXPathValue(xml string, eomfile EomFile, lookupPath string) (string, bool
 
 }
 
-func isSupportedStorySourceCode (eomfile EomFile) bool {
+func isSupportedStorySourceCode(eomfile EomFile) bool {
 	validSourceCodes := [1]string{"FT"}
 
 	sourceCode, ok := getXPathValue(eomfile.Attributes, eomfile, sourceXPath)
@@ -196,10 +198,32 @@ func isSupportedStorySourceCode (eomfile EomFile) bool {
 		warnLogger.Printf("Cannot match node in XML using xpath [%v]", sourceXPath)
 		return false
 	}
-	for _, expected :=  range validSourceCodes {
+	for _, expected := range validSourceCodes {
 		if sourceCode == expected {
 			return true
 		}
 	}
 	return false
+}
+
+func isExternalValidationSuccessful(eomfile EomFile, validationURL string) bool {
+	if validationURL == "" {
+		warnLogger.Printf("Validation endpoint URL is missing for content type=[%s], uuid=[%s]. Skipping external validation.", eomfile.Type, eomfile.UUID)
+		return true
+	}
+	marshalled, err := json.Marshal(eomfile)
+	if err != nil {
+		warnLogger.Println("[%v]", err)
+		return false
+	}
+	resp, err := http.Post(validationURL+"/"+eomfile.UUID, "application/json", bytes.NewBuffer(marshalled))
+	if err != nil {
+		warnLogger.Println("Error")
+		return false
+	}
+	if resp.StatusCode > 404 {
+		infoLogger.Println("Invalid statusCode: [%s]", resp.StatusCode)
+		return false
+	}
+	return true
 }

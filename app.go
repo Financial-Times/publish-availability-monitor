@@ -56,12 +56,13 @@ type SplunkConfig struct {
 
 // AppConfig holds the application's configuration
 type AppConfig struct {
-	Threshold  int                  `json:"threshold"` //pub SLA in seconds, ex. 120
-	QueueConf  consumer.QueueConfig `json:"queueConfig"`
-	MetricConf []MetricConfig       `json:"metricConfig"`
-	Platform   string               `json:"platform"`
-	SplunkConf SplunkConfig         `json:"splunk-config"`
-	HealthConf HealthConfig         `json:"healthConfig"`
+	Threshold           int                  `json:"threshold"` //pub SLA in seconds, ex. 120
+	QueueConf           consumer.QueueConfig `json:"queueConfig"`
+	MetricConf          []MetricConfig       `json:"metricConfig"`
+	Platform            string               `json:"platform"`
+	SplunkConf          SplunkConfig         `json:"splunk-config"`
+	HealthConf          HealthConfig         `json:"healthConfig"`
+	ValidationEndpoints map[string]string    `json:"validationEndpoints"` //contentType to validation endpoint mapping, ex. { "EOM::Story": "http://methode-article-transformer/content-transform/" }
 }
 
 // HealthConfig holds the application's healthchecks configuration
@@ -95,7 +96,6 @@ func main() {
 		errorLogger.Printf("Cannot load configuration: [%v]", err)
 		return
 	}
-
 	metricContainer = publishHistory{sync.RWMutex{}, make([]PublishMetric, 0)}
 
 	go enableHealthchecks()
@@ -176,7 +176,8 @@ func handleMessage(msg consumer.Message) {
 	}
 
 	uuid := publishedContent.GetUUID()
-	if !publishedContent.IsValid() {
+	contentType := publishedContent.GetType()
+	if !publishedContent.IsValid(appConfig.ValidationEndpoints[contentType]) {
 		infoLogger.Printf("Message [%v] with UUID [%v] is INVALID, skipping...", tid, uuid)
 		return
 	}
