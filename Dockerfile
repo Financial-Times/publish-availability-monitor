@@ -22,5 +22,4 @@ RUN apk add --update bash \
   && apk del go git bzr \
   && rm -rf $GOPATH /var/cache/apk/*
 
-ENTRYPOINT [ "/bin/sh", "-c" ]
-CMD [ "/startup.sh" ] 
+CMD [ "/startup.sh" ]
