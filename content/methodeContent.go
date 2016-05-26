@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -221,9 +223,21 @@ func isExternalValidationSuccessful(eomfile EomFile, validationURL string) bool 
 		warnLogger.Printf("External validation error: [%v]", err)
 		return true
 	}
+	defer cleanupResp(resp)
 	if resp.StatusCode > 404 {
 		infoLogger.Printf("External validation request for content uuid=[%s] received statusCode: [%s]", eomfile.UUID, resp.StatusCode)
 		return false
 	}
 	return true
+}
+
+func cleanupResp(resp *http.Response) {
+	_, err := io.Copy(ioutil.Discard, resp.Body)
+	if err != nil {
+		warnLogger.Printf("[%v]", err)
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		warnLogger.Printf("[%v]", err)
+	}
 }
