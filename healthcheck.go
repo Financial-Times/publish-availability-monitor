@@ -30,7 +30,7 @@ func (h *Healthcheck) checkHealth() func(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *Healthcheck) gtg(writer http.ResponseWriter, req *http.Request) {
-	healthChecks := []func() error{h.checkAggregateMessageQueueProxiesReachable}
+	healthChecks := []func() error{h.checkAggregateMessageQueueProxiesReachable, h.checkValidationServicesReachable}
 
 	for _, hCheck := range healthChecks {
 		if err := hCheck(); err != nil {
