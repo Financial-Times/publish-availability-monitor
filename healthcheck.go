@@ -194,6 +194,7 @@ func checkValidationServiceReachable(validationURL string, hcRes chan<- error, w
 	defer cleanupResp(resp)
 	if resp.StatusCode != 200 {
 		hcRes <- fmt.Errorf("Not healthy statusCode received: [%d]", resp.StatusCode)
+		return
 	}
 	hcRes <- nil
 }
