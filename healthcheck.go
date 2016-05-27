@@ -121,9 +121,9 @@ func (h *Healthcheck) reflectPublishFailures() fthealth.Check {
 	return fthealth.Check{
 		BusinessImpact:   "At least two of the last 10 publishes failed. This will reflect in the SLA measurement.",
 		Name:             "ReflectPublishFailures",
-		PanicGuide:       "https://sites.google.com/a/ft.com/technology/systems/dynamic-semantic-publishing/extra-publishing/publish-availability-monitor-run-book",
+		PanicGuide:       "/__publish-availability-monitor/__history",
 		Severity:         1,
-		TechnicalSummary: "Publishes did not meet the SLA measurments",
+		TechnicalSummary: "Publishes did not meet the SLA measurments. Check the panic guide link from above to see the last 10 publishes' status.",
 		Checker:          h.checkForPublishFailures,
 	}
 
