@@ -212,25 +212,32 @@ func isSupportedStorySourceCode(eomfile EomFile) bool {
 
 func isExternalValidationSuccessful(eomfile EomFile, validationURL string) bool {
 	if validationURL == "" {
-		warnLogger.Printf("Validation endpoint URL is missing for content type=[%s], uuid=[%s]. Skipping external validation.", eomfile.Type, eomfile.UUID)
+		warnLogger.Printf("External validation for content uuid=[%s]. Validation endpoint URL is missing for content type=[%s]. Skipping external validation.", eomfile.UUID, eomfile.Type)
 		return true
 	}
 	marshalled, err := json.Marshal(eomfile)
 	if err != nil {
-		warnLogger.Printf("External validation error: [%v]. Skipping external validation.", err)
+		warnLogger.Printf("External validation for content uuid=[%s] error: [%v]. Skipping external validation.", eomfile.UUID, err)
 		return true
 	}
 	resp, err := http.Post(validationURL+"/"+eomfile.UUID, "application/json", bytes.NewBuffer(marshalled))
 	if err != nil {
-		warnLogger.Printf("External validation error: [%v]. Skipping external validation.", err)
+		warnLogger.Printf("External validation for content uuid=[%s] error: [%v]. Skipping external validation.", eomfile.UUID, err)
 		return true
 	}
 	defer cleanupResp(resp)
+
+	infoLogger.Printf("External validation for content uuid=[%s] received statusCode: [%d]", eomfile.UUID, resp.StatusCode)
+
+	bs, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		warnLogger.Printf("External validation for content uuid=[%s] reading response body error: [%v]. ", eomfile.UUID, err)
+	} else {
+		infoLogger.Printf("External validation for content uuid=[%s] received response body: [%v]", eomfile.UUID, string(bs))
+	}
 	if resp.StatusCode > 404 {
-		infoLogger.Printf("External validation request for content uuid=[%s] received statusCode: [%s]", eomfile.UUID, resp.StatusCode)
 		return false
 	}
-	infoLogger.Printf("External validation request for content uuid=[%s] is successful. Received statusCode: [%s]", eomfile.UUID, resp.StatusCode)
 	return true
 }
 
