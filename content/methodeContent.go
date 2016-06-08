@@ -232,7 +232,8 @@ func isExternalValidationSuccessful(eomfile EomFile, validationURL string) bool 
 	bs, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		warnLogger.Printf("External validation for content uuid=[%s] reading response body error: [%v]. ", eomfile.UUID, err)
-	} else {
+	}
+	if resp.StatusCode != 200 {
 		infoLogger.Printf("External validation for content uuid=[%s] received response body: [%v]", eomfile.UUID, string(bs))
 	}
 	if resp.StatusCode > 404 {
