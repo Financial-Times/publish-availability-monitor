@@ -164,161 +164,161 @@ func TestIsListValid_ListInvalid(t *testing.T) {
 }
 
 var eomfileWithInvalidContentType = EomFile{
-	validUUID,
-	"FOOBAR",
-	"/9j/4QAYRXhpZgAASUkqAAgAAAAAAAAAAAAAAP/sABFEdWNr",
-	"attributes",
-	"systemAttributes",
+	UUID:             validUUID,
+	Type:             "FOOBAR",
+	Value:            "/9j/4QAYRXhpZgAASUkqAAgAAAAAAAAAAAAAAP/sABFEdWNr",
+	Attributes:       "attributes",
+	SystemAttributes: "systemAttributes",
 }
 var eomfileWithInvalidUUID = EomFile{
-	invalidUUID,
-	"Image",
-	"/9j/4QAYRXhpZgAASUkqAAgAAAAAAAAAAAAAAP/sABFEdWNr",
-	"attributes",
-	"systemAttributes",
+	UUID:             invalidUUID,
+	Type:             "Image",
+	Value:            "/9j/4QAYRXhpZgAASUkqAAgAAAAAAAAAAAAAAP/sABFEdWNr",
+	Attributes:       "attributes",
+	SystemAttributes: "systemAttributes",
 }
 
 var validImage = EomFile{
-	validUUID,
-	"Image",
-	"/9j/4QAYRXhpZgAASUkqAAgAAAAAAAAAAAAAAP/sABFEdWNr",
-	"attributes",
-	"systemAttributes",
+	UUID:             validUUID,
+	Type:             "Image",
+	Value:            "/9j/4QAYRXhpZgAASUkqAAgAAAAAAAAAAAAAAP/sABFEdWNr",
+	Attributes:       "attributes",
+	SystemAttributes: "systemAttributes",
 }
 
 var validList = EomFile{
-	validUUID,
-	"EOM::WebContainer",
-	"bar",
-	validListAttributes,
-	"system attributes",
+	UUID:             validUUID,
+	Type:             "EOM::WebContainer",
+	Value:            "bar",
+	Attributes:       validListAttributes,
+	SystemAttributes: "system attributes",
 }
 
 var validCompoundStory = EomFile{
-	validUUID,
-	"EOM::CompoundStory",
-	contentWithHeadline,
-	validFileTypeAttributes,
-	systemAttributesValidChannel,
+	UUID:             validUUID,
+	Type:             "EOM::CompoundStory",
+	Value:            contentWithHeadline,
+	Attributes:       validFileTypeAttributes,
+	SystemAttributes: systemAttributesValidChannel,
 }
 
 var validStory = EomFile{
-	validUUID,
-	"EOM::Story",
-	contentWithHeadline,
-	supportedSourceCodeAttributes,
-	systemAttributesValidChannel,
+	UUID:             validUUID,
+	Type:             "EOM::Story",
+	Value:            contentWithHeadline,
+	Attributes:       supportedSourceCodeAttributes,
+	SystemAttributes: systemAttributesValidChannel,
 }
 
 var eomfileWithTitle = EomFile{
-	validUUID,
-	"EOM::CompoundStory",
-	contentWithHeadline,
-	"attributes",
-	"systemAttributes",
+	UUID:             validUUID,
+	Type:             "EOM::CompoundStory",
+	Value:            contentWithHeadline,
+	Attributes:       "attributes",
+	SystemAttributes: "systemAttributes",
 }
 
 var eomfileWithoutTitle = EomFile{
-	validUUID,
-	"EOM::CompoundStory",
-	contentWithoutHeadline,
-	"attributes",
-	"systemAttributes",
+	UUID:             validUUID,
+	Type:             "EOM::CompoundStory",
+	Value:            contentWithoutHeadline,
+	Attributes:       "attributes",
+	SystemAttributes: "systemAttributes",
 }
 
 var validChannelEomFile = EomFile{
-	validUUID,
-	"EOM::CompoundStory",
-	"bar",
-	"attributes",
-	systemAttributesValidChannel,
+	UUID:             validUUID,
+	Type:             "EOM::CompoundStory",
+	Value:            "bar",
+	Attributes:       "attributes",
+	SystemAttributes: systemAttributesValidChannel,
 }
 
 var invalidChannelEomFile = EomFile{
-	validUUID,
-	"EOM::CompoundStory",
-	"bar",
-	"attributes",
-	systemAttributesInvalidChannel,
+	UUID:             validUUID,
+	Type:             "EOM::CompoundStory",
+	Value:            "bar",
+	Attributes:       "attributes",
+	SystemAttributes: systemAttributesInvalidChannel,
 }
 
 var supportedSourceCodeCompoundStory = EomFile{
-	validUUID,
-	"EOM::CompoundStory",
-	"bar",
-	supportedSourceCodeAttributes,
-	"systemAttributes",
+	UUID:             validUUID,
+	Type:             "EOM::CompoundStory",
+	Value:            "bar",
+	Attributes:       supportedSourceCodeAttributes,
+	SystemAttributes: "systemAttributes",
 }
 
 var supportedSourceCodeStory = EomFile{
-	validUUID,
-	"EOM::Story",
-	"value",
-	supportedSourceCodeAttributes,
-	"systemAttributes",
+	UUID:             validUUID,
+	Type:             "EOM::Story",
+	Value:            "value",
+	Attributes:       supportedSourceCodeAttributes,
+	SystemAttributes: "systemAttributes",
 }
 
 var unsupportedSourceCodeCompoundStory = EomFile{
-	validUUID,
-	"EOM::CompoundStory",
-	"bar",
-	unsupportedSourceCodeAttributes,
-	"systemAttributes",
+	UUID:             validUUID,
+	Type:             "EOM::CompoundStory",
+	Value:            "bar",
+	Attributes:       unsupportedSourceCodeAttributes,
+	SystemAttributes: "systemAttributes",
 }
 
 var unsupportedSourceCodeStory = EomFile{
-	validUUID,
-	"EOM::Story",
-	"bar",
-	unsupportedSourceCodeAttributes,
-	"systemAttributes",
+	UUID:             validUUID,
+	Type:             "EOM::Story",
+	Value:            "bar",
+	Attributes:       unsupportedSourceCodeAttributes,
+	SystemAttributes: "systemAttributes",
 }
 var supportedEomFile = EomFile{
-	validUUID,
-	"EOM::CompoundStory",
-	"bar",
-	validFileTypeAttributes,
-	"system attributes",
+	UUID:             validUUID,
+	Type:             "EOM::CompoundStory",
+	Value:            "bar",
+	Attributes:       validFileTypeAttributes,
+	SystemAttributes: "system attributes",
 }
 
 var unsupportedEomFile = EomFile{
-	validUUID,
-	"EOM::CompoundStory",
-	"bar",
-	invalidFileTypeAttributes,
-	"system attributes",
+	UUID:             validUUID,
+	Type:             "EOM::CompoundStory",
+	Value:            "bar",
+	Attributes:       invalidFileTypeAttributes,
+	SystemAttributes: "system attributes",
 }
 
 var validListEomFile = EomFile{
-	validUUID,
-	"EOM::WebContainer",
-	"bar",
-	validListAttributes,
-	"system attributes",
+	UUID:             validUUID,
+	Type:             "EOM::WebContainer",
+	Value:            "bar",
+	Attributes:       validListAttributes,
+	SystemAttributes: "system attributes",
 }
 
 var invalidListEomFile = EomFile{
-	validUUID,
-	"EOM::WebContainer",
-	"bar",
-	invalidListAttributes,
-	"system attributes",
+	UUID:             validUUID,
+	Type:             "EOM::WebContainer",
+	Value:            "bar",
+	Attributes:       invalidListAttributes,
+	SystemAttributes: "system attributes",
 }
 
 var validImageEomFile = EomFile{
-	validUUID,
-	"Image",
-	"/9j/4QAYRXhpZgAASUkqAAgAAAAAAAAAAAAAAP/sABFEdWNr",
-	"attributes",
-	"system attributes",
+	UUID:             validUUID,
+	Type:             "Image",
+	Value:            "/9j/4QAYRXhpZgAASUkqAAgAAAAAAAAAAAAAAP/sABFEdWNr",
+	Attributes:       "attributes",
+	SystemAttributes: "system attributes",
 }
 
 var invalidImageEomFile = EomFile{
-	validUUID,
-	"Image",
-	"",
-	"attributes",
-	"system attributes",
+	UUID:             validUUID,
+	Type:             "Image",
+	Value:            "",
+	Attributes:       "attributes",
+	SystemAttributes: "system attributes",
 }
 
 func TestIsMarkedDeleted_CompoundStory_True(t *testing.T) {
@@ -358,51 +358,51 @@ func TestIsMarkedDeleted_WebContainer(t *testing.T) {
 }
 
 var compoundStoryMarkedDeletedTrue = EomFile{
-	UUIDString,
-	"EOM::CompoundStory",
-	content,
-	attributesMarkedDeletedTrue,
-	systemAttributes,
+	UUID:             UUIDString,
+	Type:             "EOM::CompoundStory",
+	Value:            content,
+	Attributes:       attributesMarkedDeletedTrue,
+	SystemAttributes: systemAttributes,
 }
 
 var storyMarkedDeletedTrue = EomFile{
-	UUIDString,
-	"EOM::Story",
-	content,
-	attributesMarkedDeletedTrue,
-	systemAttributes,
+	UUID:             UUIDString,
+	Type:             "EOM::Story",
+	Value:            content,
+	Attributes:       attributesMarkedDeletedTrue,
+	SystemAttributes: systemAttributes,
 }
 
 var imageEomFile = EomFile{
-	UUIDString,
-	"Image",
-	"image bytes",
-	"fooAttributes",
-	"barsystemAttributes",
+	UUID:             UUIDString,
+	Type:             "Image",
+	Value:            "image bytes",
+	Attributes:       "fooAttributes",
+	SystemAttributes: "barsystemAttributes",
 }
 
 var compoundStoryMarkedDeletedFalse = EomFile{
-	UUIDString,
-	"EOM::CompoundStory",
-	content,
-	attributesMarkedDeletedFalse,
-	systemAttributes,
+	UUID:             UUIDString,
+	Type:             "EOM::CompoundStory",
+	Value:            content,
+	Attributes:       attributesMarkedDeletedFalse,
+	SystemAttributes: systemAttributes,
 }
 
 var storyMarkedDeletedFalse = EomFile{
-	UUIDString,
-	"EOM::Story",
-	content,
-	attributesMarkedDeletedFalse,
-	systemAttributes,
+	UUID:             UUIDString,
+	Type:             "EOM::Story",
+	Value:            content,
+	Attributes:       attributesMarkedDeletedFalse,
+	SystemAttributes: systemAttributes,
 }
 
 var webContainerEomFile = EomFile{
-	UUIDString,
-	"EOM::WebContainer",
-	"list bytes",
-	"fooAttributes",
-	"barSystemAttributes",
+	UUID:             UUIDString,
+	Type:             "EOM::WebContainer",
+	Value:            "list bytes",
+	Attributes:       "fooAttributes",
+	SystemAttributes: "barSystemAttributes",
 }
 
 const UUIDString = "e28b12f7-9796-3331-b030-05082f0b8157"

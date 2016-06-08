@@ -36,6 +36,8 @@ type EomFile struct {
 	Value            string `json:"value"`
 	Attributes       string `json:"attributes"`
 	SystemAttributes string `json:"systemAttributes"`
+	UsageTickets     string `json:"usageTickets"`
+	WorkflowStatus   string `json:"workflowStatus"`
 }
 
 func (eomfile EomFile) IsValid(externalValidationEndpoint string) bool {
