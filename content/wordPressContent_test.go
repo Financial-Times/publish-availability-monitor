@@ -19,5 +19,5 @@ var wordpressContentMarkedDeletedTrue = WordPressMessage{
 }
 
 var wordpressContentMarkedDeletedFalse = WordPressMessage{
-	Status: "ok", Post: &Post{},
+	Status: "ok", Post: Post{},
 }

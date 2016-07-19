@@ -18,7 +18,7 @@ type WordPressMessage struct {
 	Status      string `json:"status"`
 	APIURL      string `json:"apiUrl"`
 	Error       string `json:"error"`
-	Post        *Post  `json:"post"`
+	Post        Post   `json:"post"`
 	PreviousURL string `json:"previousUrl"`
 }
 
