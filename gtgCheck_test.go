@@ -18,10 +18,10 @@ func getTestGtgEnvironment(t *testing.T, status int) (*httptest.Server, Environm
 		assert.Equal(t, "/__gtg", r.URL.Path, "The check should request for the /__gtg endpoint!")
 
 		auth := r.Header.Get("Authorization")
-		b64, _ := base64.StdEncoding.DecodeString(strings.TrimLeft(auth, "Basic "))
+		b64, _ := base64.StdEncoding.DecodeString(strings.Split(auth, " ")[1])
 		credentials := string(b64)
 
-		assert.Equal(t, uniq, strings.TrimLeft(credentials, "next:"), "Credentials supplied to GTG endpoint do not much the credentials we expected!")
+		assert.Equal(t, uniq, strings.Split(credentials, ":")[1], "Credentials supplied to GTG endpoint do not much the credentials we expected!")
 
 		w.WriteHeader(status)
 	}))
