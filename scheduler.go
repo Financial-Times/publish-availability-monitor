@@ -49,7 +49,7 @@ func scheduleChecks(contentToCheck content.Content, publishDate time.Time, tid s
 
 				var checkInterval = appConfig.Threshold / metric.Granularity
 				var publishCheck = NewPublishCheck(publishMetric, env.Username, env.Password, appConfig.Threshold, checkInterval, metricSink)
-				go scheduleCheck(*publishCheck, metricContainer)
+				go scheduleCheck(env, *publishCheck, metricContainer)
 			}
 		} else {
 			// generate a generic failure metric so that the absence of monitoring is logged
@@ -66,11 +66,12 @@ func scheduleChecks(contentToCheck content.Content, publishDate time.Time, tid s
 			}
 			metricSink <- publishMetric
 			updateHistory(metricContainer, publishMetric)
+
 		}
 	}
 }
 
-func scheduleCheck(check PublishCheck, metricContainer *publishHistory) {
+func scheduleCheck(env Environment, check PublishCheck, metricContainer *publishHistory) {
 
 	//the date the SLA expires for this publish event
 	publishSLA := check.Metric.publishDate.Add(time.Duration(check.Threshold) * time.Second)
@@ -121,10 +122,15 @@ func scheduleCheck(check PublishCheck, metricContainer *publishHistory) {
 			continue
 		case <-quitChan:
 			tickerChan.Stop()
-			//if we get here, checks were unsuccessful
-			check.Metric.publishOK = false
-			check.ResultSink <- check.Metric
-			updateHistory(metricContainer, check.Metric)
+			//if we get here, checks were unsuccessful, but should we ignore them because of read health?
+			ignore := runGtgChecks(environments, env)
+
+			if !ignore {
+				check.Metric.publishOK = false
+				check.ResultSink <- check.Metric
+				updateHistory(metricContainer, check.Metric)
+			}
+
 			return
 		}
 	}

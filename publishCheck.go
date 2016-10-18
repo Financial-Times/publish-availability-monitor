@@ -47,6 +47,10 @@ type NotificationsCheck struct {
 	httpCaller httpCaller
 }
 
+type GTGCheck struct {
+	httpCaller httpCaller
+}
+
 // httpCaller abstracts http calls
 type httpCaller interface {
 	doCall(url string, username string, password string) (*http.Response, error)
@@ -88,6 +92,7 @@ func init() {
 		"lists":              ContentCheck{hC},
 		"notifications":      NotificationsCheck{hC},
 		"notifications-push": NotificationsCheck{hC},
+		"gtg":		      GTGCheck{hC},
 	}
 }
 
