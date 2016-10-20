@@ -77,7 +77,7 @@ func (c DefaultCollator) CollateResults(event ContentEvent, context CheckContext
 	}
 
 	for _, ignore := range ignoreEnvironment {
-		if !ignore {
+		if !ignore { // If anything should not be ignored, then SLA false.
 			slaMetric.metPublishSLA = false
 			c.slaFeeder.SendPublishSLA(slaMetric)
 			return
