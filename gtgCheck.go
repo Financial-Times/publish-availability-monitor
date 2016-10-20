@@ -2,9 +2,15 @@ package main
 
 import "net/url"
 
-func runGtgChecks(allEnvironments map[string]Environment, checkedEnvironment Environment) bool {
+type GTGRunner interface {
+	RunGtgChecks(allEnvironments map[string]Environment, checkedEnvironment Environment) bool
+}
+
+type DefaultGTGRunner struct {}
+
+func (r DefaultGTGRunner) RunGtgChecks(allEnvironments map[string]Environment, checkedEnvironment Environment) bool {
 	gtg := endpointSpecificChecks["gtg"]
-	check := generateGtgCheckForEnvironment(checkedEnvironment)
+	check := r.generateGtgCheckForEnvironment(checkedEnvironment)
 	if check == nil {
 		return false
 	}
@@ -16,7 +22,7 @@ func runGtgChecks(allEnvironments map[string]Environment, checkedEnvironment Env
 				continue
 			}
 
-			_, unhealthy := gtg.isCurrentOperationFinished(generateGtgCheckForEnvironment(environment))
+			_, unhealthy := gtg.isCurrentOperationFinished(r.generateGtgCheckForEnvironment(environment))
 			if !unhealthy { // If the other environment is healthy then we can ignore this failure
 				return ignore
 			}
@@ -26,7 +32,7 @@ func runGtgChecks(allEnvironments map[string]Environment, checkedEnvironment Env
 	return false // This environment is healthy, OR no environments are healthy, so do not ignore failure
 }
 
-func generateGtgCheckForEnvironment(env Environment) *PublishCheck {
+func (r DefaultGTGRunner) generateGtgCheckForEnvironment(env Environment) *PublishCheck {
 	endpoint, err := url.Parse(env.ReadUrl + "/__gtg")
 	if err != nil {
 		errorLogger.Printf("Failed to generate gtg endpoint from read url! url: [%s] - [%v]", env.ReadUrl, err.Error())

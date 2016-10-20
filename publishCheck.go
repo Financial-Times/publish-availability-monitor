@@ -20,7 +20,6 @@ type PublishCheck struct {
 	password      string
 	Threshold     int
 	CheckInterval int
-	ResultSink    chan PublishMetric
 }
 
 // EndpointSpecificCheck is the interface which determines the state of the operation we are currently checking.
@@ -75,8 +74,8 @@ func (c defaultHTTPCaller) doCall(url string, username string, password string) 
 
 // NewPublishCheck returns a PublishCheck ready to perform a check for pm.UUID, at the
 // pm.endpoint.
-func NewPublishCheck(pm PublishMetric, username string, password string, t int, ci int, rs chan PublishMetric) *PublishCheck {
-	return &PublishCheck{pm, username, password, t, ci, rs}
+func NewPublishCheck(pm PublishMetric, username string, password string, t int, ci int) *PublishCheck {
+	return &PublishCheck{pm, username, password, t, ci}
 }
 
 var endpointSpecificChecks map[string]EndpointSpecificCheck

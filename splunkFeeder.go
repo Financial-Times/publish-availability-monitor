@@ -24,3 +24,20 @@ func (sf SplunkFeeder) Send(pm PublishMetric) {
 	sf.MetricLog.Printf("UUID=%v readEnv=%v transaction_id=%v publishDate=%v publishOk=%v duration=%v endpoint=%v ",
 		pm.UUID, pm.platform, pm.tid, pm.publishDate.UnixNano(), pm.publishOK, pm.publishInterval.upperBound, pm.config.Alias)
 }
+
+type SplunkSLAFeeder interface {
+	SendPublishSLA(sla SLAMetric)
+}
+
+type DefaultSplunkSLAFeeder struct {
+	MetricLog *log.Logger
+}
+
+func NewSplunkSLAFeeder(logPrefix string) SplunkSLAFeeder {
+	logger := log.New(os.Stdout, logPrefix, log.Ldate|log.Ltime|log.Lmicroseconds|log.LUTC)
+	return DefaultSplunkSLAFeeder{logger}
+}
+
+func (sf DefaultSplunkSLAFeeder) SendPublishSLA(sm SLAMetric) {
+	sf.MetricLog.Printf("UUID=%v metPublishSLA=%v okEnvironments=%v transaction_id=%v publishDate=%v", sm.UUID, sm.metPublishSLA, sm.okEnvironments, sm.tid, sm.publishDate.UnixNano())
+}

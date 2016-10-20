@@ -5,17 +5,31 @@ import (
 	"net/url"
 	"regexp"
 	"time"
-
-	"github.com/Financial-Times/publish-availability-monitor/content"
+	"sync"
 )
 
 var (
 	absoluteUrlRegex = regexp.MustCompile("(?i)https?://.*")
 )
 
-func scheduleChecks(contentToCheck content.Content, publishDate time.Time, tid string, isMarkedDeleted bool, metricContainer *publishHistory, environments map[string]Environment) {
+type Scheduler interface {
+	ScheduleChecks(event ContentEvent, environments map[string]Environment) (CheckContext)
+}
+
+type CheckContext struct {
+	results chan PublishMetric
+	waitGroup *sync.WaitGroup
+}
+
+type InstrumentedScheduler struct {
+	metricContainer *publishHistory
+}
+
+func (i InstrumentedScheduler) ScheduleChecks(event ContentEvent, environments map[string]Environment) (CheckContext) {
+	context := CheckContext{make(chan PublishMetric), &sync.WaitGroup{}}
+
 	for _, metric := range appConfig.MetricConf {
-		if !validType(metric.ContentTypes, contentToCheck.GetType()) {
+		if !validType(metric.ContentTypes, event.contentToCheck.GetType()) {
 			continue
 		}
 
@@ -36,42 +50,46 @@ func scheduleChecks(contentToCheck content.Content, publishDate time.Time, tid s
 				}
 
 				var publishMetric = PublishMetric{
-					contentToCheck.GetUUID(),
+					event.contentToCheck.GetUUID(),
 					false,
-					publishDate,
+					event.publishDate,
 					name,
 					Interval{},
 					metric,
 					*endpointURL,
-					tid,
-					isMarkedDeleted,
+					event.tid,
+					event.isMarkedDeleted,
 				}
 
 				var checkInterval = appConfig.Threshold / metric.Granularity
-				var publishCheck = NewPublishCheck(publishMetric, env.Username, env.Password, appConfig.Threshold, checkInterval, metricSink)
-				go scheduleCheck(env, *publishCheck, metricContainer)
+				var publishCheck = NewPublishCheck(publishMetric, env.Username, env.Password, appConfig.Threshold, checkInterval)
+				go i.scheduleCheck(context, env, *publishCheck, i.metricContainer)
 			}
 		} else {
 			// generate a generic failure metric so that the absence of monitoring is logged
 			var publishMetric = PublishMetric{
-				contentToCheck.GetUUID(),
+				event.contentToCheck.GetUUID(),
 				false,
-				publishDate,
+				event.publishDate,
 				"none",
 				Interval{},
 				metric,
 				url.URL{},
-				tid,
-				isMarkedDeleted,
+				event.tid,
+				event.isMarkedDeleted,
 			}
-			metricSink <- publishMetric
-			updateHistory(metricContainer, publishMetric)
 
+			context.results <- publishMetric
+			i.updateHistory(publishMetric)
 		}
 	}
+
+	return context
 }
 
-func scheduleCheck(env Environment, check PublishCheck, metricContainer *publishHistory) {
+func (i InstrumentedScheduler) scheduleCheck(context CheckContext, env Environment, check PublishCheck, metricContainer *publishHistory) {
+	context.waitGroup.Add(1)
+	defer context.waitGroup.Done()
 
 	//the date the SLA expires for this publish event
 	publishSLA := check.Metric.publishDate.Add(time.Duration(check.Threshold) * time.Second)
@@ -112,8 +130,8 @@ func scheduleCheck(env Environment, check PublishCheck, metricContainer *publish
 			upper := checkNr * check.CheckInterval
 			check.Metric.publishInterval = Interval{lower, upper}
 
-			check.ResultSink <- check.Metric
-			updateHistory(metricContainer, check.Metric)
+			context.results <- check.Metric
+			i.updateHistory(check.Metric)
 			return
 		}
 		checkNr++
@@ -122,22 +140,17 @@ func scheduleCheck(env Environment, check PublishCheck, metricContainer *publish
 			continue
 		case <-quitChan:
 			tickerChan.Stop()
-			//if we get here, checks were unsuccessful, but should we ignore them because of read health?
-			ignore := runGtgChecks(environments, env)
 
-			if !ignore {
-				check.Metric.publishOK = false
-				check.ResultSink <- check.Metric
-				updateHistory(metricContainer, check.Metric)
-			}
+			check.Metric.publishOK = false
+			context.results <- check.Metric
+			i.updateHistory(check.Metric)
 
 			return
 		}
 	}
-
 }
 
-func updateHistory(metricContainer *publishHistory, newPublishResult PublishMetric) {
+func (i InstrumentedScheduler) updateHistory(newPublishResult PublishMetric) {
 	metricContainer.Lock()
 	if len(metricContainer.publishMetrics) == 10 {
 		metricContainer.publishMetrics = metricContainer.publishMetrics[1:len(metricContainer.publishMetrics)]

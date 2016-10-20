@@ -21,7 +21,7 @@ func TestCheckBatchOfNotifications_ResponseBatchOfNotificationsIsEmpty_NotFinish
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(buildResponse(200, testResponse)),
 	}
-	pc := NewPublishCheck(newPublishMetricBuilder().build(), "", "", 0, 0, nil)
+	pc := NewPublishCheck(newPublishMetricBuilder().build(), "", "", 0, 0)
 	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", pc); result.operationFinished {
 		t.Error("Expected failure")
 	}
@@ -49,7 +49,7 @@ func TestCheckBatchOfNotifications_ResponseDoesNotContainUUID_NotFinished(t *tes
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(buildResponse(200, testResponse)),
 	}
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID("1cb14245-5185-4ed5-9188-4d2a86085598").withTID("tid_0123wxyz").build(), "", "", 0, 0, nil)
+	pc := NewPublishCheck(newPublishMetricBuilder().withUUID("1cb14245-5185-4ed5-9188-4d2a86085598").withTID("tid_0123wxyz").build(), "", "", 0, 0)
 	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", pc); result.operationFinished {
 		t.Error("Expected failure")
 	}
@@ -79,7 +79,7 @@ func TestCheckBatchOfNotifications_ResponseDoesContainUUIDLastModifiedFieldIsUnp
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(buildResponse(200, testResponse)),
 	}
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(currentUUID).withTID("tid_0123wxyz").build(), "", "", 0, 0, nil)
+	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(currentUUID).withTID("tid_0123wxyz").build(), "", "", 0, 0)
 	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", pc); result.operationFinished {
 		t.Error("Expected failure")
 	}
@@ -110,7 +110,7 @@ func TestCheckBatchOfNotifications_ResponseDoesContainUUIDLastModifiedFieldIsUnp
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(buildResponse(200, testResponse)),
 	}
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(currentUUID).withTID(currentTID).build(), "", "", 0, 0, nil)
+	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(currentUUID).withTID(currentTID).build(), "", "", 0, 0)
 	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", pc); !result.operationFinished {
 		t.Error("Expected success")
 	}
@@ -144,7 +144,7 @@ func TestCheckBatchOfNotifications_ResponseDoesContainUUIDLastModifiedFieldIsAft
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(buildResponse(200, testResponse)),
 	}
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(currentUUID).withPublishDate(currentPublishedDate).build(), "", "", 0, 0, nil)
+	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(currentUUID).withPublishDate(currentPublishedDate).build(), "", "", 0, 0)
 	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", pc); !result.ignoreCheck {
 		t.Error("Expected ignoreCheck to be [true].")
 	}
@@ -178,7 +178,7 @@ func TestCheckBatchOfNotifications_ResponseDoesContainUUIDLastModifiedFieldEqual
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(buildResponse(200, testResponse)),
 	}
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(currentUUID).withPublishDate(currentPublishedDate).build(), "", "", 0, 0, nil)
+	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(currentUUID).withPublishDate(currentPublishedDate).build(), "", "", 0, 0)
 	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", pc); !result.operationFinished {
 		t.Error("Expected success.")
 	}
@@ -212,7 +212,7 @@ func TestCheckBatchOfNotifications_ResponseDoesContainUUIDLastModifiedFieldBefor
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(buildResponse(200, testResponse)),
 	}
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(currentUUID).withPublishDate(currentPublishedDate).build(), "", "", 0, 0, nil)
+	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(currentUUID).withPublishDate(currentPublishedDate).build(), "", "", 0, 0)
 	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", pc); result.operationFinished {
 		t.Error("Expected failure.")
 	}
@@ -241,7 +241,7 @@ func TestCheckBatchOfNotifications_ResponseIsNotEmptyDoesNotContainUUID_NextNoti
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(buildResponse(200, testResponse)),
 	}
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(currentUUID).build(), "", "", 0, 0, nil)
+	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(currentUUID).build(), "", "", 0, 0)
 	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", pc); result.nextNotificationsURL != nextNotificationsURL {
 		t.Error("Expected success.")
 	}
@@ -261,7 +261,7 @@ func TestCheckBatchOfNotifications_ResponseBatchOfNotificationsIsEmpty_NextNotif
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(buildResponse(200, testResponse)),
 	}
-	pc := NewPublishCheck(newPublishMetricBuilder().build(), "", "", 0, 0, nil)
+	pc := NewPublishCheck(newPublishMetricBuilder().build(), "", "", 0, 0)
 	if result := notificationsCheck.checkBatchOfNotifications("dummy-url", pc); result.nextNotificationsURL != "" {
 		t.Error("Expected empty string.")
 	}
@@ -292,7 +292,7 @@ func TestIsCurrentOperationFinished_FirstBatchOfNotificationsContainsUUIDAndTID_
 		mockHTTPCaller(buildResponse(200, testResponse)),
 	}
 
-	pc := NewPublishCheck(newPublishMetricBuilder().withTID(testTID).build(), "", "", 0, 0, nil)
+	pc := NewPublishCheck(newPublishMetricBuilder().withTID(testTID).build(), "", "", 0, 0)
 	if finished, _ := notificationsCheck.isCurrentOperationFinished(pc); !finished {
 		t.Error("Expected success")
 	}
@@ -330,7 +330,7 @@ func TestIsCurrentOperationFinished_FirstBatchOfNotificationsDoesNotContainUUIDS
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(buildResponse(200, testResponse1), buildResponse(200, testResponse2)),
 	}
-	pc := NewPublishCheck(newPublishMetricBuilder().withTID("tid_0123wxyZ").withUUID(currentUUID).build(), "", "", 0, 0, nil)
+	pc := NewPublishCheck(newPublishMetricBuilder().withTID("tid_0123wxyZ").withUUID(currentUUID).build(), "", "", 0, 0)
 	if finished, _ := notificationsCheck.isCurrentOperationFinished(pc); finished {
 		t.Error("Expected failure")
 	}
@@ -378,7 +378,7 @@ func TestIsCurrentOperationFinished_FirstBatchOfNotificationsDoesNotContainUUIDB
 		mockHTTPCaller(buildResponse(200, testResponse1), buildResponse(200, testResponse2)),
 	}
 
-	pc := NewPublishCheck(newPublishMetricBuilder().withTID(currentTID).withUUID(currentUUID).build(), "", "", 0, 0, nil)
+	pc := NewPublishCheck(newPublishMetricBuilder().withTID(currentTID).withUUID(currentUUID).build(), "", "", 0, 0)
 	if finished, _ := notificationsCheck.isCurrentOperationFinished(pc); !finished {
 		t.Error("Expected success")
 	}
@@ -421,7 +421,7 @@ func TestAdjustNextNotificationsURL_CurrentHostAndPortDiffers_Success(t *testing
 func TestShouldSkipCheck_ContentIsNotMarkedAsDeleted_CheckNotSkipped(t *testing.T) {
 	pm := newPublishMetricBuilder().withMarkedDeleted(false).build()
 	notificationsCheck := NotificationsCheck{}
-	pc := NewPublishCheck(pm, "", "", 0, 0, nil)
+	pc := NewPublishCheck(pm, "", "", 0, 0)
 
 	if notificationsCheck.shouldSkipCheck(pc) {
 		t.Errorf("Expected failure")
@@ -430,7 +430,7 @@ func TestShouldSkipCheck_ContentIsNotMarkedAsDeleted_CheckNotSkipped(t *testing.
 
 func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsExist_CheckNotSkipped(t *testing.T) {
 	pm := newPublishMetricBuilder().withMarkedDeleted(true).withEndpoint("http://notifications-endpoint:8080/content/notifications").build()
-	pc := NewPublishCheck(pm, "", "", 0, 0, nil)
+	pc := NewPublishCheck(pm, "", "", 0, 0)
 	notificationsCheck := NotificationsCheck{
 		mockHTTPCaller(buildResponse(200, `[{"id": "foobar", "lastModified" : "foobaz", "publishReference" : "unitTestRef" }]`)),
 	}
@@ -441,7 +441,7 @@ func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsExist_Chec
 
 func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsDoesNotExist_CheckSkipped(t *testing.T) {
 	pm := newPublishMetricBuilder().withMarkedDeleted(true).withEndpoint("http://notifications-endpoint:8080/content/notifications").build()
-	pc := NewPublishCheck(pm, "", "", 0, 0, nil)
+	pc := NewPublishCheck(pm, "", "", 0, 0)
 	notificationsCheck := NotificationsCheck{
 		mockHTTPCaller(buildResponse(200, `[]`)),
 	}
@@ -483,7 +483,7 @@ func TestCheckNotificationItems_ShouldNotFinishOpIfNotFound(t *testing.T) {
 		tid:             "tid_testtest99",
 		isMarkedDeleted: false,
 	}
-	pc := NewPublishCheck(pm, "", "", 0, 0, nil)
+	pc := NewPublishCheck(pm, "", "", 0, 0)
 	var defaultResult = notificationCheckResult{operationFinished: false, ignoreCheck: false, nextNotificationsURL: ""}
 	actual := checkNotificationItems(notifications, pc, defaultResult)
 

@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var gtg = DefaultGTGRunner{}
 
 func getTestGtgEnvironment(t *testing.T, status int) (*httptest.Server, Environment) {
 	uniq := uuid.NewV4().String()
@@ -51,7 +52,7 @@ func TestAllClustersHealthy(t *testing.T){
 		anotherEnvironment.Name: anotherEnvironment,
 	}
 
-	ignore := runGtgChecks(envs, environment)
+	ignore := gtg.RunGtgChecks(envs, environment)
 
 	assert.False(t, ignore, "All clusters are healthy! This should NOT be ignored!")
 }
@@ -71,7 +72,7 @@ func TestRequestedClusterHealthy(t *testing.T){
 		anotherEnvironment.Name: anotherEnvironment,
 	}
 
-	ignore := runGtgChecks(envs, environment)
+	ignore := gtg.RunGtgChecks(envs, environment)
 
 	assert.False(t, ignore, "The cluster we checked on is healthy! This should NOT be ignored!")
 }
@@ -91,7 +92,7 @@ func TestOtherClusterHealthy(t *testing.T){
 		anotherEnvironment.Name: anotherEnvironment,
 	}
 
-	ignore := runGtgChecks(envs, environment)
+	ignore := gtg.RunGtgChecks(envs, environment)
 
 	assert.True(t, ignore, "At least one other cluster is healthy! This SHOULD be ignored!")
 }
@@ -111,7 +112,7 @@ func TestOtherClustersHealthy(t *testing.T){
 		anotherEnvironment.Name: anotherEnvironment,
 	}
 
-	ignore := runGtgChecks(envs, environment)
+	ignore := gtg.RunGtgChecks(envs, environment)
 
 	assert.True(t, ignore, "At least one other cluster is healthy! This SHOULD be ignored!")
 }
@@ -131,7 +132,7 @@ func TestAllClustersUnhealthy(t *testing.T){
 		anotherEnvironment.Name: anotherEnvironment,
 	}
 
-	ignore := runGtgChecks(envs, environment)
+	ignore := gtg.RunGtgChecks(envs, environment)
 
 	assert.False(t, ignore, "None of our clusters are healthy! This should NOT be ignored!")
 }
