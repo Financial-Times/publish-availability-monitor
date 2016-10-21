@@ -226,7 +226,7 @@ func handleMessage(msg consumer.Message) {
 		return
 	}
 
-	collator := DefaultCollator{environments, InstrumentedScheduler{&metricContainer}, DefaultGTGRunner{}, metricSink, NewSplunkSLAFeeder("[SLAmetrics] ")}
+	collator := DefaultCollator{environments, InstrumentedScheduler{&metricContainer}, DefaultGTGRunner{}, metricSink, NewSplunkSLAFeeder("[slaMetrics] ")}
 	collator.MeasureSLA(ContentEvent{publishedContent, publishDate, tid, publishedContent.IsMarkedDeleted()})
 
 	// for images we need to check their corresponding image sets
