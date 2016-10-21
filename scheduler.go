@@ -26,13 +26,17 @@ type InstrumentedScheduler struct {
 }
 
 func (i InstrumentedScheduler) ScheduleChecks(event ContentEvent, environments map[string]Environment) (CheckContext) {
-	context := CheckContext{make(chan PublishMetric), &sync.WaitGroup{}}
-
+	metrics := make([]MetricConfig, 0)
 	for _, metric := range appConfig.MetricConf {
-		if !validType(metric.ContentTypes, event.contentToCheck.GetType()) {
-			continue
+		if validType(metric.ContentTypes, event.contentToCheck.GetType()) {
+			metrics = append(metrics, metric)
 		}
+	}
 
+	channelSize := len(environments) * len(metrics)
+	context := CheckContext{make(chan PublishMetric, channelSize), &sync.WaitGroup{}}
+
+	for _, metric := range metrics {
 		if len(environments) > 0 {
 			for name, env := range environments {
 				var endpointURL *url.URL
@@ -63,7 +67,9 @@ func (i InstrumentedScheduler) ScheduleChecks(event ContentEvent, environments m
 
 				var checkInterval = appConfig.Threshold / metric.Granularity
 				var publishCheck = NewPublishCheck(publishMetric, env.Username, env.Password, appConfig.Threshold, checkInterval)
-				go i.scheduleCheck(context, env, *publishCheck, i.metricContainer)
+
+				context.waitGroup.Add(1)
+				go i.scheduleCheck(context, env, *publishCheck)
 			}
 		} else {
 			// generate a generic failure metric so that the absence of monitoring is logged
@@ -87,8 +93,7 @@ func (i InstrumentedScheduler) ScheduleChecks(event ContentEvent, environments m
 	return context
 }
 
-func (i InstrumentedScheduler) scheduleCheck(context CheckContext, env Environment, check PublishCheck, metricContainer *publishHistory) {
-	context.waitGroup.Add(1)
+func (i InstrumentedScheduler) scheduleCheck(context CheckContext, env Environment, check PublishCheck) {
 	defer context.waitGroup.Done()
 
 	//the date the SLA expires for this publish event
@@ -151,12 +156,13 @@ func (i InstrumentedScheduler) scheduleCheck(context CheckContext, env Environme
 }
 
 func (i InstrumentedScheduler) updateHistory(newPublishResult PublishMetric) {
-	metricContainer.Lock()
+	i.metricContainer.Lock()
+	infoLogger.Println("Adding new publish metric to publish metrics")
 	if len(metricContainer.publishMetrics) == 10 {
-		metricContainer.publishMetrics = metricContainer.publishMetrics[1:len(metricContainer.publishMetrics)]
+		i.metricContainer.publishMetrics = i.metricContainer.publishMetrics[1:len(metricContainer.publishMetrics)]
 	}
-	metricContainer.publishMetrics = append(metricContainer.publishMetrics, newPublishResult)
-	metricContainer.Unlock()
+	i.metricContainer.publishMetrics = append(i.metricContainer.publishMetrics, newPublishResult)
+	i.metricContainer.Unlock()
 }
 
 func validType(validTypes []string, eomType string) bool {
