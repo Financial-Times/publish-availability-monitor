@@ -7,3 +7,4 @@ publish-availability-monitor
 .idea/
 /.project
 /config.json
+default.etcd

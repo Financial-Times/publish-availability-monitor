@@ -228,7 +228,8 @@ func handleMessage(msg consumer.Message) {
 		return
 	}
 
-	scheduleChecks(publishedContent, publishDate, tid, publishedContent.IsMarkedDeleted(), &metricContainer, environments)
+	collator := DefaultCollator{environments, InstrumentedScheduler{&metricContainer}, DefaultGTGRunner{}, metricSink, NewSplunkSLAFeeder("[slaMetrics] ")}
+	collator.MeasureSLA(ContentEvent{publishedContent, publishDate, tid, publishedContent.IsMarkedDeleted()})
 
 	// for images we need to check their corresponding image sets
 	// the image sets don't have messages of their own so we need to create one
@@ -240,7 +241,7 @@ func handleMessage(msg consumer.Message) {
 		}
 		imageSetEomFile := spawnImageSet(eomFile)
 		if imageSetEomFile.UUID != "" {
-			scheduleChecks(imageSetEomFile, publishDate, tid, false, &metricContainer, environments)
+			collator.MeasureSLA(ContentEvent{imageSetEomFile, publishDate, tid, false})
 		}
 	}
 }
