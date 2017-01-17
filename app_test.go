@@ -40,26 +40,6 @@ func TestIsIgnorableMessage_syntheticMessage(t *testing.T) {
 	}
 }
 
-func TestGetCredentials(t *testing.T) {
-	environments["env1"] = Environment{"env1", "http://env1.example.org", "http://s3.example.org", "user1", "pass1"}
-	environments["env2"] = Environment{"env2", "http://env2.example.org", "http://s3.example.org", "user2", "pass2"}
-
-	username, password := getCredentials("http://env2.example.org/__some-service")
-	if username != "user2" || password != "pass2" {
-		t.Error("incorrect credentials returned")
-	}
-}
-
-func TestGetCredentials_Unauthenticated(t *testing.T) {
-	environments["env1"] = Environment{"env1", "http://env1.example.org", "http://s3.example.org", "user1", "pass1"}
-	environments["env2"] = Environment{"env2", "http://env2.example.org", "http://s3.example.org", "user2", "pass2"}
-
-	username, password := getCredentials("http://env3.example.org/__some-service")
-	if username != "" || password != "" {
-		t.Error("incorrect credentials returned")
-	}
-}
-
 func TestGetValidationEndpointKey_CompoundStory(t *testing.T) {
 	validationEndpointKey := getValidationEndpointKey(supportedSourceCodeCompoundStory, naturalTID, testUuid)
 	assert.Equal(t, validationEndpointKey, "EOM::CompoundStory", "Didn't get expected validation url key for compound story")

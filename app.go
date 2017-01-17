@@ -59,12 +59,13 @@ type SplunkConfig struct {
 
 // AppConfig holds the application's configuration
 type AppConfig struct {
-	Threshold           int                  `json:"threshold"` //pub SLA in seconds, ex. 120
-	QueueConf           consumer.QueueConfig `json:"queueConfig"`
-	MetricConf          []MetricConfig       `json:"metricConfig"`
-	SplunkConf          SplunkConfig         `json:"splunk-config"`
-	HealthConf          HealthConfig         `json:"healthConfig"`
-	ValidationEndpoints map[string]string    `json:"validationEndpoints"` //contentType to validation endpoint mapping, ex. { "EOM::Story": "http://methode-article-transformer/content-transform" }
+	Threshold                int                  `json:"threshold"` //pub SLA in seconds, ex. 120
+	QueueConf                consumer.QueueConfig `json:"queueConfig"`
+	MetricConf               []MetricConfig       `json:"metricConfig"`
+	SplunkConf               SplunkConfig         `json:"splunk-config"`
+	HealthConf               HealthConfig         `json:"healthConfig"`
+	ValidationEndpoints      map[string]string    `json:"validationEndpoints"` //contentType to validation endpoint mapping, ex. { "EOM::Story": "http://methode-article-transformer/content-transform" }
+	CredentialValidationUuid string               `json:"credentialValidationUuid"`
 }
 
 // HealthConfig holds the application's healthchecks configuration
@@ -256,16 +257,6 @@ func handleMessage(msg consumer.Message) {
 			scheduleChecks(imageSetEomFile, publishDate, tid, false, &metricContainer, environments)
 		}
 	}
-}
-
-func getCredentials(url string) (string, string) {
-	for _, env := range environments {
-		if strings.HasPrefix(url, env.ReadUrl) {
-			return env.Username, env.Password
-		}
-	}
-
-	return "", ""
 }
 
 func getValidationCredentials(url string) (string, string) {
