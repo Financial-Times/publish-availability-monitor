@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	fthealth "github.com/Financial-Times/go-fthealth/v1a"
+	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
-
-	fthealth "github.com/Financial-Times/go-fthealth/v1a"
-	"github.com/Financial-Times/publish-availability-monitor/feeds"
 )
 
 // Healthcheck offers methods to measure application health.
@@ -366,7 +366,19 @@ func (h *readEnvironmentHealthcheck) checkReadEnvironmentReachable() (string, er
 }
 
 func (h *readEnvironmentHealthcheck) checkReadEnvironmentCredentials() (string, error) {
-	req, err := http.NewRequest("GET", h.env.ReadUrl+"/__document-store-api/content/"+h.uuid, nil)
+
+	var endpointURL *url.URL
+	for _, metric := range appConfig.MetricConf {
+		var err error
+		if metric.Alias == "content" {
+			endpointURL, err = url.Parse(h.env.ReadUrl + metric.Endpoint)
+			if err != nil {
+				errorLogger.Printf("Read env credentials healthcheck cannot parse url [%v], Err: [%v]", metric.Endpoint, err.Error())
+			}
+			break
+		}
+	}
+	req, err := http.NewRequest("GET", endpointURL.String()+h.uuid, nil)
 	if h.env.Username != "" && h.env.Password != "" {
 		req.SetBasicAuth(h.env.Username, h.env.Password)
 	}
@@ -378,9 +390,9 @@ func (h *readEnvironmentHealthcheck) checkReadEnvironmentCredentials() (string, 
 		errorLogger.Printf("Credential check read error : %v", err.Error())
 		return "", err
 	}
-	if resp.StatusCode == 401 {
+	if resp.StatusCode != 200 {
 		errorLogger.Printf("Could not read with provided credentials")
-		return "", errors.New("Authorization error for provided read credentials")
+		return "", errors.New("Authorization error for provided read credentials, request returns: " + strconv.Itoa(resp.StatusCode))
 	}
 	return "", nil
 }
@@ -405,6 +417,14 @@ func inferHealthCheckUrl(serviceUrl string) (string, error) {
 func buildFtHealthcheckUrl(endpoint url.URL, health string) (string, error) {
 	endpoint.Path = health
 	endpoint.RawQuery = "" // strip query params
+	return endpoint.String(), nil
+}
+
+func buildCredentialcheckUrl(endpoint url.URL, health string) (string, error) {
+	endpoint.Path = health
+	endpoint.RawQuery = "" // strip query params
+	errorLogger.Printf(endpoint.RawPath)
+	errorLogger.Printf(endpoint.Path)
 	return endpoint.String(), nil
 }
 
