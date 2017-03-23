@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	fthealth "github.com/Financial-Times/go-fthealth/v1a"
-	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"sync"
+
+	fthealth "github.com/Financial-Times/go-fthealth/v1a"
+	"github.com/Financial-Times/publish-availability-monitor/feeds"
 )
 
 // Healthcheck offers methods to measure application health.
@@ -417,14 +418,6 @@ func inferHealthCheckUrl(serviceUrl string) (string, error) {
 func buildFtHealthcheckUrl(endpoint url.URL, health string) (string, error) {
 	endpoint.Path = health
 	endpoint.RawQuery = "" // strip query params
-	return endpoint.String(), nil
-}
-
-func buildCredentialcheckUrl(endpoint url.URL, health string) (string, error) {
-	endpoint.Path = health
-	endpoint.RawQuery = "" // strip query params
-	errorLogger.Printf(endpoint.RawPath)
-	errorLogger.Printf(endpoint.Path)
 	return endpoint.String(), nil
 }
 
