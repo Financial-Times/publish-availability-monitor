@@ -3,13 +3,15 @@ package content
 import "testing"
 
 func TestIsMarkedDeleted_True(t *testing.T) {
-	if !wordpressContentMarkedDeletedTrue.IsMarkedDeleted() {
+	valRes := wordpressContentMarkedDeletedTrue.Validate("", "", "", "")
+	if !valRes.IsMarkedDeleted {
 		t.Error("Expected True, the story IS marked deleted")
 	}
 }
 
 func TestIsMarkedDeleted_False(t *testing.T) {
-	if wordpressContentMarkedDeletedFalse.IsMarkedDeleted() {
+	valRes := wordpressContentMarkedDeletedFalse.Validate("", "", "", "")
+	if valRes.IsMarkedDeleted {
 		t.Error("Expected False, the wordPress article IS NOT marked deleted")
 	}
 }
@@ -31,13 +33,15 @@ var wordpressContentWithInvalidBlogDomain = WordPressMessage{
 }
 
 func TestIsValidBlogDomain_True(t *testing.T) {
-	if !wordpressContentWithValidBlogDomain.IsValid("", "", "", "") {
+	valRes := wordpressContentWithValidBlogDomain.Validate("", "", "", "")
+	if !valRes.IsValid{
 		t.Error("Expected True")
 	}
 }
 
 func TestIsValidBlogDomain_False(t *testing.T) {
-	if wordpressContentWithInvalidBlogDomain.IsValid("", "", "", "") {
+	valRes := wordpressContentWithInvalidBlogDomain.Validate("", "", "", "")
+	if valRes.IsValid{
 		t.Error("Expected False")
 	}
 }

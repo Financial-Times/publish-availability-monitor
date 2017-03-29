@@ -60,7 +60,8 @@ func TestUnmarshalContent_ValidVideoMessage(t *testing.T) {
 		t.Errorf("Expected success, but error occured [%v]", err)
 		return
 	}
-	if content.IsMarkedDeleted() {
+	valRes := content.Validate("", "", "", "")
+	if valRes.IsMarkedDeleted {
 		t.Errorf("Expected published content.")
 	}
 }
@@ -71,7 +72,8 @@ func TestUnmarshalContent_ValidDeletedVideoMessage(t *testing.T) {
 		t.Errorf("Expected success, but error occured [%v]", err)
 		return
 	}
-	if !content.IsMarkedDeleted() {
+	valRes := content.Validate("", "", "", "")
+	if !valRes.IsMarkedDeleted {
 		t.Errorf("Expected deleted content.")
 	}
 }
@@ -82,7 +84,8 @@ func TestUnmarshalContent_InvalidVideoMessage(t *testing.T) {
 		t.Errorf("Expected success, but error occured [%v]", err)
 		return
 	}
-	if content.IsValid("", "", "", "") {
+	valRes := content.Validate("", "", "", "")
+	if valRes.IsValid {
 		t.Errorf("Expected invalid content.")
 	}
 }

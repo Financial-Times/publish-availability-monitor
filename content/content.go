@@ -13,10 +13,14 @@ import (
 
 // Content is the interface for different type of contents from different CMSs.
 type Content interface {
-	IsValid(externalValidationEndpoint string, txID string, username string, password string) bool
-	IsMarkedDeleted() bool
+	Validate(externalValidationEndpoint string, txID string, username string, password string) ValidationResponse
 	GetType() string
 	GetUUID() string
+}
+
+type ValidationResponse struct {
+	IsValid bool
+	IsMarkedDeleted bool
 }
 
 const systemIDKey = "Origin-System-Id"

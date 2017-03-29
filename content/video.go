@@ -16,20 +16,20 @@ type Video struct {
 	PublishedAt string `json:"published_at"`
 }
 
-func (v Video) IsValid(externalValidationEndpoint string, txId string, username string, password string) bool {
+func (v Video) Validate(externalValidationEndpoint string, txId string, username string, password string) ValidationResponse {
 	contentUUID := v.UUID
 	if !isUUIDValid(contentUUID) {
 		warnLogger.Printf("Video invalid: invalid UUID: [%s]", contentUUID)
-		return false
+		return ValidationResponse{IsValid:false, IsMarkedDeleted: v.isMarkedDeleted()}
 	}
 	if !idRegexp.MatchString(v.Id) {
 		warnLogger.Printf("Video invalid: invalid ID: [%s]", v.Id)
-		return false
+		return ValidationResponse{IsValid:false, IsMarkedDeleted: v.isMarkedDeleted()}
 	}
-	return true
+	return ValidationResponse{IsValid:true, IsMarkedDeleted: v.isMarkedDeleted()}
 }
 
-func (v Video) IsMarkedDeleted() bool {
+func (v Video) isMarkedDeleted() bool {
 	if v.PublishedAt != "" || v.UpdatedAt != "" {
 		return false
 	}

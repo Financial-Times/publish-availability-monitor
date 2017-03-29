@@ -221,7 +221,8 @@ func handleMessage(msg consumer.Message) {
 		username, password = getValidationCredentials(validationEndpoint)
 	}
 
-	if !publishedContent.IsValid(validationEndpoint, tid, username, password) {
+	valRes := publishedContent.Validate(validationEndpoint, tid, username, password)
+	if !valRes.IsValid {
 		infoLogger.Printf("Message [%v] with UUID [%v] is INVALID, skipping...", tid, uuid)
 		return
 	}
@@ -241,7 +242,7 @@ func handleMessage(msg consumer.Message) {
 		return
 	}
 
-	scheduleChecks(publishedContent, publishDate, tid, publishedContent.IsMarkedDeleted(), &metricContainer, environments)
+	scheduleChecks(publishedContent, publishDate, tid, valRes.IsMarkedDeleted, &metricContainer, environments)
 
 	// for images we need to check their corresponding image sets
 	// the image sets don't have messages of their own so we need to create one
@@ -255,6 +256,27 @@ func handleMessage(msg consumer.Message) {
 		if imageSetEomFile.UUID != "" {
 			scheduleChecks(imageSetEomFile, publishDate, tid, false, &metricContainer, environments)
 		}
+	}
+
+	// if this is normal content, schedule checks for internal components also
+	if publishedContent.GetType() == "EOM::CompoundStory" {
+		eomFileForInternalComponentsCheck, ok := publishedContent.(content.EomFile)
+		if !ok {
+			errorLogger.Printf("Cannot assert that message [%v] with UUID [%v] and type 'EOM::CompoundStory' is an EomFile.", tid, uuid)
+			return
+		}
+		eomFileForInternalComponentsCheck.Type = "InternalComponents"
+
+		var internalComponentsValidationEndpoint = appConfig.ValidationEndpoints["InternalComponents"]
+		var usr, pass = getValidationCredentials(internalComponentsValidationEndpoint)
+
+		icValRes := publishedContent.Validate(internalComponentsValidationEndpoint, tid, usr, pass)
+		if !icValRes.IsValid {
+			infoLogger.Printf("Message [%v] with UUID [%v] has INVALID internal components, skipping internal components schedule check.", tid, uuid)
+			return
+		}
+
+		scheduleChecks(eomFileForInternalComponentsCheck, publishDate, tid, icValRes.IsMarkedDeleted, &metricContainer, environments)
 	}
 }
 

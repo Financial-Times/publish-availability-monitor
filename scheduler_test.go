@@ -42,6 +42,14 @@ var validImageEomFile = content.EomFile{
 	SystemAttributes: "system attributes",
 }
 
+var mockArticleEomFile = content.EomFile{
+	UUID:             "a24da1d4-1524-2322-c231-25032d0f8334",
+	Type:             "EOM:CompoundStory",
+	Value:            "/9j/4QAYRXhpZgAASUkqAAgAAAAAAAAAAAAAAP/sABFEdWNr",
+	Attributes:       "attributes",
+	SystemAttributes: "system attributes",
+}
+
 func TestScheduleChecksForS3AreCorrect(testing *testing.T) {
 	//redefine appConfig to have only S3
 	appConfig = &AppConfig{
@@ -63,7 +71,7 @@ func TestScheduleChecksForS3AreCorrect(testing *testing.T) {
 	s3URL := "http://s1.example.org"
 	mockEnvironments["env1"] = Environment{"env1", readURL, s3URL, "user1", "pass1"}
 
-	capturingMetrics := runScheduleChecks(testing, mockEnvironments)
+	capturingMetrics := runScheduleChecks(testing, validImageEomFile, mockEnvironments)
 	defer capturingMetrics.RUnlock()
 
 	require.NotNil(testing, capturingMetrics)
@@ -92,7 +100,7 @@ func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 	s3URL := "http://s1.example.org"
 	mockEnvironments["env1"] = Environment{"env1", readURL, s3URL, "user1", "pass1"}
 
-	capturingMetrics := runScheduleChecks(testing, mockEnvironments)
+	capturingMetrics := runScheduleChecks(testing, validImageEomFile, mockEnvironments)
 	defer capturingMetrics.RUnlock()
 
 	require.NotNil(testing, capturingMetrics)
@@ -100,7 +108,37 @@ func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 	require.Equal(testing, readURL+"/whatever/", capturingMetrics.publishMetrics[0].endpoint.String())
 }
 
-func runScheduleChecks(testing *testing.T, mockEnvironments map[string]Environment) *publishHistory {
+func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testing.T) {
+	appConfig = &AppConfig{
+		MetricConf: []MetricConfig{
+			{
+				Endpoint:    "/internalcomponents/",
+				Granularity: 1,
+				Alias:       "internal-components",
+				ContentTypes: []string{
+					"InternalComponents",
+				},
+			},
+		},
+		Threshold: 1,
+	}
+
+	var mockEnvironments = make(map[string]Environment)
+	readURL := "http://env1.example.org"
+	s3URL := "http://s1.example.org"
+	mockEnvironments["env1"] = Environment{"env1", readURL, s3URL, "user1", "pass1"}
+
+	mockArticleEomFile.Type = "InternalComponents"
+
+	capturingMetrics := runScheduleChecks(testing, mockArticleEomFile, mockEnvironments)
+	defer capturingMetrics.RUnlock()
+
+	require.NotNil(testing, capturingMetrics)
+	require.Equal(testing, 1, len(capturingMetrics.publishMetrics))
+	require.Equal(testing, readURL+"/internalcomponents/", capturingMetrics.publishMetrics[0].endpoint.String())
+}
+
+func runScheduleChecks(testing *testing.T, content content.Content, mockEnvironments map[string]Environment) *publishHistory {
 	capturingMetrics := &publishHistory{sync.RWMutex{}, make([]PublishMetric, 0)}
 	tid := "tid_1234"
 	publishDate, err := time.Parse(dateLayout, "2016-01-08T14:22:06.271Z")
@@ -114,7 +152,7 @@ func runScheduleChecks(testing *testing.T, mockEnvironments map[string]Environme
 	//redefine metricSink to avoid hang
 	metricSink = make(chan PublishMetric, 2)
 
-	scheduleChecks(validImageEomFile, publishDate, tid, validImageEomFile.IsMarkedDeleted(), capturingMetrics, mockEnvironments)
+	scheduleChecks(content, publishDate, tid, true, capturingMetrics, mockEnvironments)
 	for {
 		capturingMetrics.RLock()
 		if len(capturingMetrics.publishMetrics) == len(mockEnvironments) {

@@ -43,13 +43,15 @@ func TestInitTypeForNonContentPlaceholders(t *testing.T) {
 }
 
 func TestIsEomfileValid_EmptyValidationURL_Invalid(t *testing.T) {
-	if eomfileWithInvalidContentType.IsValid("", validUUID, "", "") {
+	valRes := eomfileWithInvalidContentType.Validate("", validUUID, "", "")
+	if valRes.IsValid {
 		t.Error("Eomfile with empty validation URL marked as valid")
 	}
 }
 
 func TestIsEomfileValid_InvalidUUID_Invalid(t *testing.T) {
-	if eomfileWithInvalidUUID.IsValid(testExtValEndpoint, "", "", "") {
+	valRes := eomfileWithInvalidUUID.Validate(testExtValEndpoint, "", "", "")
+	if valRes.IsValid {
 		t.Error("Eomfile with invalid UUID marked as valid")
 	}
 }
@@ -62,7 +64,8 @@ func TestIsEomfileValid_ExternalValidationTrue_Valid(t *testing.T) {
 		//return OK
 	}))
 	defer ts.Close()
-	if !validCompoundStory.IsValid(ts.URL+"/content-transform", "tid_"+txId, "", "") {
+	valRes := validCompoundStory.Validate(ts.URL+"/content-transform", "tid_"+txId, "", "")
+	if !valRes.IsValid {
 		t.Error("Valid CompoundStory marked as invalid!")
 	}
 }
@@ -75,7 +78,8 @@ func TestIsEomfileValid_ExternalValidationFalseStatusCode418_Invalid(t *testing.
 		w.WriteHeader(ImATeapot)
 	}))
 	defer ts.Close()
-	if validCompoundStory.IsValid(ts.URL+"/content-transform", "tid_"+txId, "", "") {
+	valRes := validCompoundStory.Validate(ts.URL+"/content-transform", "tid_"+txId, "", "")
+	if valRes.IsValid {
 		t.Error("Valid CompoundStory regarded as invalid by external validation marked as valid!")
 	}
 }
@@ -86,7 +90,8 @@ func TestIsEomfileValid_ExternalValidationFalseStatusCode422_Invalid(t *testing.
 		w.WriteHeader(UnprocessableEntity)
 	}))
 	defer ts.Close()
-	if validCompoundStory.IsValid(ts.URL+"/map", "", "", "") {
+	valRes := validCompoundStory.Validate(ts.URL+"/map", "", "", "")
+	if valRes.IsValid {
 		t.Error("Valid CompoundStory regarded as invalid by external validation marked as valid!")
 	}
 }
@@ -125,37 +130,79 @@ var validCompoundStory_ContentPlaceholder = EomFile{
 }
 
 func TestIsMarkedDeleted_CompoundStory_True(t *testing.T) {
-	if !compoundStoryMarkedDeletedTrue.IsMarkedDeleted() {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/map", r.RequestURI, "Invalid external validation URL")
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer ts.Close()
+	valRes := compoundStoryMarkedDeletedTrue.Validate(ts.URL+"/map", "", "", "")
+
+	if !valRes.IsMarkedDeleted {
 		t.Error("Expected True, the compound story IS marked deleted")
 	}
 }
 
 func TestIsMarkedDeleted_CompoundStory_False(t *testing.T) {
-	if compoundStoryMarkedDeletedFalse.IsMarkedDeleted() {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/map", r.RequestURI, "Invalid external validation URL")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+	valRes := compoundStoryMarkedDeletedFalse.Validate(ts.URL+"/map", "", "", "")
+
+	if valRes.IsMarkedDeleted {
 		t.Error("Expected False, the compound story IS NOT marked deleted")
 	}
 }
 
 func TestIsMarkedDeleted_Story_True(t *testing.T) {
-	if !storyMarkedDeletedTrue.IsMarkedDeleted() {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/map", r.RequestURI, "Invalid external validation URL")
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer ts.Close()
+	valRes := storyMarkedDeletedTrue.Validate(ts.URL+"/map", "", "", "")
+
+	if !valRes.IsMarkedDeleted {
 		t.Error("Expected True, the story IS marked deleted")
 	}
 }
 
 func TestIsMarkedDeleted_Story_False(t *testing.T) {
-	if storyMarkedDeletedFalse.IsMarkedDeleted() {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/map", r.RequestURI, "Invalid external validation URL")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+	valRes := storyMarkedDeletedFalse.Validate(ts.URL+"/map", "", "", "")
+
+	if valRes.IsMarkedDeleted {
 		t.Error("Expected False, the story IS NOT marked deleted")
 	}
 }
 
 func TestIsMarkedDeleted_Image(t *testing.T) {
-	if imageEomFile.IsMarkedDeleted() {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/map", r.RequestURI, "Invalid external validation URL")
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer ts.Close()
+	valRes := imageEomFile.Validate(ts.URL+"/map", "", "", "")
+
+	if valRes.IsMarkedDeleted {
 		t.Error("Expected False, the image IS NOT marked deleted")
 	}
 }
 
 func TestIsMarkedDeleted_WebContainer(t *testing.T) {
-	if webContainerEomFile.IsMarkedDeleted() {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/map", r.RequestURI, "Invalid external validation URL")
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer ts.Close()
+	valRes := webContainerEomFile.Validate(ts.URL+"/map", "", "", "")
+
+	if valRes.IsMarkedDeleted {
 		t.Error("Expected False, the webContainer IS NOT marked deleted")
 	}
 }

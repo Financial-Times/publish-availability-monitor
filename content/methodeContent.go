@@ -6,16 +6,11 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strings"
 
 	"encoding/xml"
 
 	"github.com/Financial-Times/publish-availability-monitor/checks"
-	"launchpad.net/xmlpath"
 )
-
-const sourceXPath = "//ObjectMetadata/EditorialNotes/Sources/Source/SourceCode"
-const markDeletedFlagXPath = "//ObjectMetadata/OutputChannels/DIFTcom/DIFTcomMarkDeleted"
 
 // EomFile models Methode content
 type EomFile struct {
@@ -49,27 +44,29 @@ func (eomfile EomFile) initType() EomFile {
 	return eomfile
 }
 
-func (eomfile EomFile) IsValid(externalValidationEndpoint string, txID string, username string, password string) bool {
+func (eomfile EomFile) Validate(externalValidationEndpoint string, txID string, username string, password string) ValidationResponse {
 	contentUUID := eomfile.UUID
 	if !isUUIDValid(contentUUID) {
 		warnLogger.Printf("Eomfile invalid: invalid UUID: [%s]. transaction_id=[%s]", contentUUID, txID)
-		return false
+		return ValidationResponse{IsValid:false}
 	}
 
-	return isExternalValidationSuccessful(eomfile, externalValidationEndpoint, txID, username, password)
+	isValid, statusCode := isExternalValidationSuccessful(eomfile, externalValidationEndpoint, txID, username, password)
+
+	return ValidationResponse{IsValid:isValid, IsMarkedDeleted: eomfile.isMarkedDeleted(statusCode)}
 }
 
-func (eomfile EomFile) IsMarkedDeleted() bool {
+func (eomfile EomFile) isMarkedDeleted(validationStatusCode int) bool {
 	if eomfile.Type == "Image" || eomfile.Type == "EOM::WebContainer" {
 		return false
 	}
-	markDeletedFlag, ok := GetXPathValue(eomfile.Attributes, eomfile, markDeletedFlagXPath)
-	if !ok {
-		warnLogger.Printf("Eomfile with uuid=[%s]: Cannot match node in XML using xpath [%v]", eomfile.UUID, markDeletedFlagXPath)
-		return false
+
+	if validationStatusCode == http.StatusNotFound {
+		infoLogger.Printf("Eomfile with uuid=[%s] is marked as deleted!", eomfile.UUID)
+		return true
 	}
-	infoLogger.Printf("Eomfile with uuid=[%s]: MarkAsDeletedFlag: [%v]", eomfile.UUID, markDeletedFlag)
-	return markDeletedFlag == "True"
+
+	return false
 }
 
 func (eomfile EomFile) GetType() string {
@@ -80,27 +77,15 @@ func (eomfile EomFile) GetUUID() string {
 	return eomfile.UUID
 }
 
-func GetXPathValue(xml string, eomfile EomFile, lookupPath string) (string, bool) {
-	path := xmlpath.MustCompile(lookupPath)
-	root, err := xmlpath.Parse(strings.NewReader(xml))
-	if err != nil {
-		warnLogger.Printf("Cannot parse XML of eomfile with uuid=[%s] using xpath [%v], error: [%v]", eomfile.UUID, lookupPath, err.Error())
-		return "", false
-	}
-	xpathValue, ok := path.String(root)
-	return xpathValue, ok
-
-}
-
-func isExternalValidationSuccessful(eomfile EomFile, validationURL string, txID, username string, password string) bool {
+func isExternalValidationSuccessful(eomfile EomFile, validationURL string, txID, username string, password string) (bool, int) {
 	if validationURL == "" {
 		warnLogger.Printf("External validation for content uuid=[%s] transaction_id=[%s]. Validation endpoint URL is missing for content type=[%s]", eomfile.UUID, txID, eomfile.Type)
-		return false
+		return false, 0
 	}
 	marshalled, err := json.Marshal(eomfile)
 	if err != nil {
 		warnLogger.Printf("External validation for content uuid=[%s] transaction_id=[%s] error: [%v]. Skipping external validation.", eomfile.UUID, txID, err)
-		return true
+		return true, 0
 	}
 
 	resp, err := httpCaller.DoCallWithEntity(
@@ -111,7 +96,7 @@ func isExternalValidationSuccessful(eomfile EomFile, validationURL string, txID,
 
 	if err != nil {
 		warnLogger.Printf("External validation for content uuid=[%s] transaction_id=[%s] error: [%v]. Skipping external validation.", eomfile.UUID, txID, err)
-		return true
+		return true, 0
 	}
 	defer cleanupResp(resp)
 
@@ -121,18 +106,17 @@ func isExternalValidationSuccessful(eomfile EomFile, validationURL string, txID,
 	if err != nil {
 		warnLogger.Printf("External validation for content uuid=[%s] transaction_id=[%s] error: [%v]", eomfile.UUID, txID, err)
 	}
-	if resp.StatusCode != 200 {
+
+	if resp.StatusCode != http.StatusOK {
 		infoLogger.Printf("External validation for content uuid=[%s] transaction_id=[%s] error: [%v]", eomfile.UUID, txID, string(bs))
 	}
-	if resp.StatusCode == 418 {
-		return false
-	}
-	//invalid  contentplaceholder (link file) will not be published so do not monitor
-	if resp.StatusCode == 422 {
-		return false
+
+	// 422 invalid  contentplaceholder (link file) will not be published so do not monitor
+	if resp.StatusCode == http.StatusUnprocessableEntity || resp.StatusCode == http.StatusTeapot {
+		return false, resp.StatusCode
 	}
 
-	return true
+	return true, resp.StatusCode
 }
 
 func cleanupResp(resp *http.Response) {

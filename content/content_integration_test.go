@@ -61,7 +61,7 @@ func TestThat_ContentPayloadFromKafkaMsg_MatchesTheContentPayloadSentToValidatio
 			return
 		}
 		//don't care about the actual result
-		content.IsValid(ts.URL, "tid_foobar", "", "")
+		content.Validate(ts.URL, "tid_foobar", "", "")
 	}
 }
 

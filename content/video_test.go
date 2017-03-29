@@ -13,7 +13,8 @@ var videoValid = Video{
 }
 
 func TestIsVideoValid_Valid(t *testing.T) {
-	if !videoValid.IsValid("", "", "", "") {
+	valRes := videoValid.Validate("", "", "", "")
+	if !valRes.IsValid {
 		t.Error("Video should be valid.")
 	}
 }
@@ -26,7 +27,8 @@ var videoNoId = Video{
 }
 
 func TestIsVideoValid_NoId(t *testing.T) {
-	if videoNoId.IsValid("", "", "", "") {
+	valRes := videoNoId.Validate("", "", "", "")
+	if valRes.IsValid {
 		t.Error("Video should be invalid as it has no Id.")
 	}
 }
@@ -39,7 +41,8 @@ var videoNoUUID = Video{
 }
 
 func TestIsVideoValid_NoUUID(t *testing.T) {
-	if videoNoUUID.IsValid("", "", "", "") {
+	valRes := videoNoUUID.Validate("", "", "", "")
+	if valRes.IsValid {
 		t.Error("Video should be invalid as it has no uuid.")
 	}
 }
@@ -51,7 +54,8 @@ var videoNoDates = Video{
 }
 
 func TestIsDeleted_NoDates(t *testing.T) {
-	if !videoNoDates.IsMarkedDeleted() {
+	valRes := videoNoDates.Validate("", "", "", "")
+	if !valRes.IsMarkedDeleted {
 		t.Error("Video should be evaluated as deleted as it has no dates in it.")
 	}
 }
@@ -64,7 +68,8 @@ var videoOneDateOnly = Video{
 }
 
 func TestIsDeleted_OneDateOnly(t *testing.T) {
-	if videoOneDateOnly.IsMarkedDeleted() {
+	valRes := videoOneDateOnly.Validate("", "", "", "")
+	if valRes.IsMarkedDeleted {
 		t.Error("Video should be evaluated as published as it has one date in it.")
 	}
 }

@@ -77,6 +77,15 @@
       "contentTypes": [
          "EOM::WebContainer"
       ]
+   },
+   {
+      "endpoint": "INTERNAL_COMPONENTS_URL",
+      "granularity": 40,
+      "alias": "internal-components",
+      "health": "/__document-store-api/__health",
+      "contentTypes": [
+         "InternalComponents"
+      ]
    }
 ],
 "splunk-config": {
@@ -90,6 +99,7 @@
    "EOM::CompoundStory_ContentPlaceholder": "METHODE_CONTENT_PLACEHOLDER_MAPPER_URL",
    "EOM::Story": "METHODE_ARTICLE_VALIDATION_URL",
    "EOM::WebContainer": "METHODE_LIST_VALIDATION_URL",
-   "Image": "METHODE_IMAGE_MODEL_MAPPER_URL"
+   "Image": "METHODE_IMAGE_MODEL_MAPPER_URL",
+   "InternalComponents": "METHODE_ARTICLE_INTERNAL_COMPONENTS_MAPPER_URL"
 }
 }
