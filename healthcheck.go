@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -24,6 +25,7 @@ type Healthcheck struct {
 type readEnvironmentHealthcheck struct {
 	env    Environment
 	client http.Client
+	uuid   string
 }
 
 const pam_run_book_url = "https://sites.google.com/a/ft.com/ft-technology-service-transition/home/run-book-library/publish-availability-monitor"
@@ -56,6 +58,15 @@ func (h *Healthcheck) checkHealth(writer http.ResponseWriter, req *http.Request)
 		checks = append(checks, noReadEnvironments)
 	} else {
 		for _, hc := range readEnvironmentChecks {
+			checks = append(checks, hc)
+		}
+	}
+
+	readEnvironmentCredentialChecks := h.readEnvironmentsCredentials()
+	if len(readEnvironmentCredentialChecks) == 0 {
+		checks = append(checks, noReadEnvironments)
+	} else {
+		for _, hc := range readEnvironmentCredentialChecks {
 			checks = append(checks, hc)
 		}
 	}
@@ -281,7 +292,25 @@ func (h *Healthcheck) readEnvironmentsReachable() []fthealth.Check {
 			PanicGuide:       pam_run_book_url,
 			Severity:         1,
 			TechnicalSummary: "Read services are not reachable/healthy",
-			Checker:          (&readEnvironmentHealthcheck{env, h.client}).checkReadEnvironmentReachable,
+			Checker:          (&readEnvironmentHealthcheck{env, h.client, h.config.CredentialValidationUuid}).checkReadEnvironmentReachable,
+		}
+		i++
+	}
+	return hc
+}
+
+func (h *Healthcheck) readEnvironmentsCredentials() []fthealth.Check {
+	hc := make([]fthealth.Check, len(environments))
+
+	i := 0
+	for _, env := range environments {
+		hc[i] = fthealth.Check{
+			BusinessImpact:   "Publish metrics might not be correct. False positive failures might be recorded. This will impact the SLA measurement.",
+			Name:             env.Name + " readEndpointsCredentials",
+			PanicGuide:       pam_run_book_url,
+			Severity:         1,
+			TechnicalSummary: "Read services are not reachable due to issue with auth credentials",
+			Checker:          (&readEnvironmentHealthcheck{env, h.client, h.config.CredentialValidationUuid}).checkReadEnvironmentCredentials,
 		}
 		i++
 	}
@@ -333,6 +362,38 @@ func (h *readEnvironmentHealthcheck) checkReadEnvironmentReachable() (string, er
 		if err != nil {
 			return "", err
 		}
+	}
+	return "", nil
+}
+
+func (h *readEnvironmentHealthcheck) checkReadEnvironmentCredentials() (string, error) {
+
+	var endpointURL *url.URL
+	for _, metric := range appConfig.MetricConf {
+		var err error
+		if metric.Alias == "content" {
+			endpointURL, err = url.Parse(h.env.ReadUrl + metric.Endpoint)
+			if err != nil {
+				errorLogger.Printf("Read env credentials healthcheck cannot parse url [%v], Err: [%v]", metric.Endpoint, err.Error())
+			}
+			break
+		}
+	}
+	req, err := http.NewRequest("GET", endpointURL.String()+h.uuid, nil)
+	if h.env.Username != "" && h.env.Password != "" {
+		req.SetBasicAuth(h.env.Username, h.env.Password)
+	}
+	req.Header.Add("User-Agent", "UPP Publish Availability Monitor")
+
+	resp, err := h.client.Do(req)
+
+	if err != nil {
+		errorLogger.Printf("Credential check read error : %v", err.Error())
+		return "", err
+	}
+	if resp.StatusCode != 200 {
+		errorLogger.Printf("Could not read with provided credentials")
+		return "", errors.New("Authorization error for provided read credentials, request returns: " + strconv.Itoa(resp.StatusCode))
 	}
 	return "", nil
 }

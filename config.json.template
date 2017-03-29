@@ -1,5 +1,6 @@
 {
    "threshold": 120,
+   "credentialValidationUuid": "CREDENTIAL_VALIDATION_UUID",
    "queueConfig": {
       "address": ["QUEUE_ADDR"],
       "group": "PubMonitor",
@@ -79,7 +80,7 @@
       ]
    }
 ],
-"splunk-config": {
+"splunkConfig": {
    "logPrefix": "[splunkMetrics] "
 },
 "healthConfig": {
@@ -92,4 +93,5 @@
    "EOM::WebContainer": "METHODE_LIST_VALIDATION_URL",
    "Image": "METHODE_IMAGE_MODEL_MAPPER_URL"
 }
+
 }
