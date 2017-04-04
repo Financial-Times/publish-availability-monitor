@@ -132,6 +132,26 @@ func TestUnmarshalContent_ContentIsMethodeArticle_LinkedObjectsFieldIsEmpty(t *t
 	}
 }
 
+func TestUnmarshalContent_MethodeBinaryContentSet(t *testing.T) {
+	content, err := UnmarshalContent(validMethodeMessage)
+	assert.NoError(t, err)
+
+	eomFile, ok := content.(EomFile)
+	assert.True(t, ok)
+
+	assert.Equal(t, []byte(validMethodeMessage.Body), eomFile.BinaryContent)
+}
+
+func TestUnmarshalContent_VideoBinaryContentSet(t *testing.T) {
+	content, err := UnmarshalContent(validVideoMsg)
+	assert.NoError(t, err)
+
+	video, ok := content.(Video)
+	assert.True(t, ok)
+
+	assert.Equal(t, []byte(validVideoMsg.Body), video.BinaryContent)
+}
+
 func TestIsUUIDValid_UUIDValid(t *testing.T) {
 	if !isUUIDValid(validUUID) {
 		t.Error("Valid UUID marked as invalid!")

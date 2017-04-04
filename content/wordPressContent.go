@@ -29,6 +29,10 @@ type Post struct {
 	Url  string `json:"url"`
 }
 
+func (wordPressMessage WordPressMessage) Initialize(binaryContent []byte) Content {
+	return wordPressMessage
+}
+
 func (wordPressMessage WordPressMessage) Validate(extValEndpoint string, txId string, username string, password string) ValidationResponse {
 	if wordPressMessage.Status == "error" && wordPressMessage.Error != notFoundError {
 		//it's an error which we do not understand
