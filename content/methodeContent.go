@@ -48,12 +48,12 @@ func (eomfile EomFile) Validate(externalValidationEndpoint string, txID string, 
 	contentUUID := eomfile.UUID
 	if !isUUIDValid(contentUUID) {
 		warnLogger.Printf("Eomfile invalid: invalid UUID: [%s]. transaction_id=[%s]", contentUUID, txID)
-		return ValidationResponse{IsValid:false}
+		return ValidationResponse{IsValid: false}
 	}
 
 	isValid, statusCode := isExternalValidationSuccessful(eomfile, externalValidationEndpoint, txID, username, password)
 
-	return ValidationResponse{IsValid:isValid, IsMarkedDeleted: eomfile.isMarkedDeleted(statusCode)}
+	return ValidationResponse{IsValid: isValid, IsMarkedDeleted: eomfile.isMarkedDeleted(statusCode)}
 }
 
 func (eomfile EomFile) isMarkedDeleted(validationStatusCode int) bool {
@@ -84,7 +84,7 @@ func isExternalValidationSuccessful(eomfile EomFile, validationURL string, txID,
 	}
 	marshalled, err := json.Marshal(eomfile)
 	if err != nil {
-		warnLogger.Printf("External validation for content uuid=[%s] transaction_id=[%s] error: [%v]. Skipping external validation.", eomfile.UUID, txID, err)
+		warnLogger.Printf("External validation for content uuid=[%s] transaction_id=[%s] validationURL=[%s], marshalling EOM File error: [%v]. Skipping external validation.", eomfile.UUID, txID, validationURL, err)
 		return true, 0
 	}
 
@@ -95,20 +95,20 @@ func isExternalValidationSuccessful(eomfile EomFile, validationURL string, txID,
 		"application/json", bytes.NewReader(marshalled))
 
 	if err != nil {
-		warnLogger.Printf("External validation for content uuid=[%s] transaction_id=[%s] error: [%v]. Skipping external validation.", eomfile.UUID, txID, err)
+		warnLogger.Printf("External validation for content uuid=[%s] transaction_id=[%s] validationURL=[%s], create request error: [%v]. Skipping external validation.", eomfile.UUID, txID, validationURL, err)
 		return true, 0
 	}
 	defer cleanupResp(resp)
 
-	infoLogger.Printf("External validation for content uuid=[%s] transaction_id=[%s] received statusCode [%d]", eomfile.UUID, txID, resp.StatusCode)
+	infoLogger.Printf("External validation for content uuid=[%s] transaction_id=[%s] validationURL=[%s], received statusCode [%d]", eomfile.UUID, txID, validationURL, resp.StatusCode)
 
 	bs, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		warnLogger.Printf("External validation for content uuid=[%s] transaction_id=[%s] error: [%v]", eomfile.UUID, txID, err)
+		warnLogger.Printf("External validation for content uuid=[%s] transaction_id=[%s] validationURL=[%s], reading response body error: [%v]", eomfile.UUID, txID, validationURL, err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		infoLogger.Printf("External validation for content uuid=[%s] transaction_id=[%s] error: [%v]", eomfile.UUID, txID, string(bs))
+		infoLogger.Printf("External validation for content uuid=[%s] transaction_id=[%s] validationURL=[%s], received statusCode [%d], received error: [%v]", eomfile.UUID, txID, validationURL, resp.StatusCode, string(bs))
 	}
 
 	// 422 invalid  contentplaceholder (link file) will not be published so do not monitor
