@@ -34,14 +34,14 @@ var wordpressContentWithInvalidBlogDomain = WordPressMessage{
 
 func TestIsValidBlogDomain_True(t *testing.T) {
 	valRes := wordpressContentWithValidBlogDomain.Validate("", "", "", "")
-	if !valRes.IsValid{
+	if !valRes.IsValid {
 		t.Error("Expected True")
 	}
 }
 
 func TestIsValidBlogDomain_False(t *testing.T) {
 	valRes := wordpressContentWithInvalidBlogDomain.Validate("", "", "", "")
-	if valRes.IsValid{
+	if valRes.IsValid {
 		t.Error("Expected False")
 	}
 }

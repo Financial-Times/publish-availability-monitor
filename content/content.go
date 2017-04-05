@@ -19,7 +19,7 @@ type Content interface {
 }
 
 type ValidationResponse struct {
-	IsValid bool
+	IsValid         bool
 	IsMarkedDeleted bool
 }
 

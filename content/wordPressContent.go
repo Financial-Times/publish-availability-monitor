@@ -32,29 +32,29 @@ type Post struct {
 func (wordPressMessage WordPressMessage) Validate(extValEndpoint string, txId string, username string, password string) ValidationResponse {
 	if wordPressMessage.Status == "error" && wordPressMessage.Error != notFoundError {
 		//it's an error which we do not understand
-		return ValidationResponse{IsValid:false, IsMarkedDeleted: wordPressMessage.isMarkedDeleted()}
+		return ValidationResponse{IsValid: false, IsMarkedDeleted: wordPressMessage.isMarkedDeleted()}
 	}
 
 	contentUUID := wordPressMessage.Post.UUID
 	if !isUUIDValid(contentUUID) {
 		warnLogger.Printf("WordPress message invalid: invalid UUID: [%s]", contentUUID)
-		return ValidationResponse{IsValid:false, IsMarkedDeleted: wordPressMessage.isMarkedDeleted()}
+		return ValidationResponse{IsValid: false, IsMarkedDeleted: wordPressMessage.isMarkedDeleted()}
 	}
 
 	postURL := wordPressMessage.Post.Url
 	if !isValidBrand(postURL) {
 		warnLogger.Printf("WordPress message invalid: failed to resolve brand for uri [%s].", postURL)
-		return ValidationResponse{IsValid:false, IsMarkedDeleted: wordPressMessage.isMarkedDeleted()}
+		return ValidationResponse{IsValid: false, IsMarkedDeleted: wordPressMessage.isMarkedDeleted()}
 	}
 
 	contentType := wordPressMessage.Post.Type
 	for _, validType := range validWordPressTypes {
 		if contentType == validType {
-			return ValidationResponse{IsValid:true, IsMarkedDeleted: wordPressMessage.isMarkedDeleted()}
+			return ValidationResponse{IsValid: true, IsMarkedDeleted: wordPressMessage.isMarkedDeleted()}
 		}
 	}
 	warnLogger.Printf("WordPress message invalid: unexpected content type: [%s]", contentType)
-	return ValidationResponse{IsValid:false, IsMarkedDeleted: wordPressMessage.isMarkedDeleted()}
+	return ValidationResponse{IsValid: false, IsMarkedDeleted: wordPressMessage.isMarkedDeleted()}
 }
 
 func (wordPressMessage WordPressMessage) isMarkedDeleted() bool {
