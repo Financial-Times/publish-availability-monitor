@@ -184,7 +184,7 @@ func (s S3Check) isCurrentOperationFinished(pc *PublishCheck) (operationFinished
 	defer cleanupResp(resp)
 
 	if resp.StatusCode != 200 {
-		warnLogger.Printf("Checking %s. Error calling URL: [%v] : Response status: [%v]", loggingContextForCheck(pm.config.Alias, pm.UUID, pm.platform, pm.tid), url, resp.Status)
+		infoLogger.Printf("Checking %s. Calling URL: [%v] : Response status: [%v]", loggingContextForCheck(pm.config.Alias, pm.UUID, pm.platform, pm.tid), url, resp.Status)
 		return false, false
 	}
 
