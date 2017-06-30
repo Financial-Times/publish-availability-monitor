@@ -5,7 +5,6 @@ service:
 replicaCount: 1
 image:
   repository: coco/publish-availability-monitor
-  version: "{{ .Chart.Version }}"
   pullPolicy: Always
 envs:
   kafka_topic: ""
