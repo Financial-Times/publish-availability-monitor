@@ -18,7 +18,7 @@ spec:
         visualize: "true"
     spec:
       containers:
-      - name: {{ .Chart.Name }}
+      - name: {{ .Values.service.name }}
         image: "{{ .Values.image.repository }}:{{ .Chart.Version }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         resources:
