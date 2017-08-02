@@ -57,7 +57,7 @@
       "endpoint": "NOTIFICATIONS_PUSH_URL",
       "granularity": 40,
       "alias": "notifications-push",
-      "apiKey": "API_KEY",
+      "apiKey": "NOTIFICATIONS_PUSH_API_KEY",
       "health": "/__notifications-push/__health",
       "contentTypes": [
         "EOM::CompoundStory",
@@ -77,7 +77,7 @@
       "endpoint": "LISTS_NOTIFICATIONS_PUSH_URL",
       "granularity": 40,
       "alias": "list-notifications-push",
-      "apiKey": "API_KEY",
+      "apiKey": "LIST_NOTIFICATIONS_PUSH_API_KEY",
       "health": "/__list-notifications-push/__health",
       "contentTypes": [
         "EOM::WebContainer"
