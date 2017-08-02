@@ -77,7 +77,7 @@
       "endpoint": "LISTS_NOTIFICATIONS_PUSH_URL",
       "granularity": 40,
       "alias": "list-notifications-push",
-      "apiKey": "LIST_NOTIFICATIONS_PUSH_API_KEY",
+      "apiKey": "LISTS_NOTIFICATIONS_PUSH_API_KEY",
       "health": "/__list-notifications-push/__health",
       "contentTypes": [
         "EOM::WebContainer"
