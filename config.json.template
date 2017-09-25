@@ -61,6 +61,7 @@
       "health": "/__notifications-push/__health",
       "contentTypes": [
         "EOM::CompoundStory",
+        "EOM::CompoundStory_ContentPlaceholder",
         "post"
       ]
     },
