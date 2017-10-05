@@ -96,7 +96,7 @@ spec:
       volumes:
       - name: pam-secrets
         secret:
-          secretName: pam-credentials
+          secretName: publish-availability-monitor-secrets
           items:
           - key: read-credentials
             path: {{ .Values.volumes.read_env_credentials_file_name }}
