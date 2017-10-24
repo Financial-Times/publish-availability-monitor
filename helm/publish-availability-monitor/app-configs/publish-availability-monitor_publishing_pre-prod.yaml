@@ -1,0 +1,24 @@
+# Values used for the deployed application.
+replicaCount: 1
+service:
+  name: publish-availability-monitor
+envs:
+  kafka_topic: "PreNativeCmsPublicationEvents"
+  content_url: "/__document-store-api/content/"
+  internal_components_url: "/__document-store-api/internalcomponents/"
+  lists_url: "/__document-store-api/lists/"
+  notifications_url: "/__notifications-rw/content/notifications?type=all"
+  notifications_push_url: "/content/notifications-push?monitor=true"
+  lists_notifications_url: "/__list-notifications-rw/lists/notifications"
+  lists_notifications_push_url: "/lists/notifications-push?monitor=true"
+  validation_endpoints:
+    methode_article_mapper: "__methode-article-mapper/map"
+    methode_content_placeholder_mapper: "__methode-content-placeholder-mapper/map"
+    methode_image_model_mapper: "__methode-image-model-mapper/map"
+    methode_list_mapper: "__methode-list-mapper/map"
+    methode_article_internal_components_mapper: "__methode-article-internal-components-mapper/map"
+    video_mapper: "__video-mapper/map"
+    wordpress_mapper: "__wordpress-article-mapper/map"
+    base_url: "https://k8s-delivery-upp-eu.ft.com/"
+environments:
+  environments: '[{"name":"k8s","read-url": "https://k8s-delivery-upp-eu.ft.com","s3-url": "http://com.ft.imagepublish.k8s.test.s3.amazonaws.com"}]'
