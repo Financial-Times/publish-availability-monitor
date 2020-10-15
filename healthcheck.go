@@ -10,10 +10,11 @@ import (
 	"time"
 
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	"github.com/Financial-Times/publish-availability-monitor/feeds"
+	logger "github.com/Financial-Times/go-logger/v2"
+	consumer "github.com/Financial-Times/message-queue-gonsumer"
+	"github.com/Financial-Times/publish-availability-monitor/v2/feeds"
 	"github.com/Financial-Times/service-status-go/gtg"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 const requestTimeout = 4500
@@ -28,7 +29,8 @@ type Healthcheck struct {
 
 func newHealthcheck(config *AppConfig, metricContainer *publishHistory) *Healthcheck {
 	httpClient := &http.Client{Timeout: requestTimeout * time.Millisecond}
-	c := consumer.NewConsumer(config.QueueConf, func(m consumer.Message) {}, httpClient)
+	l := logger.NewUnstructuredLogger()
+	c := consumer.NewConsumer(config.QueueConf, func(m consumer.Message) {}, httpClient, l)
 	return &Healthcheck{
 		client:          httpClient,
 		config:          config,

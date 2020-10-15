@@ -15,13 +15,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	"github.com/Financial-Times/publish-availability-monitor/checks"
-	"github.com/Financial-Times/publish-availability-monitor/feeds"
-	"github.com/Financial-Times/publish-availability-monitor/logformat"
+	logger "github.com/Financial-Times/go-logger/v2"
+	consumer "github.com/Financial-Times/message-queue-gonsumer"
+	"github.com/Financial-Times/publish-availability-monitor/v2/checks"
+	"github.com/Financial-Times/publish-availability-monitor/v2/feeds"
+	"github.com/Financial-Times/publish-availability-monitor/v2/logformat"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
-	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 )
 
 // Interval is a simple representation of an interval of time, with a lower and
@@ -205,8 +206,9 @@ func readMessages(brandMappings map[string]string) {
 		break
 	}
 
+	l := logger.NewUnstructuredLogger()
 	h := NewKafkaMessageHandler(typeRes)
-	c := consumer.NewConsumer(appConfig.QueueConf, h.HandleMessage, &http.Client{})
+	c := consumer.NewConsumer(appConfig.QueueConf, h.HandleMessage, &http.Client{}, l)
 
 	var wg sync.WaitGroup
 	wg.Add(1)

@@ -4,9 +4,9 @@ import (
 	"encoding/xml"
 	"fmt"
 
-	"github.com/Financial-Times/publish-availability-monitor/checks"
-	"github.com/Financial-Times/publish-availability-monitor/content"
-	log "github.com/Sirupsen/logrus"
+	"github.com/Financial-Times/publish-availability-monitor/v2/checks"
+	"github.com/Financial-Times/publish-availability-monitor/v2/content"
+	log "github.com/sirupsen/logrus"
 )
 
 var blogCategories = []string{"blog", "webchat-live-blogs", "webchat-live-qa", "webchat-markets-live", "fastft"}

@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/Financial-Times/publish-availability-monitor/content"
-	log "github.com/Sirupsen/logrus"
+	"github.com/Financial-Times/publish-availability-monitor/v2/content"
+	log "github.com/sirupsen/logrus"
 )
 
 var (

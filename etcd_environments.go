@@ -10,9 +10,9 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/net/proxy"
 
-	"github.com/Financial-Times/publish-availability-monitor/feeds"
-	log "github.com/Sirupsen/logrus"
+	"github.com/Financial-Times/publish-availability-monitor/v2/feeds"
 	etcd "github.com/coreos/etcd/client"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -73,7 +73,7 @@ func DiscoverEnvironmentsAndValidators(wg *sync.WaitGroup, etcdPeers *string, et
 	validatorKey = etcdValidatorCredKey
 
 	transport := &http.Transport{
-		Dial: proxy.Direct.Dial,
+		Dial:                  proxy.Direct.Dial,
 		ResponseHeaderTimeout: 10 * time.Second,
 		MaxIdleConnsPerHost:   100,
 	}

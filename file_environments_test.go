@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Financial-Times/publish-availability-monitor/feeds"
+	"github.com/Financial-Times/publish-availability-monitor/v2/feeds"
 	"github.com/stretchr/testify/assert"
 )
 

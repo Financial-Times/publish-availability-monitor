@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Financial-Times/publish-availability-monitor/checks"
-	"github.com/Financial-Times/publish-availability-monitor/feeds"
-	log "github.com/Sirupsen/logrus"
+	"github.com/Financial-Times/publish-availability-monitor/v2/checks"
+	"github.com/Financial-Times/publish-availability-monitor/v2/feeds"
+	log "github.com/sirupsen/logrus"
 )
 
 // PublishCheck performs an availability  check on a piece of content, at a
@@ -128,10 +128,10 @@ func init() {
 
 	//key is the endpoint alias from the config
 	endpointSpecificChecks = map[string]EndpointSpecificCheck{
-		"content":               ContentCheck{hC},
-		"content-neo4j":         ContentNeo4jCheck{hC},
-		"complementary-content": ContentCheck{hC},
-		"internal-components":   ContentCheck{hC},
+		"content":                 ContentCheck{hC},
+		"content-neo4j":           ContentNeo4jCheck{hC},
+		"complementary-content":   ContentCheck{hC},
+		"internal-components":     ContentCheck{hC},
 		"S3":                      S3Check{hC},
 		"enrichedContent":         ContentCheck{hC},
 		"lists":                   ContentCheck{hC},

@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func NewNotificationsFeed(name string, baseUrl url.URL, expiry int, interval int, username string, password string, apiKey string) Feed {

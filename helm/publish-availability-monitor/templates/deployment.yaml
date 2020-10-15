@@ -41,12 +41,12 @@ spec:
           valueFrom:
             configMapKeyRef:
               name: global-config
-              key: kafka.proxy.url
+              key: kafka-msk.proxy.url
         - name: QUEUE_ADDR
           valueFrom:
             configMapKeyRef:
               name: global-config
-              key: kafka.proxy.url.with.protocol
+              key: kafka-msk.proxy.url.with.protocol
         - name: CONTENT_URL
           value: "{{ .Values.envs.content_url }}"
         - name: CONTENT_NEO4J_URL

@@ -4,9 +4,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Financial-Times/publish-availability-monitor/content"
-	"github.com/Financial-Times/uuid-utils-go"
-	log "github.com/Sirupsen/logrus"
+	"github.com/Financial-Times/publish-availability-monitor/v2/content"
+	uuidutils "github.com/Financial-Times/uuid-utils-go"
+	log "github.com/sirupsen/logrus"
 )
 
 var uuidDeriver = uuidutils.NewUUIDDeriverWith(uuidutils.IMAGE_SET)

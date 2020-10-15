@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Financial-Times/publish-availability-monitor/feeds"
-	log "github.com/Sirupsen/logrus"
+	"github.com/Financial-Times/publish-availability-monitor/v2/feeds"
+	log "github.com/sirupsen/logrus"
 )
 
 func watchConfigFiles(wg *sync.WaitGroup, envsFileName string, envCredentialsFileName string, validationCredentialsFileName string, configRefreshPeriod int) {

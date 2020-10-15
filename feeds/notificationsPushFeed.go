@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Financial-Times/publish-availability-monitor/checks"
-	log "github.com/Sirupsen/logrus"
+	"github.com/Financial-Times/publish-availability-monitor/v2/checks"
+	log "github.com/sirupsen/logrus"
 )
 
 const NotificationsPush = "Notifications-Push"
