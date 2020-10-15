@@ -3,7 +3,6 @@ replicaCount: 1
 service:
   name: publish-availability-monitor
 
-eksCluster: true
 
 envs:
   kafka_topic: "PreNativeCmsPublicationEvents"
