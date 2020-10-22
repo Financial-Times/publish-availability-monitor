@@ -120,8 +120,7 @@ var configFilesHashValues = make(map[string]string)
 var carouselTransactionIDRegExp = regexp.MustCompile(`^.+_carousel_[\d]{10}.*$`)
 
 func init() {
-	f := logformat.NewSLF4JFormatter(`.*/github\.com/Financial-Times/.*`)
-	log.SetFormatter(f)
+	log.SetFormatter(&logformat.SLF4JFormatter{})
 }
 
 func main() {
