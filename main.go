@@ -23,11 +23,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Interval is a simple representation of an interval of time, with a lower and
-// upper boundary
-type Interval struct {
-	lowerBound int
-	upperBound int
+type publishHistory struct {
+	sync.RWMutex
+	publishMetrics []PublishMetric
 }
 
 // PublishMetric holds the information about the metric we are measuring.
@@ -43,6 +41,25 @@ type PublishMetric struct {
 	isMarkedDeleted bool
 }
 
+func (pm PublishMetric) String() string {
+	return fmt.Sprintf("Tid: %s, UUID: %s, Platform: %s, Endpoint: %s, PublishDate: %s, Duration: %d, Succeeded: %t.",
+		pm.tid,
+		pm.UUID,
+		pm.platform,
+		pm.config.Alias,
+		pm.publishDate.String(),
+		pm.publishInterval.upperBound,
+		pm.publishOK,
+	)
+}
+
+// Interval is a simple representation of an interval of time, with a lower and
+// upper boundary
+type Interval struct {
+	lowerBound int
+	upperBound int
+}
+
 // MetricConfig is the configuration of a PublishMetric
 type MetricConfig struct {
 	Granularity  int      `json:"granularity"` //how we split up the threshold, ex. 120/12
@@ -51,11 +68,6 @@ type MetricConfig struct {
 	Alias        string   `json:"alias"`
 	Health       string   `json:"health,omitempty"`
 	ApiKey       string   `json:"apiKey,omitempty"`
-}
-
-// SplunkConfig holds the SplunkFeeder-specific configuration
-type SplunkConfig struct {
-	LogPrefix string `json:"logPrefix"`
 }
 
 // AppConfig holds the application's configuration
@@ -67,6 +79,11 @@ type AppConfig struct {
 	HealthConf          HealthConfig         `json:"healthConfig"`
 	ValidationEndpoints map[string]string    `json:"validationEndpoints"` //contentType to validation endpoint mapping, ex. { "EOM::Story": "http://methode-article-transformer/content-transform" }
 	UUIDResolverUrl     string               `json:"uuidResolverUrl"`
+}
+
+// SplunkConfig holds the SplunkFeeder-specific configuration
+type SplunkConfig struct {
+	LogPrefix string `json:"logPrefix"`
 }
 
 // HealthConfig holds the application's healthchecks configuration
@@ -87,11 +104,6 @@ type Credentials struct {
 	EnvName  string `json:"env-name"`
 	Username string `json:"username"`
 	Password string `json:"password"`
-}
-
-type publishHistory struct {
-	sync.RWMutex
-	publishMetrics []PublishMetric
 }
 
 const dateLayout = time.RFC3339Nano
@@ -118,8 +130,6 @@ func init() {
 func main() {
 	flag.Parse()
 
-	brandMappings := readBrandMappings()
-
 	var err error
 	appConfig, err = ParseConfig(*configFileName)
 	if err != nil {
@@ -140,7 +150,7 @@ func main() {
 	go startHttpListener()
 
 	startAggregator()
-	readMessages(brandMappings)
+	readMessages()
 }
 
 func startHttpListener() {
@@ -167,8 +177,24 @@ func setupHealthchecks(router *mux.Router) {
 	router.HandleFunc(status.GTGPath, status.NewGoodToGoHandler(hc.GTG))
 }
 
-func readMessages(brandMappings map[string]string) {
+func loadHistory(w http.ResponseWriter, r *http.Request) {
+	metricContainer.RLock()
+	for i := len(metricContainer.publishMetrics) - 1; i >= 0; i-- {
+		fmt.Fprintf(w, "%d. %v\n\n", len(metricContainer.publishMetrics)-i, metricContainer.publishMetrics[i])
+	}
+	metricContainer.RUnlock()
+}
 
+func startAggregator() {
+	var destinations []MetricDestination
+
+	splunkFeeder := NewSplunkFeeder(appConfig.SplunkConf.LogPrefix)
+	destinations = append(destinations, splunkFeeder)
+	aggregator := NewAggregator(metricSink, destinations)
+	go aggregator.Run()
+}
+
+func readMessages() {
 	for !environments.areReady() {
 		log.Info("Environments not set, retry in 3s...")
 		time.Sleep(3 * time.Second)
@@ -179,7 +205,7 @@ func readMessages(brandMappings map[string]string) {
 		env := environments.environment(envName)
 		docStoreCaller := checks.NewHttpCaller(10)
 		docStoreClient := checks.NewHttpDocStoreClient(env.ReadUrl+appConfig.UUIDResolverUrl, docStoreCaller, env.Username, env.Password)
-		uuidResolver := checks.NewHttpUUIDResolver(docStoreClient, brandMappings)
+		uuidResolver := checks.NewHttpUUIDResolver(docStoreClient, readBrandMappings())
 		typeRes = NewMethodeTypeResolver(uuidResolver)
 		break
 	}
@@ -202,23 +228,6 @@ func readMessages(brandMappings map[string]string) {
 	wg.Wait()
 }
 
-func startAggregator() {
-	var destinations []MetricDestination
-
-	splunkFeeder := NewSplunkFeeder(appConfig.SplunkConf.LogPrefix)
-	destinations = append(destinations, splunkFeeder)
-	aggregator := NewAggregator(metricSink, destinations)
-	go aggregator.Run()
-}
-
-func loadHistory(w http.ResponseWriter, r *http.Request) {
-	metricContainer.RLock()
-	for i := len(metricContainer.publishMetrics) - 1; i >= 0; i-- {
-		fmt.Fprintf(w, "%d. %v\n\n", len(metricContainer.publishMetrics)-i, metricContainer.publishMetrics[i])
-	}
-	metricContainer.RUnlock()
-}
-
 func readBrandMappings() map[string]string {
 	brandMappingsFile, err := ioutil.ReadFile("brandMappings.json")
 	if err != nil {
@@ -232,17 +241,4 @@ func readBrandMappings() map[string]string {
 		os.Exit(1)
 	}
 	return brandMappings
-}
-
-func (pm PublishMetric) String() string {
-	return fmt.Sprintf("Tid: %s, UUID: %s, Platform: %s, Endpoint: %s, PublishDate: %s, Duration: %d, Succeeded: %t.",
-		pm.tid,
-		pm.UUID,
-		pm.platform,
-		pm.config.Alias,
-		pm.publishDate.String(),
-		pm.publishInterval.upperBound,
-		pm.publishOK,
-	)
-
 }
