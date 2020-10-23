@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/http/pprof"
 	"net/url"
 	"os"
 	"os/signal"
@@ -98,7 +97,6 @@ type publishHistory struct {
 const dateLayout = time.RFC3339Nano
 
 var configFileName = flag.String("config", "", "Path to configuration file")
-
 var envsFileName = flag.String("envs-file-name", "/etc/pam/envs/read-environments.json", "Path to json file that contains environments configuration")
 var envCredentialsFileName = flag.String("envs-credentials-file-name", "/etc/pam/credentials/read-environments-credentials.json", "Path to json file that contains environments credentials")
 var validatorCredentialsFileName = flag.String("validator-credentials-file-name", "/etc/pam/credentials/validator-credentials.json", "Path to json file that contains validation endpoints configuration")
@@ -156,8 +154,6 @@ func startHttpListener() {
 	router.HandleFunc(status.BuildInfoPath, status.BuildInfoHandler)
 	router.HandleFunc(status.BuildInfoPathDW, status.BuildInfoHandler)
 
-	attachProfiler(router)
-
 	http.Handle("/", router)
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
@@ -169,13 +165,6 @@ func setupHealthchecks(router *mux.Router) {
 	hc := newHealthcheck(appConfig, &metricContainer)
 	router.HandleFunc("/__health", hc.checkHealth())
 	router.HandleFunc(status.GTGPath, status.NewGoodToGoHandler(hc.GTG))
-}
-
-func attachProfiler(router *mux.Router) {
-	router.HandleFunc("/debug/pprof/", pprof.Index)
-	router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-	router.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 }
 
 func readMessages(brandMappings map[string]string) {
