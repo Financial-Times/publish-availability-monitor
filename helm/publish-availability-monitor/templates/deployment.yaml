@@ -53,8 +53,6 @@ spec:
           value: "{{ .Values.envs.content_neo4j_url }}"
         - name: COMPLEMENTARY_CONTENT_URL
           value: "{{ .Values.envs.complementary_content_url }}"
-        - name: ETCD_PEERS
-          value: "NOT_AVAILABLE"
         - name: INTERNAL_COMPONENTS_URL
           value: "{{ .Values.envs.internal_components_url }}"
         - name: LISTS_URL

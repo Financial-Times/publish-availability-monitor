@@ -99,12 +99,6 @@ const dateLayout = time.RFC3339Nano
 
 var configFileName = flag.String("config", "", "Path to configuration file")
 
-var etcdPeers = flag.String("etcd-peers", "http://localhost:2379", "Comma-separated list of addresses of etcd endpoints to connect to")
-var etcdReadEnvKey = flag.String("etcd-read-env-key", "/ft/config/monitoring/read-urls", "etcd key that lists the read environment URLs")
-var etcdS3EnvKey = flag.String("etcd-s3-env-key", "/ft/config/monitoring/s3-image-bucket-urls", "etcd key that lists the S3 image bucket URLs")
-var etcdCredKey = flag.String("etcd-cred-key", "/ft/_credentials/publish-read/read-credentials", "etcd key that lists the read environment credentials")
-var etcdValidatorCredKey = flag.String("etcd-validator-cred-key", "/ft/_credentials/publish-read/validator-credentials", "etcd key that specifies the validator credentials")
-
 var envsFileName = flag.String("envs-file-name", "/etc/pam/envs/read-environments.json", "Path to json file that contains environments configuration")
 var envCredentialsFileName = flag.String("envs-credentials-file-name", "/etc/pam/credentials/read-environments-credentials.json", "Path to json file that contains environments credentials")
 var validatorCredentialsFileName = flag.String("validator-credentials-file-name", "/etc/pam/credentials/validator-credentials.json", "Path to json file that contains validation endpoints configuration")
@@ -137,13 +131,10 @@ func main() {
 
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
-	if *etcdPeers == "NOT_AVAILABLE" {
-		log.Info("Sourcing dynamic configs from file")
-		go watchConfigFiles(wg, *envsFileName, *envCredentialsFileName, *validatorCredentialsFileName, *configRefreshPeriod)
-	} else {
-		log.Info("Sourcing dynamic configs from ETCD")
-		go DiscoverEnvironmentsAndValidators(wg, etcdPeers, etcdReadEnvKey, etcdCredKey, etcdS3EnvKey, etcdValidatorCredKey)
-	}
+
+	log.Info("Sourcing dynamic configs from file")
+	go watchConfigFiles(wg, *envsFileName, *envCredentialsFileName, *validatorCredentialsFileName, *configRefreshPeriod)
+
 	wg.Wait()
 
 	metricContainer = publishHistory{sync.RWMutex{}, make([]PublishMetric, 0)}

@@ -8,8 +8,6 @@ github.com/Financial-Times/uuid-utils-go v0.0.0-20170516110427-e22658edd0f1 h1:F
 github.com/Financial-Times/uuid-utils-go v0.0.0-20170516110427-e22658edd0f1/go.mod h1:i62wLwNq+NmRCQpZS5BLTKsOVYsTOxs9bSx7FgtxXwM=
 github.com/Sirupsen/logrus v0.11.2 h1:Y9zFw+JCopoVWAZ2CP14LLaBCW7h3uhubyAt87zMNSA=
 github.com/Sirupsen/logrus v0.11.2/go.mod h1:rmk17hk6i8ZSAJkSDa7nOxamrG+SP4P0mm+DAvExv4U=
-github.com/coreos/etcd v3.1.2+incompatible h1:vEXjJ5ZC8Y14gZ8RE73dLaOuQSerpHrKv9vMWnXock4=
-github.com/coreos/etcd v3.1.2+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/giantswarm/retry-go v0.0.0-20151203102909-d78cea247d5e h1:i3Ox1mmSokDZD9HM8qwUf93IBRURPJK4AA/zsIDyD+E=
@@ -37,12 +35,8 @@ github.com/stretchr/objx v0.0.0-20150928122152-1a9d0bb9f541 h1:nvL7eaZN/Zw5emVOG
 github.com/stretchr/objx v0.0.0-20150928122152-1a9d0bb9f541/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.1.4 h1:ToftOQTytwshuOSj6bDSolVUa3GINfJP/fg3OkkOzQQ=
 github.com/stretchr/testify v1.1.4/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
-github.com/ugorji/go v0.0.0-20170215201144-c88ee250d022 h1:wIYK3i9zY6ZBcWw4GFvoPVwtb45iEm8KyOVmDhSLvsE=
-github.com/ugorji/go v0.0.0-20170215201144-c88ee250d022/go.mod h1:hnLbHMwcvSihnDhEfx2/BzKp2xb0Y+ErdfYcrs9tkJQ=
 github.com/willf/bitset v1.0.1-0.20161202170036-5c3c0fce4884 h1:tFQJaPzUsI/N0zuUIq+WU35Xtp55nPZtsxxGoTC+rjM=
 github.com/willf/bitset v1.0.1-0.20161202170036-5c3c0fce4884/go.mod h1:RjeCKbqT1RxIR/KWY6phxZiaY1IyutSBfGjNPySAYV4=
-golang.org/x/net v0.0.0-20170227185932-906cda9512f7 h1:cXTQM7PvYdKO7wZjQ89tHLjH+eEhiCNOEsZtyz9WRSk=
-golang.org/x/net v0.0.0-20170227185932-906cda9512f7/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
 golang.org/x/sys v0.0.0-20170329061634-9a7256cb28ed h1:1RoWulWaFGB+t8NExLratqmgydjWzGMhG2wyOqZxifQ=
 golang.org/x/sys v0.0.0-20170329061634-9a7256cb28ed/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 h1:YR8cESwS4TdDjEe65xsg0ogRM/Nc3DYOhEAlW+xobZo=
