@@ -130,6 +130,11 @@ func (f *NotificationsPushFeed) storeNotifications(notifications []Notification)
 			history = make([]*Notification, 0)
 		}
 
+		// Linter warning: Implicit memory aliasing in for loop. (gosec)
+		// The implementation is based on the assumption that notification-push service
+		// will push notifications slice containing only a single item which migh lead to bugs in the future.
+		// If the "notifications" slice contains more than one item
+		// for every iteration the code will capture only the first one.
 		history = append(history, &n)
 		f.notifications[uuid] = history
 	}
