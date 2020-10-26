@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Financial-Times/publish-availability-monitor/checks"
+	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -30,7 +30,7 @@ type notificationsResponse struct {
 
 func (f *NotificationsPullFeed) Start() {
 	if f.httpCaller == nil {
-		f.httpCaller = checks.NewHttpCaller(10)
+		f.httpCaller = httpcaller.NewCaller(10)
 	}
 
 	f.ticker = time.NewTicker(time.Duration(f.interval) * time.Second)
@@ -66,7 +66,7 @@ func (f *NotificationsPullFeed) pollNotificationsFeed() {
 
 	txId := f.buildNotificationsTxId()
 	notificationsUrl := f.notificationsUrl + "?" + f.notificationsQueryString
-	resp, err := f.httpCaller.DoCall(checks.Config{Url: notificationsUrl, Username: f.username, Password: f.password, TxId: txId})
+	resp, err := f.httpCaller.DoCall(httpcaller.Config{URL: notificationsUrl, Username: f.username, Password: f.password, TxID: txId})
 
 	if err != nil {
 		log.WithField("transaction_id", txId).WithError(err).Errorf("error calling notifications %s", notificationsUrl)

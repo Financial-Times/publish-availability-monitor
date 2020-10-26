@@ -1,4 +1,4 @@
-package checks
+package httpcaller
 
 import (
 	"fmt"
@@ -9,22 +9,28 @@ import (
 	"github.com/giantswarm/retry-go"
 )
 
-// httpCaller abstracts http calls
-type HttpCaller interface {
+// Caller abstracts http calls
+type Caller interface {
 	DoCall(config Config) (*http.Response, error)
 }
 
-// Default implementation of httpCaller
-type defaultHttpCaller struct {
+// Default implementation of Caller
+type DefaultCaller struct {
 	client *http.Client
 }
 
 type Config struct {
-	HttpMethod, Url, Username, Password, ApiKey, TxId, ContentType string
-	Entity                                                         io.Reader
+	HTTPMethod  string
+	URL         string
+	Username    string
+	Password    string
+	APIKey      string
+	TxID        string
+	ContentType string
+	Entity      io.Reader
 }
 
-func NewHttpCaller(timeoutSeconds int) HttpCaller {
+func NewCaller(timeoutSeconds int) DefaultCaller {
 	var client http.Client
 	if timeoutSeconds > 0 {
 		client = http.Client{
@@ -41,25 +47,25 @@ func NewHttpCaller(timeoutSeconds int) HttpCaller {
 		}
 	}
 
-	return defaultHttpCaller{&client}
+	return DefaultCaller{&client}
 }
 
 // Performs http GET calls using the default http client
-func (c defaultHttpCaller) DoCall(config Config) (resp *http.Response, err error) {
-	if config.HttpMethod == "" {
-		config.HttpMethod = "GET"
+func (c DefaultCaller) DoCall(config Config) (resp *http.Response, err error) {
+	if config.HTTPMethod == "" {
+		config.HTTPMethod = "GET"
 	}
-	req, err := http.NewRequest(config.HttpMethod, config.Url, config.Entity)
+	req, err := http.NewRequest(config.HTTPMethod, config.URL, config.Entity)
 	if config.Username != "" && config.Password != "" {
 		req.SetBasicAuth(config.Username, config.Password)
 	}
 
-	if config.ApiKey != "" {
-		req.Header.Add("X-Api-Key", config.ApiKey)
+	if config.APIKey != "" {
+		req.Header.Add("X-Api-Key", config.APIKey)
 	}
 
-	if config.TxId != "" {
-		req.Header.Add("X-Request-Id", config.TxId)
+	if config.TxID != "" {
+		req.Header.Add("X-Request-Id", config.TxID)
 	}
 
 	if config.ContentType != "" {

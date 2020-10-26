@@ -1,8 +1,10 @@
-package main
+package splunk
 
 import (
 	"log"
 	"os"
+
+	"github.com/Financial-Times/publish-availability-monitor/models"
 )
 
 // SplunkFeeder implements MetricDestination interface to send PublishMetrics to Splunk.
@@ -20,7 +22,7 @@ func NewSplunkFeeder(logPrefix string) *SplunkFeeder {
 }
 
 // Send logs pm into a file.
-func (sf SplunkFeeder) Send(pm PublishMetric) {
+func (sf SplunkFeeder) Send(pm models.PublishMetric) {
 	sf.MetricLog.Printf("UUID=%v readEnv=%v transaction_id=%v publishDate=%v publishOk=%v duration=%v endpoint=%v ",
-		pm.UUID, pm.platform, pm.tid, pm.publishDate.UnixNano(), pm.publishOK, pm.publishInterval.upperBound, pm.config.Alias)
+		pm.UUID, pm.Platform, pm.TID, pm.PublishDate.UnixNano(), pm.PublishOK, pm.PublishInterval.UpperBound, pm.Config.Alias)
 }

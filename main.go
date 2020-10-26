@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"regexp"
@@ -17,7 +16,11 @@ import (
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	"github.com/Financial-Times/publish-availability-monitor/checks"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
+	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/Financial-Times/publish-availability-monitor/logformat"
+	"github.com/Financial-Times/publish-availability-monitor/models"
+	"github.com/Financial-Times/publish-availability-monitor/sender"
+	"github.com/Financial-Times/publish-availability-monitor/splunk"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
@@ -25,60 +28,18 @@ import (
 
 type publishHistory struct {
 	sync.RWMutex
-	publishMetrics []PublishMetric
-}
-
-// PublishMetric holds the information about the metric we are measuring.
-type PublishMetric struct {
-	UUID            string
-	publishOK       bool      //did it meet the SLA?
-	publishDate     time.Time //the time WE get the message
-	platform        string
-	publishInterval Interval //the interval it was actually published in, ex. (10,20)
-	config          MetricConfig
-	endpoint        url.URL
-	tid             string
-	isMarkedDeleted bool
-}
-
-func (pm PublishMetric) String() string {
-	return fmt.Sprintf("Tid: %s, UUID: %s, Platform: %s, Endpoint: %s, PublishDate: %s, Duration: %d, Succeeded: %t.",
-		pm.tid,
-		pm.UUID,
-		pm.platform,
-		pm.config.Alias,
-		pm.publishDate.String(),
-		pm.publishInterval.upperBound,
-		pm.publishOK,
-	)
-}
-
-// Interval is a simple representation of an interval of time, with a lower and
-// upper boundary
-type Interval struct {
-	lowerBound int
-	upperBound int
-}
-
-// MetricConfig is the configuration of a PublishMetric
-type MetricConfig struct {
-	Granularity  int      `json:"granularity"` //how we split up the threshold, ex. 120/12
-	Endpoint     string   `json:"endpoint"`
-	ContentTypes []string `json:"contentTypes"` //list of valid eom types for this metric
-	Alias        string   `json:"alias"`
-	Health       string   `json:"health,omitempty"`
-	ApiKey       string   `json:"apiKey,omitempty"`
+	publishMetrics []models.PublishMetric
 }
 
 // AppConfig holds the application's configuration
 type AppConfig struct {
-	Threshold           int                  `json:"threshold"` //pub SLA in seconds, ex. 120
-	QueueConf           consumer.QueueConfig `json:"queueConfig"`
-	MetricConf          []MetricConfig       `json:"metricConfig"`
-	SplunkConf          SplunkConfig         `json:"splunk-config"`
-	HealthConf          HealthConfig         `json:"healthConfig"`
-	ValidationEndpoints map[string]string    `json:"validationEndpoints"` //contentType to validation endpoint mapping, ex. { "EOM::Story": "http://methode-article-transformer/content-transform" }
-	UUIDResolverUrl     string               `json:"uuidResolverUrl"`
+	Threshold           int                   `json:"threshold"` //pub SLA in seconds, ex. 120
+	QueueConf           consumer.QueueConfig  `json:"queueConfig"`
+	MetricConf          []models.MetricConfig `json:"metricConfig"`
+	SplunkConf          SplunkConfig          `json:"splunk-config"`
+	HealthConf          HealthConfig          `json:"healthConfig"`
+	ValidationEndpoints map[string]string     `json:"validationEndpoints"` //contentType to validation endpoint mapping, ex. { "EOM::Story": "http://methode-article-transformer/content-transform" }
+	UUIDResolverURL     string                `json:"uuidResolverUrl"`
 }
 
 // SplunkConfig holds the SplunkFeeder-specific configuration
@@ -106,8 +67,6 @@ type Credentials struct {
 	Password string `json:"password"`
 }
 
-const dateLayout = time.RFC3339Nano
-
 var configFileName = flag.String("config", "", "Path to configuration file")
 var envsFileName = flag.String("envs-file-name", "/etc/pam/envs/read-environments.json", "Path to json file that contains environments configuration")
 var envCredentialsFileName = flag.String("envs-credentials-file-name", "/etc/pam/credentials/read-environments-credentials.json", "Path to json file that contains environments credentials")
@@ -116,8 +75,9 @@ var configRefreshPeriod = flag.Int("config-refresh-period", 1, "Refresh period f
 
 var appConfig *AppConfig
 var environments = newThreadSafeEnvironments()
+
 var subscribedFeeds = make(map[string][]feeds.Feed)
-var metricSink = make(chan PublishMetric)
+var metricSink = make(chan models.PublishMetric)
 var metricContainer publishHistory
 var validatorCredentials string
 var configFilesHashValues = make(map[string]string)
@@ -145,7 +105,7 @@ func main() {
 
 	wg.Wait()
 
-	metricContainer = publishHistory{sync.RWMutex{}, make([]PublishMetric, 0)}
+	metricContainer = publishHistory{sync.RWMutex{}, make([]models.PublishMetric, 0)}
 
 	go startHttpListener()
 
@@ -186,11 +146,11 @@ func loadHistory(w http.ResponseWriter, r *http.Request) {
 }
 
 func startAggregator() {
-	var destinations []MetricDestination
+	var destinations []sender.MetricDestination
 
-	splunkFeeder := NewSplunkFeeder(appConfig.SplunkConf.LogPrefix)
+	splunkFeeder := splunk.NewSplunkFeeder(appConfig.SplunkConf.LogPrefix)
 	destinations = append(destinations, splunkFeeder)
-	aggregator := NewAggregator(metricSink, destinations)
+	aggregator := sender.NewAggregator(metricSink, destinations)
 	go aggregator.Run()
 }
 
@@ -203,8 +163,8 @@ func readMessages() {
 	var typeRes typeResolver
 	for _, envName := range environments.names() {
 		env := environments.environment(envName)
-		docStoreCaller := checks.NewHttpCaller(10)
-		docStoreClient := checks.NewHttpDocStoreClient(env.ReadUrl+appConfig.UUIDResolverUrl, docStoreCaller, env.Username, env.Password)
+		docStoreCaller := httpcaller.NewCaller(10)
+		docStoreClient := checks.NewHTTPDocStoreClient(env.ReadUrl+appConfig.UUIDResolverURL, docStoreCaller, env.Username, env.Password)
 		uuidResolver := checks.NewHttpUUIDResolver(docStoreClient, readBrandMappings())
 		typeRes = NewMethodeTypeResolver(uuidResolver)
 		break

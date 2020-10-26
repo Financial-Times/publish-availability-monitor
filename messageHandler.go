@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	"github.com/Financial-Times/publish-availability-monitor/checks"
 	"github.com/Financial-Times/publish-availability-monitor/content"
+	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -36,7 +38,7 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 	}
 
 	publishDateString := msg.Headers["Message-Timestamp"]
-	publishDate, err := time.Parse(dateLayout, publishDateString)
+	publishDate, err := time.Parse(checks.DateLayout, publishDateString)
 	if err != nil {
 		log.Errorf("Cannot parse publish date [%v] from message [%v], error: [%v]",
 			publishDateString, tid, err.Error())
@@ -68,8 +70,25 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 		}
 	}
 
+	hC := httpcaller.NewCaller(10)
+
+	//key is the endpoint alias from the config
+	endpointSpecificChecks := map[string]checks.EndpointSpecificCheck{
+		"content":                 checks.NewContentCheck(hC),
+		"content-neo4j":           checks.NewContentNeo4jCheck(hC),
+		"complementary-content":   checks.NewContentCheck(hC),
+		"internal-components":     checks.NewContentCheck(hC),
+		"S3":                      checks.NewS3Check(hC),
+		"enrichedContent":         checks.NewContentCheck(hC),
+		"lists":                   checks.NewContentCheck(hC),
+		"notifications":           checks.NewNotificationsCheck(hC, subscribedFeeds, "notifications"),
+		"notifications-push":      checks.NewNotificationsCheck(hC, subscribedFeeds, "notifications-push"),
+		"list-notifications":      checks.NewNotificationsCheck(hC, subscribedFeeds, "list-notifications"),
+		"list-notifications-push": checks.NewNotificationsCheck(hC, subscribedFeeds, "list-notifications-push"),
+	}
+
 	for _, scheduleParam := range paramsToSchedule {
-		scheduleChecks(scheduleParam)
+		scheduleChecks(scheduleParam, subscribedFeeds, endpointSpecificChecks)
 	}
 }
 

@@ -1,12 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"net/url"
 	"regexp"
 	"time"
 
+	"github.com/Financial-Times/publish-availability-monitor/checks"
 	"github.com/Financial-Times/publish-availability-monitor/content"
+	"github.com/Financial-Times/publish-availability-monitor/feeds"
+	"github.com/Financial-Times/publish-availability-monitor/models"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -23,7 +25,7 @@ type schedulerParam struct {
 	environments    *threadSafeEnvironments
 }
 
-func scheduleChecks(p *schedulerParam) {
+func scheduleChecks(p *schedulerParam, subscribedFeeds map[string][]feeds.Feed, endpointSpecificChecks map[string]checks.EndpointSpecificCheck) {
 	for _, metric := range appConfig.MetricConf {
 		if !validType(metric.ContentTypes, p.contentToCheck.GetType()) {
 			continue
@@ -50,34 +52,34 @@ func scheduleChecks(p *schedulerParam) {
 					continue
 				}
 
-				var publishMetric = PublishMetric{
-					p.contentToCheck.GetUUID(),
-					false,
-					p.publishDate,
-					name,
-					Interval{},
-					metric,
-					*endpointURL,
-					p.tid,
-					p.isMarkedDeleted,
+				var publishMetric = models.PublishMetric{
+					UUID:            p.contentToCheck.GetUUID(),
+					PublishOK:       false,
+					PublishDate:     p.publishDate,
+					Platform:        name,
+					PublishInterval: models.Interval{},
+					Config:          metric,
+					Endpoint:        *endpointURL,
+					TID:             p.tid,
+					IsMarkedDeleted: p.isMarkedDeleted,
 				}
 
 				var checkInterval = appConfig.Threshold / metric.Granularity
-				var publishCheck = NewPublishCheck(publishMetric, env.Username, env.Password, appConfig.Threshold, checkInterval, metricSink)
+				var publishCheck = checks.NewPublishCheck(publishMetric, env.Username, env.Password, appConfig.Threshold, checkInterval, metricSink, endpointSpecificChecks)
 				go scheduleCheck(*publishCheck, p.metricContainer)
 			}
 		} else {
 			// generate a generic failure metric so that the absence of monitoring is logged
-			var publishMetric = PublishMetric{
-				p.contentToCheck.GetUUID(),
-				false,
-				p.publishDate,
-				"none",
-				Interval{},
-				metric,
-				url.URL{},
-				p.tid,
-				p.isMarkedDeleted,
+			var publishMetric = models.PublishMetric{
+				UUID:            p.contentToCheck.GetUUID(),
+				PublishOK:       false,
+				PublishDate:     p.publishDate,
+				Platform:        "none",
+				PublishInterval: models.Interval{},
+				Config:          metric,
+				Endpoint:        url.URL{},
+				TID:             p.tid,
+				IsMarkedDeleted: p.isMarkedDeleted,
 			}
 			metricSink <- publishMetric
 			updateHistory(p.metricContainer, publishMetric)
@@ -85,19 +87,18 @@ func scheduleChecks(p *schedulerParam) {
 	}
 }
 
-func scheduleCheck(check PublishCheck, metricContainer *publishHistory) {
-
+func scheduleCheck(check checks.PublishCheck, metricContainer *publishHistory) {
 	//the date the SLA expires for this publish event
-	publishSLA := check.Metric.publishDate.Add(time.Duration(check.Threshold) * time.Second)
+	publishSLA := check.Metric.PublishDate.Add(time.Duration(check.Threshold) * time.Second)
 
 	//compute the actual seconds left until the SLA to compensate for the
 	//time passed between publish and the message reaching this point
 	secondsUntilSLA := publishSLA.Sub(time.Now()).Seconds()
 	log.Infof("Checking %s. [%v] seconds until SLA.",
-		loggingContextForCheck(check.Metric.config.Alias,
+		checks.LoggingContextForCheck(check.Metric.Config.Alias,
 			check.Metric.UUID,
-			check.Metric.platform,
-			check.Metric.tid),
+			check.Metric.Platform,
+			check.Metric.TID),
 		int(secondsUntilSLA))
 
 	//used to signal the ticker to stop after the threshold duration is reached
@@ -107,20 +108,20 @@ func scheduleCheck(check PublishCheck, metricContainer *publishHistory) {
 		close(quitChan)
 	}()
 
-	secondsSincePublish := time.Since(check.Metric.publishDate).Seconds()
+	secondsSincePublish := time.Since(check.Metric.PublishDate).Seconds()
 	log.Infof("Checking %s. [%v] seconds elapsed since publish.",
-		loggingContextForCheck(check.Metric.config.Alias,
+		checks.LoggingContextForCheck(check.Metric.Config.Alias,
 			check.Metric.UUID,
-			check.Metric.platform,
-			check.Metric.tid),
+			check.Metric.Platform,
+			check.Metric.TID),
 		int(secondsSincePublish))
 
 	elapsedIntervals := secondsSincePublish / float64(check.CheckInterval)
 	log.Infof("Checking %s. Skipping first [%v] checks",
-		loggingContextForCheck(check.Metric.config.Alias,
+		checks.LoggingContextForCheck(check.Metric.Config.Alias,
 			check.Metric.UUID,
-			check.Metric.platform,
-			check.Metric.tid),
+			check.Metric.Platform,
+			check.Metric.TID),
 		int(elapsedIntervals))
 
 	checkNr := int(elapsedIntervals) + 1
@@ -130,20 +131,23 @@ func scheduleCheck(check PublishCheck, metricContainer *publishHistory) {
 		checkSuccessful, ignoreCheck := check.DoCheck()
 		if ignoreCheck {
 			log.Infof("Ignore check for %s",
-				loggingContextForCheck(check.Metric.config.Alias,
+				checks.LoggingContextForCheck(check.Metric.Config.Alias,
 					check.Metric.UUID,
-					check.Metric.platform,
-					check.Metric.tid))
+					check.Metric.Platform,
+					check.Metric.TID))
 			tickerChan.Stop()
 			return
 		}
 		if checkSuccessful {
 			tickerChan.Stop()
-			check.Metric.publishOK = true
+			check.Metric.PublishOK = true
 
 			lower := (checkNr - 1) * check.CheckInterval
 			upper := checkNr * check.CheckInterval
-			check.Metric.publishInterval = Interval{lower, upper}
+			check.Metric.PublishInterval = models.Interval{
+				LowerBound: lower,
+				UpperBound: upper,
+			}
 
 			check.ResultSink <- check.Metric
 			updateHistory(metricContainer, check.Metric)
@@ -156,7 +160,7 @@ func scheduleCheck(check PublishCheck, metricContainer *publishHistory) {
 		case <-quitChan:
 			tickerChan.Stop()
 			//if we get here, checks were unsuccessful
-			check.Metric.publishOK = false
+			check.Metric.PublishOK = false
 			check.ResultSink <- check.Metric
 			updateHistory(metricContainer, check.Metric)
 			return
@@ -165,7 +169,7 @@ func scheduleCheck(check PublishCheck, metricContainer *publishHistory) {
 
 }
 
-func updateHistory(metricContainer *publishHistory, newPublishResult PublishMetric) {
+func updateHistory(metricContainer *publishHistory, newPublishResult models.PublishMetric) {
 	metricContainer.Lock()
 	if len(metricContainer.publishMetrics) == 10 {
 		metricContainer.publishMetrics = metricContainer.publishMetrics[1:len(metricContainer.publishMetrics)]
@@ -181,8 +185,4 @@ func validType(validTypes []string, eomType string) bool {
 		}
 	}
 	return false
-}
-
-func loggingContextForCheck(checkType string, uuid string, environment string, transactionID string) string {
-	return fmt.Sprintf("environment=[%v], checkType=[%v], uuid=[%v], transaction_id=[%v]", environment, checkType, uuid, transactionID)
 }

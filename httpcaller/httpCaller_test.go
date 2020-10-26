@@ -1,4 +1,4 @@
-package checks
+package httpcaller
 
 import (
 	"encoding/base64"
@@ -48,8 +48,8 @@ func TestUnauthenticated(t *testing.T) {
 	}, nil)
 	defer server.Close()
 
-	httpCaller := NewHttpCaller(10)
-	resp, err := httpCaller.DoCall(Config{Url: server.URL})
+	httpCaller := NewCaller(10)
+	resp, err := httpCaller.DoCall(Config{URL: server.URL})
 	assert.Nil(t, err, "unexpected error")
 
 	assertExpectedResponse(t, resp)
@@ -67,8 +67,8 @@ func TestAuthenticated(t *testing.T) {
 	}, nil)
 	defer server.Close()
 
-	httpCaller := NewHttpCaller(10)
-	resp, err := httpCaller.DoCall(Config{Url: server.URL, Username: username, Password: password, ApiKey: apiKey})
+	httpCaller := NewCaller(10)
+	resp, err := httpCaller.DoCall(Config{URL: server.URL, Username: username, Password: password, APIKey: apiKey})
 	assert.Nil(t, err, "unexpected error")
 
 	assertExpectedResponse(t, resp)
@@ -83,8 +83,8 @@ func TestTransactionId(t *testing.T) {
 	}, nil)
 	defer server.Close()
 
-	httpCaller := NewHttpCaller(10)
-	resp, err := httpCaller.DoCall(Config{Url: server.URL, TxId: txId})
+	httpCaller := NewCaller(10)
+	resp, err := httpCaller.DoCall(Config{URL: server.URL, TxID: txId})
 	assert.Nil(t, err, "unexpected error")
 
 	assertExpectedResponse(t, resp)
@@ -103,8 +103,8 @@ func TestRequestWithEntity(t *testing.T) {
 	)
 	defer server.Close()
 
-	httpCaller := NewHttpCaller(10)
-	resp, err := httpCaller.DoCall(Config{HttpMethod: "POST", Url: server.URL, ContentType: contentType, Entity: strings.NewReader(body)})
+	httpCaller := NewCaller(10)
+	resp, err := httpCaller.DoCall(Config{HTTPMethod: "POST", URL: server.URL, ContentType: contentType, Entity: strings.NewReader(body)})
 	assert.Nil(t, err, "unexpected error")
 
 	assertExpectedResponse(t, resp)
@@ -122,8 +122,8 @@ func TestClientDoesRetry(t *testing.T) {
 	}))
 	defer server.Close()
 
-	httpCaller := NewHttpCaller(10)
-	_, err := httpCaller.DoCall(Config{HttpMethod: "GET", Url: server.URL})
+	httpCaller := NewCaller(10)
+	_, err := httpCaller.DoCall(Config{HTTPMethod: "GET", URL: server.URL}) //nolint:bodyclose
 	assert.NoError(t, err)
 	assert.Equal(t, 2, retryCount)
 }
@@ -136,8 +136,8 @@ func TestClientDoesOnlyTwoRetries(t *testing.T) {
 	}))
 	defer server.Close()
 
-	httpCaller := NewHttpCaller(10)
-	_, err := httpCaller.DoCall(Config{HttpMethod: "GET", Url: server.URL})
+	httpCaller := NewCaller(10)
+	_, err := httpCaller.DoCall(Config{HTTPMethod: "GET", URL: server.URL}) //nolint:bodyclose
 	assert.NoError(t, err)
 	assert.Equal(t, 2, retryCount)
 }
@@ -150,8 +150,8 @@ func TestClientDoesNoRetryAfterSuccessfullResponse(t *testing.T) {
 	}))
 	defer server.Close()
 
-	httpCaller := NewHttpCaller(10)
-	_, err := httpCaller.DoCall(Config{HttpMethod: "GET", Url: server.URL})
+	httpCaller := NewCaller(10)
+	_, err := httpCaller.DoCall(Config{HTTPMethod: "GET", URL: server.URL}) //nolint:bodyclose
 	assert.NoError(t, err)
 	assert.Equal(t, 1, retryCount)
 }

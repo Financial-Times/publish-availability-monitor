@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -173,7 +175,7 @@ func (h *Healthcheck) checkForPublishFailures() (string, error) {
 	var emptyStruct struct{}
 	for i := 0; i < len(h.metricContainer.publishMetrics); i++ {
 
-		if !h.metricContainer.publishMetrics[i].publishOK {
+		if !h.metricContainer.publishMetrics[i].PublishOK {
 			failures[h.metricContainer.publishMetrics[i].UUID] = emptyStruct
 		}
 	}
@@ -354,4 +356,15 @@ func buildFtHealthcheckUrl(endpoint url.URL, health string) (string, error) {
 
 func buildAwsHealthcheckUrl(serviceUrl string) (string, error) {
 	return serviceUrl + "healthCheckDummyFile", nil
+}
+
+func cleanupResp(resp *http.Response) {
+	_, err := io.Copy(ioutil.Discard, resp.Body)
+	if err != nil {
+		log.Warnf("[%v]", err)
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		log.Warnf("[%v]", err)
+	}
 }

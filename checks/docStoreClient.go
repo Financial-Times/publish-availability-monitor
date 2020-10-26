@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/Sirupsen/logrus"
 )
 
@@ -13,15 +14,15 @@ type DocStoreClient interface {
 	IsUUIDPresent(uuid, tid string) (isPresent bool, err error)
 }
 
-type httpDocStoreClient struct {
+type HTTPDocStoreClient struct {
 	docStoreAddress string
-	httpCaller      HttpCaller
+	httpCaller      httpcaller.Caller
 	username        string
 	password        string
 }
 
-func NewHttpDocStoreClient(docStoreAddress string, httpCaller HttpCaller, username, password string) *httpDocStoreClient {
-	return &httpDocStoreClient{
+func NewHTTPDocStoreClient(docStoreAddress string, httpCaller httpcaller.Caller, username, password string) *HTTPDocStoreClient {
+	return &HTTPDocStoreClient{
 		docStoreAddress: docStoreAddress,
 		httpCaller:      httpCaller,
 		username:        username,
@@ -29,7 +30,7 @@ func NewHttpDocStoreClient(docStoreAddress string, httpCaller HttpCaller, userna
 	}
 }
 
-func (c *httpDocStoreClient) ContentQuery(authority string, identifier string, tid string) (status int, location string, err error) {
+func (c *HTTPDocStoreClient) ContentQuery(authority string, identifier string, tid string) (status int, location string, err error) {
 	docStoreUrl, err := url.Parse(c.docStoreAddress + "/content-query")
 	if err != nil {
 		return -1, "", fmt.Errorf("invalid address docStoreAddress=%v", c.docStoreAddress)
@@ -39,11 +40,11 @@ func (c *httpDocStoreClient) ContentQuery(authority string, identifier string, t
 	query.Add("identifierAuthority", authority)
 	docStoreUrl.RawQuery = query.Encode()
 
-	resp, err := c.httpCaller.DoCall(Config{
-		Url:      docStoreUrl.String(),
+	resp, err := c.httpCaller.DoCall(httpcaller.Config{
+		URL:      docStoreUrl.String(),
 		Username: c.username,
 		Password: c.password,
-		TxId:     ConstructPamTxId(tid),
+		TxID:     ConstructPamTxId(tid),
 	})
 
 	if err != nil {
@@ -54,17 +55,17 @@ func (c *httpDocStoreClient) ContentQuery(authority string, identifier string, t
 	return resp.StatusCode, resp.Header.Get("Location"), nil
 }
 
-func (c *httpDocStoreClient) IsUUIDPresent(uuid, tid string) (isPresent bool, err error) {
+func (c *HTTPDocStoreClient) IsUUIDPresent(uuid, tid string) (isPresent bool, err error) {
 	docStoreUrl, err := url.Parse(c.docStoreAddress + "/content/" + uuid)
 	if err != nil {
 		return false, fmt.Errorf("invalid address docStoreAddress=%v", c.docStoreAddress)
 	}
 
-	resp, err := c.httpCaller.DoCall(Config{
-		Url:      docStoreUrl.String(),
+	resp, err := c.httpCaller.DoCall(httpcaller.Config{
+		URL:      docStoreUrl.String(),
 		Username: c.username,
 		Password: c.password,
-		TxId:     ConstructPamTxId(tid),
+		TxID:     ConstructPamTxId(tid),
 	})
 
 	if err != nil {

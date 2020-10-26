@@ -1,4 +1,4 @@
-package main
+package checks
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_InvalidContent(t *testing.
 	}
 
 	pm := newPublishMetricBuilder().withTID(currentTid).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
 	assert.False(t, finished, "Expected error.")
 }
 
@@ -27,7 +27,7 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_InvalidUUID(t *testing.T) 
 	}
 
 	pm := newPublishMetricBuilder().withTID(currentTid).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
 	assert.False(t, finished, "Expected error.")
 }
 
@@ -39,7 +39,7 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_Finished(t *testing.T) {
 	}
 
 	pm := newPublishMetricBuilder().withUUID("1234-1234").withTID(currentTid).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
 	assert.True(t, finished, "operation should have finished successfully")
 }
 
@@ -53,7 +53,7 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_WithAuthentication(t *test
 	}
 
 	pm := newPublishMetricBuilder().withUUID("1234-1234").withTID(currentTid).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, username, password, 0, 0, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, username, password, 0, 0, nil, nil))
 	assert.True(t, finished, "operation should have finished successfully")
 }
 
@@ -65,7 +65,7 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_NotFinished(t *testing.T) 
 	}
 
 	pm := newPublishMetricBuilder().withTID(currentTid).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
 	assert.False(t, finished, "Expected failure.")
 }
 
@@ -77,7 +77,7 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_MarkedDeleted_Finished(t *
 	}
 
 	pm := newPublishMetricBuilder().withTID(currentTid).withMarkedDeleted(true).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
 	assert.True(t, finished, "operation should have finished successfully.")
 }
 
@@ -89,6 +89,6 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_MarkedDeleted_NotFinished(
 	}
 
 	pm := newPublishMetricBuilder().withTID(currentTid).withMarkedDeleted(true).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
 	assert.False(t, finished, "operation should not have finished")
 }

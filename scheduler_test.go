@@ -5,7 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Financial-Times/publish-availability-monitor/checks"
 	"github.com/Financial-Times/publish-availability-monitor/content"
+	"github.com/Financial-Times/publish-availability-monitor/models"
 	"github.com/stretchr/testify/require"
 )
 
@@ -54,7 +56,7 @@ var mockArticleEomFile = content.EomFile{
 func TestScheduleChecksForS3AreCorrect(testing *testing.T) {
 	//redefine appConfig to have only S3
 	appConfig = &AppConfig{
-		MetricConf: []MetricConfig{
+		MetricConf: []models.MetricConfig{
 			{
 				Endpoint:    "/whatever/",
 				Granularity: 1,
@@ -77,13 +79,13 @@ func TestScheduleChecksForS3AreCorrect(testing *testing.T) {
 
 	require.NotNil(testing, capturingMetrics)
 	require.Equal(testing, 1, len(capturingMetrics.publishMetrics))
-	require.Equal(testing, s3URL+"/whatever/", capturingMetrics.publishMetrics[0].endpoint.String())
+	require.Equal(testing, s3URL+"/whatever/", capturingMetrics.publishMetrics[0].Endpoint.String())
 }
 
 func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 	//redefine appConfig to have only Content
 	appConfig = &AppConfig{
-		MetricConf: []MetricConfig{
+		MetricConf: []models.MetricConfig{
 			{
 				Endpoint:    "/whatever/",
 				Granularity: 1,
@@ -106,12 +108,12 @@ func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 
 	require.NotNil(testing, capturingMetrics)
 	require.Equal(testing, 1, len(capturingMetrics.publishMetrics))
-	require.Equal(testing, readURL+"/whatever/", capturingMetrics.publishMetrics[0].endpoint.String())
+	require.Equal(testing, readURL+"/whatever/", capturingMetrics.publishMetrics[0].Endpoint.String())
 }
 
 func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testing.T) {
 	appConfig = &AppConfig{
-		MetricConf: []MetricConfig{
+		MetricConf: []models.MetricConfig{
 			{
 				Endpoint:    "/internalcomponents/",
 				Granularity: 1,
@@ -137,12 +139,12 @@ func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testi
 
 	require.NotNil(testing, capturingMetrics)
 	require.Equal(testing, 1, len(capturingMetrics.publishMetrics))
-	require.Equal(testing, readURL+"/internalcomponents/", capturingMetrics.publishMetrics[0].endpoint.String())
+	require.Equal(testing, readURL+"/internalcomponents/", capturingMetrics.publishMetrics[0].Endpoint.String())
 }
 
 func TestScheduleChecksForDynamicContentWithInternalComponentsAreCorrect(testing *testing.T) {
 	appConfig = &AppConfig{
-		MetricConf: []MetricConfig{
+		MetricConf: []models.MetricConfig{
 			{
 				Endpoint:    "/internalcomponents/",
 				Granularity: 1,
@@ -169,24 +171,24 @@ func TestScheduleChecksForDynamicContentWithInternalComponentsAreCorrect(testing
 
 	require.NotNil(testing, capturingMetrics)
 	require.Equal(testing, 1, len(capturingMetrics.publishMetrics))
-	require.Equal(testing, readURL+"/internalcomponents/", capturingMetrics.publishMetrics[0].endpoint.String())
+	require.Equal(testing, readURL+"/internalcomponents/", capturingMetrics.publishMetrics[0].Endpoint.String())
 }
 
 func runScheduleChecks(testing *testing.T, content content.Content, mockEnvironments *threadSafeEnvironments) *publishHistory {
-	capturingMetrics := &publishHistory{sync.RWMutex{}, make([]PublishMetric, 0)}
+	capturingMetrics := &publishHistory{sync.RWMutex{}, make([]models.PublishMetric, 0)}
 	tid := "tid_1234"
-	publishDate, err := time.Parse(dateLayout, "2016-01-08T14:22:06.271Z")
+	publishDate, err := time.Parse(checks.DateLayout, "2016-01-08T14:22:06.271Z")
 	if err != nil {
 		testing.Error("Failure in setting up test data")
 		return nil
 	}
 
 	//redefine map to avoid actual checks
-	endpointSpecificChecks = map[string]EndpointSpecificCheck{}
+	endpointSpecificChecks := map[string]checks.EndpointSpecificCheck{}
 	//redefine metricSink to avoid hang
-	metricSink = make(chan PublishMetric, 2)
+	metricSink = make(chan models.PublishMetric, 2)
 
-	scheduleChecks(&schedulerParam{content, publishDate, tid, true, capturingMetrics, mockEnvironments})
+	scheduleChecks(&schedulerParam{content, publishDate, tid, true, capturingMetrics, mockEnvironments}, subscribedFeeds, endpointSpecificChecks)
 	for {
 		capturingMetrics.RLock()
 		if len(capturingMetrics.publishMetrics) == mockEnvironments.len() {

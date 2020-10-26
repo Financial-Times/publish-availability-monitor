@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Financial-Times/publish-availability-monitor/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -54,14 +55,47 @@ func TestBuildAwsHealthcheckUrl(t *testing.T) {
 }
 
 func TestPublishNoFailuresForSameUUIDs(t *testing.T) {
-	config := MetricConfig{}
-	interval := Interval{5, 5}
+	config := models.MetricConfig{}
+	interval := models.Interval{LowerBound: 5, UpperBound: 5}
 	newUrl := url.URL{}
 	t0 := time.Now()
-	publishMetric1 := PublishMetric{"1234567", false, t0, "", interval, config, newUrl, "tid_1234", false}
-	publishMetric2 := PublishMetric{"1234567", false, t0, "", interval, config, newUrl, "tid_6789", false}
-	publishMetric3 := PublishMetric{"1234567", false, t0, "", interval, config, newUrl, "tid_6789", false}
-	testMetrics := []PublishMetric{publishMetric1, publishMetric2, publishMetric3}
+	publishMetric1 := models.PublishMetric{
+		UUID:            "1234567",
+		PublishOK:       false,
+		PublishDate:     t0,
+		Platform:        "",
+		PublishInterval: interval,
+		Config:          config,
+		Endpoint:        newUrl,
+		TID:             "tid_1234",
+		IsMarkedDeleted: false,
+	}
+
+	publishMetric2 := models.PublishMetric{
+		UUID:            "1234567",
+		PublishOK:       false,
+		PublishDate:     t0,
+		Platform:        "",
+		PublishInterval: interval,
+		Config:          config,
+		Endpoint:        newUrl,
+		TID:             "tid_6789",
+		IsMarkedDeleted: false,
+	}
+
+	publishMetric3 := models.PublishMetric{
+		UUID:            "1234567",
+		PublishOK:       false,
+		PublishDate:     t0,
+		Platform:        "",
+		PublishInterval: interval,
+		Config:          config,
+		Endpoint:        newUrl,
+		TID:             "tid_6789",
+		IsMarkedDeleted: false,
+	}
+
+	testMetrics := []models.PublishMetric{publishMetric1, publishMetric2, publishMetric3}
 	testPublishHistory := publishHistory{sync.RWMutex{}, testMetrics}
 	testHealthcheck := Healthcheck{
 		config:          &AppConfig{},
@@ -73,14 +107,47 @@ func TestPublishNoFailuresForSameUUIDs(t *testing.T) {
 }
 
 func TestPublishFailureForDistinctUUIDs(t *testing.T) {
-	config := MetricConfig{}
-	interval := Interval{5, 5}
+	config := models.MetricConfig{}
+	interval := models.Interval{LowerBound: 5, UpperBound: 5}
 	newUrl := url.URL{}
 	t0 := time.Now()
-	publishMetric1 := PublishMetric{"12345", false, t0, "", interval, config, newUrl, "tid_1234", false}
-	publishMetric2 := PublishMetric{"12678", false, t0, "", interval, config, newUrl, "tid_6789", false}
-	publishMetric3 := PublishMetric{"12679", true, t0, "", interval, config, newUrl, "tid_6789", false}
-	testMetrics := []PublishMetric{publishMetric1, publishMetric2, publishMetric3}
+	publishMetric1 := models.PublishMetric{
+		UUID:            "12345",
+		PublishOK:       false,
+		PublishDate:     t0,
+		Platform:        "",
+		PublishInterval: interval,
+		Config:          config,
+		Endpoint:        newUrl,
+		TID:             "tid_1234",
+		IsMarkedDeleted: false,
+	}
+
+	publishMetric2 := models.PublishMetric{
+		UUID:            "12678",
+		PublishOK:       false,
+		PublishDate:     t0,
+		Platform:        "",
+		PublishInterval: interval,
+		Config:          config,
+		Endpoint:        newUrl,
+		TID:             "tid_6789",
+		IsMarkedDeleted: false,
+	}
+
+	publishMetric3 := models.PublishMetric{
+		UUID:            "12679",
+		PublishOK:       false,
+		PublishDate:     t0,
+		Platform:        "",
+		PublishInterval: interval,
+		Config:          config,
+		Endpoint:        newUrl,
+		TID:             "tid_6789",
+		IsMarkedDeleted: false,
+	}
+
+	testMetrics := []models.PublishMetric{publishMetric1, publishMetric2, publishMetric3}
 	testPublishHistory := publishHistory{sync.RWMutex{}, testMetrics}
 	testHealthcheck := Healthcheck{
 		config:          &AppConfig{},
