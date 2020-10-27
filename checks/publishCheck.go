@@ -73,7 +73,7 @@ func NewContentCheck(httpCaller httpcaller.Caller) ContentCheck {
 func (c ContentCheck) isCurrentOperationFinished(pc *PublishCheck) (operationFinished, ignoreCheck bool) {
 	pm := pc.Metric
 	url := pm.Endpoint.String() + pm.UUID
-	resp, err := c.httpCaller.DoCall(httpcaller.Config{URL: url, Username: pc.username, Password: pc.password, TxID: ConstructPamTxId(pm.TID)}) //nolint:bodyclose
+	resp, err := c.httpCaller.DoCall(httpcaller.Config{URL: url, Username: pc.username, Password: pc.password, TxID: httpcaller.ConstructPamTxId(pm.TID)}) //nolint:bodyclose
 	if err != nil {
 		log.Warnf("Error calling URL: [%v] for %s : [%v]", url, pc, err.Error())
 		return false, false
@@ -134,7 +134,7 @@ func (c ContentNeo4jCheck) isCurrentOperationFinished(pc *PublishCheck) (operati
 		URL:      url,
 		Username: pc.username,
 		Password: pc.password,
-		TxID:     ConstructPamTxId(pm.TID)})
+		TxID:     httpcaller.ConstructPamTxId(pm.TID)})
 
 	if err != nil {
 		log.Warnf("Error calling URL: [%v] for %s : [%v]", url, pc, err.Error())
@@ -262,7 +262,7 @@ func (n NotificationsCheck) shouldSkipCheck(pc *PublishCheck) bool {
 		return false
 	}
 	url := pm.Endpoint.String() + "/" + pm.UUID
-	resp, err := n.httpCaller.DoCall(httpcaller.Config{URL: url, Username: pc.username, Password: pc.password, TxID: ConstructPamTxId(pm.TID)}) //nolint:bodyclose
+	resp, err := n.httpCaller.DoCall(httpcaller.Config{URL: url, Username: pc.username, Password: pc.password, TxID: httpcaller.ConstructPamTxId(pm.TID)}) //nolint:bodyclose
 	if err != nil {
 		log.Warnf("Checking %s. Error calling URL: [%v] : [%v]", LoggingContextForCheck(pm.Config.Alias, pm.UUID, pm.Platform, pm.TID), url, err.Error())
 		return false

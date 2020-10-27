@@ -15,6 +15,8 @@ import (
 
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	"github.com/Financial-Times/publish-availability-monitor/checks"
+	"github.com/Financial-Times/publish-availability-monitor/config"
+	"github.com/Financial-Times/publish-availability-monitor/envs"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/Financial-Times/publish-availability-monitor/logformat"
@@ -26,60 +28,18 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type publishHistory struct {
-	sync.RWMutex
-	publishMetrics []models.PublishMetric
-}
-
-// AppConfig holds the application's configuration
-type AppConfig struct {
-	Threshold           int                   `json:"threshold"` //pub SLA in seconds, ex. 120
-	QueueConf           consumer.QueueConfig  `json:"queueConfig"`
-	MetricConf          []models.MetricConfig `json:"metricConfig"`
-	SplunkConf          SplunkConfig          `json:"splunk-config"`
-	HealthConf          HealthConfig          `json:"healthConfig"`
-	ValidationEndpoints map[string]string     `json:"validationEndpoints"` //contentType to validation endpoint mapping, ex. { "EOM::Story": "http://methode-article-transformer/content-transform" }
-	UUIDResolverURL     string                `json:"uuidResolverUrl"`
-}
-
-// SplunkConfig holds the SplunkFeeder-specific configuration
-type SplunkConfig struct {
-	LogPrefix string `json:"logPrefix"`
-}
-
-// HealthConfig holds the application's healthchecks configuration
-type HealthConfig struct {
-	FailureThreshold int `json:"failureThreshold"`
-}
-
-// Environment defines an environment in which the publish metrics should be checked
-type Environment struct {
-	Name     string `json:"name"`
-	ReadUrl  string `json:"read-url"`
-	S3Url    string `json:"s3-url"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type Credentials struct {
-	EnvName  string `json:"env-name"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 var configFileName = flag.String("config", "", "Path to configuration file")
 var envsFileName = flag.String("envs-file-name", "/etc/pam/envs/read-environments.json", "Path to json file that contains environments configuration")
 var envCredentialsFileName = flag.String("envs-credentials-file-name", "/etc/pam/credentials/read-environments-credentials.json", "Path to json file that contains environments credentials")
 var validatorCredentialsFileName = flag.String("validator-credentials-file-name", "/etc/pam/credentials/validator-credentials.json", "Path to json file that contains validation endpoints configuration")
 var configRefreshPeriod = flag.Int("config-refresh-period", 1, "Refresh period for configuration in minutes. By default it is 1 minute.")
 
-var appConfig *AppConfig
-var environments = newThreadSafeEnvironments()
+var environments = envs.NewThreadSafeEnvironments()
 
 var subscribedFeeds = make(map[string][]feeds.Feed)
 var metricSink = make(chan models.PublishMetric)
-var metricContainer publishHistory
-var validatorCredentials string
+var metricContainer models.PublishHistory
+
 var configFilesHashValues = make(map[string]string)
 var carouselTransactionIDRegExp = regexp.MustCompile(`^.+_carousel_[\d]{10}.*$`)
 
@@ -91,7 +51,7 @@ func main() {
 	flag.Parse()
 
 	var err error
-	appConfig, err = ParseConfig(*configFileName)
+	appConfig, err := ParseConfig(*configFileName)
 	if err != nil {
 		log.WithError(err).Error("Cannot load configuration")
 		return
@@ -101,21 +61,25 @@ func main() {
 	wg.Add(1)
 
 	log.Info("Sourcing dynamic configs from file")
-	go watchConfigFiles(wg, *envsFileName, *envCredentialsFileName, *validatorCredentialsFileName, *configRefreshPeriod)
+
+	go envs.WatchConfigFiles(wg, *envsFileName, *envCredentialsFileName, *validatorCredentialsFileName, *configRefreshPeriod, configFilesHashValues, environments, subscribedFeeds, appConfig)
 
 	wg.Wait()
 
-	metricContainer = publishHistory{sync.RWMutex{}, make([]models.PublishMetric, 0)}
+	metricContainer = models.PublishHistory{
+		RWMutex:        sync.RWMutex{},
+		PublishMetrics: make([]models.PublishMetric, 0),
+	}
 
-	go startHttpListener()
+	go startHTTPListener(appConfig)
 
-	startAggregator()
-	readMessages()
+	startAggregator(appConfig)
+	readMessages(appConfig)
 }
 
-func startHttpListener() {
+func startHTTPListener(appConfig *config.AppConfig) {
 	router := mux.NewRouter()
-	setupHealthchecks(router)
+	setupHealthchecks(router, appConfig)
 	router.HandleFunc("/__history", loadHistory)
 
 	router.HandleFunc(status.PingPath, status.PingHandler)
@@ -131,7 +95,7 @@ func startHttpListener() {
 	}
 }
 
-func setupHealthchecks(router *mux.Router) {
+func setupHealthchecks(router *mux.Router, appConfig *config.AppConfig) {
 	hc := newHealthcheck(appConfig, &metricContainer)
 	router.HandleFunc("/__health", hc.checkHealth())
 	router.HandleFunc(status.GTGPath, status.NewGoodToGoHandler(hc.GTG))
@@ -139,13 +103,13 @@ func setupHealthchecks(router *mux.Router) {
 
 func loadHistory(w http.ResponseWriter, r *http.Request) {
 	metricContainer.RLock()
-	for i := len(metricContainer.publishMetrics) - 1; i >= 0; i-- {
-		fmt.Fprintf(w, "%d. %v\n\n", len(metricContainer.publishMetrics)-i, metricContainer.publishMetrics[i])
+	for i := len(metricContainer.PublishMetrics) - 1; i >= 0; i-- {
+		fmt.Fprintf(w, "%d. %v\n\n", len(metricContainer.PublishMetrics)-i, metricContainer.PublishMetrics[i])
 	}
 	metricContainer.RUnlock()
 }
 
-func startAggregator() {
+func startAggregator(appConfig *config.AppConfig) {
 	var destinations []sender.MetricDestination
 
 	splunkFeeder := splunk.NewSplunkFeeder(appConfig.SplunkConf.LogPrefix)
@@ -154,23 +118,23 @@ func startAggregator() {
 	go aggregator.Run()
 }
 
-func readMessages() {
-	for !environments.areReady() {
+func readMessages(appConfig *config.AppConfig) {
+	for !environments.AreReady() {
 		log.Info("Environments not set, retry in 3s...")
 		time.Sleep(3 * time.Second)
 	}
 
 	var typeRes typeResolver
-	for _, envName := range environments.names() {
-		env := environments.environment(envName)
+	for _, envName := range environments.Names() {
+		env := environments.Environment(envName)
 		docStoreCaller := httpcaller.NewCaller(10)
-		docStoreClient := checks.NewHTTPDocStoreClient(env.ReadUrl+appConfig.UUIDResolverURL, docStoreCaller, env.Username, env.Password)
+		docStoreClient := checks.NewHTTPDocStoreClient(env.ReadURL+appConfig.UUIDResolverURL, docStoreCaller, env.Username, env.Password)
 		uuidResolver := checks.NewHttpUUIDResolver(docStoreClient, readBrandMappings())
 		typeRes = NewMethodeTypeResolver(uuidResolver)
 		break
 	}
 
-	h := NewKafkaMessageHandler(typeRes)
+	h := NewKafkaMessageHandler(typeRes, appConfig)
 	c := consumer.NewConsumer(appConfig.QueueConf, h.HandleMessage, &http.Client{})
 
 	var wg sync.WaitGroup

@@ -1,49 +1,50 @@
-package main
+package checks
 
 import (
 	"net/url"
 	"regexp"
 	"time"
 
-	"github.com/Financial-Times/publish-availability-monitor/checks"
+	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/content"
+	"github.com/Financial-Times/publish-availability-monitor/envs"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/Financial-Times/publish-availability-monitor/models"
 	log "github.com/Sirupsen/logrus"
 )
 
 var (
-	absoluteUrlRegex = regexp.MustCompile("(?i)https?://.*")
+	AbsoluteURLRegex = regexp.MustCompile("(?i)https?://.*")
 )
 
-type schedulerParam struct {
+type SchedulerParam struct {
 	contentToCheck  content.Content
 	publishDate     time.Time
 	tid             string
 	isMarkedDeleted bool
-	metricContainer *publishHistory
-	environments    *threadSafeEnvironments
+	metricContainer *models.PublishHistory
+	environments    *envs.ThreadSafeEnvironments
 }
 
-func scheduleChecks(p *schedulerParam, subscribedFeeds map[string][]feeds.Feed, endpointSpecificChecks map[string]checks.EndpointSpecificCheck) {
+func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, endpointSpecificChecks map[string]EndpointSpecificCheck, appConfig *config.AppConfig, metricSink chan models.PublishMetric) {
 	for _, metric := range appConfig.MetricConf {
 		if !validType(metric.ContentTypes, p.contentToCheck.GetType()) {
 			continue
 		}
 
-		if p.environments.len() > 0 {
-			for _, name := range p.environments.names() {
-				env := p.environments.environment(name)
+		if p.environments.Len() > 0 {
+			for _, name := range p.environments.Names() {
+				env := p.environments.Environment(name)
 				var endpointURL *url.URL
 				var err error
 
-				if absoluteUrlRegex.MatchString(metric.Endpoint) {
+				if AbsoluteURLRegex.MatchString(metric.Endpoint) {
 					endpointURL, err = url.Parse(metric.Endpoint)
 				} else {
 					if metric.Alias == "S3" {
 						endpointURL, err = url.Parse(env.S3Url + metric.Endpoint)
 					} else {
-						endpointURL, err = url.Parse(env.ReadUrl + metric.Endpoint)
+						endpointURL, err = url.Parse(env.ReadURL + metric.Endpoint)
 					}
 				}
 
@@ -65,7 +66,7 @@ func scheduleChecks(p *schedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 				}
 
 				var checkInterval = appConfig.Threshold / metric.Granularity
-				var publishCheck = checks.NewPublishCheck(publishMetric, env.Username, env.Password, appConfig.Threshold, checkInterval, metricSink, endpointSpecificChecks)
+				var publishCheck = NewPublishCheck(publishMetric, env.Username, env.Password, appConfig.Threshold, checkInterval, metricSink, endpointSpecificChecks)
 				go scheduleCheck(*publishCheck, p.metricContainer)
 			}
 		} else {
@@ -87,7 +88,7 @@ func scheduleChecks(p *schedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 	}
 }
 
-func scheduleCheck(check checks.PublishCheck, metricContainer *publishHistory) {
+func scheduleCheck(check PublishCheck, metricContainer *models.PublishHistory) {
 	//the date the SLA expires for this publish event
 	publishSLA := check.Metric.PublishDate.Add(time.Duration(check.Threshold) * time.Second)
 
@@ -95,7 +96,7 @@ func scheduleCheck(check checks.PublishCheck, metricContainer *publishHistory) {
 	//time passed between publish and the message reaching this point
 	secondsUntilSLA := publishSLA.Sub(time.Now()).Seconds()
 	log.Infof("Checking %s. [%v] seconds until SLA.",
-		checks.LoggingContextForCheck(check.Metric.Config.Alias,
+		LoggingContextForCheck(check.Metric.Config.Alias,
 			check.Metric.UUID,
 			check.Metric.Platform,
 			check.Metric.TID),
@@ -110,7 +111,7 @@ func scheduleCheck(check checks.PublishCheck, metricContainer *publishHistory) {
 
 	secondsSincePublish := time.Since(check.Metric.PublishDate).Seconds()
 	log.Infof("Checking %s. [%v] seconds elapsed since publish.",
-		checks.LoggingContextForCheck(check.Metric.Config.Alias,
+		LoggingContextForCheck(check.Metric.Config.Alias,
 			check.Metric.UUID,
 			check.Metric.Platform,
 			check.Metric.TID),
@@ -118,7 +119,7 @@ func scheduleCheck(check checks.PublishCheck, metricContainer *publishHistory) {
 
 	elapsedIntervals := secondsSincePublish / float64(check.CheckInterval)
 	log.Infof("Checking %s. Skipping first [%v] checks",
-		checks.LoggingContextForCheck(check.Metric.Config.Alias,
+		LoggingContextForCheck(check.Metric.Config.Alias,
 			check.Metric.UUID,
 			check.Metric.Platform,
 			check.Metric.TID),
@@ -131,7 +132,7 @@ func scheduleCheck(check checks.PublishCheck, metricContainer *publishHistory) {
 		checkSuccessful, ignoreCheck := check.DoCheck()
 		if ignoreCheck {
 			log.Infof("Ignore check for %s",
-				checks.LoggingContextForCheck(check.Metric.Config.Alias,
+				LoggingContextForCheck(check.Metric.Config.Alias,
 					check.Metric.UUID,
 					check.Metric.Platform,
 					check.Metric.TID))
@@ -169,12 +170,12 @@ func scheduleCheck(check checks.PublishCheck, metricContainer *publishHistory) {
 
 }
 
-func updateHistory(metricContainer *publishHistory, newPublishResult models.PublishMetric) {
+func updateHistory(metricContainer *models.PublishHistory, newPublishResult models.PublishMetric) {
 	metricContainer.Lock()
-	if len(metricContainer.publishMetrics) == 10 {
-		metricContainer.publishMetrics = metricContainer.publishMetrics[1:len(metricContainer.publishMetrics)]
+	if len(metricContainer.PublishMetrics) == 10 {
+		metricContainer.PublishMetrics = metricContainer.PublishMetrics[1:len(metricContainer.PublishMetrics)]
 	}
-	metricContainer.publishMetrics = append(metricContainer.publishMetrics, newPublishResult)
+	metricContainer.PublishMetrics = append(metricContainer.PublishMetrics, newPublishResult)
 	metricContainer.Unlock()
 }
 

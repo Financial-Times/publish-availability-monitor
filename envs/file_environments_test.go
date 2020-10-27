@@ -1,4 +1,4 @@
-package main
+package envs
 
 import (
 	"bufio"
@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/stretchr/testify/assert"
 )
@@ -41,59 +42,59 @@ const (
 func TestParseEnvsIntoMap(t *testing.T) {
 	envsToBeParsed := getValidEnvs()
 	credentials := getValidCredentials()
-	environments = newThreadSafeEnvironments()
+	environments := NewThreadSafeEnvironments()
 
-	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials)
+	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments)
 
 	assert.Equal(t, 0, len(removedEnvs))
-	assert.Equal(t, len(envsToBeParsed), environments.len())
+	assert.Equal(t, len(envsToBeParsed), environments.Len())
 	envName := envsToBeParsed[1].Name
-	assert.Equal(t, envName, environments.environment(envName).Name)
-	assert.Equal(t, credentials[1].Username, environments.environment(envName).Username)
+	assert.Equal(t, envName, environments.Environment(envName).Name)
+	assert.Equal(t, credentials[1].Username, environments.Environment(envName).Username)
 }
 
 func TestParseEnvsIntoMapWithRemovedEnv(t *testing.T) {
 	envsToBeParsed := getValidEnvs()
 	credentials := getValidCredentials()
-	environments = newThreadSafeEnvironments()
-	environments.envMap["removed-env"] = Environment{}
+	environments := NewThreadSafeEnvironments()
+	environments.EnvMap["removed-env"] = Environment{}
 
-	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials)
+	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments)
 
 	assert.Equal(t, 1, len(removedEnvs))
-	assert.Equal(t, len(envsToBeParsed), environments.len())
+	assert.Equal(t, len(envsToBeParsed), environments.Len())
 	envName := envsToBeParsed[1].Name
-	assert.Equal(t, envName, environments.environment(envName).Name)
-	assert.Equal(t, credentials[1].Username, environments.environment(envName).Username)
+	assert.Equal(t, envName, environments.Environment(envName).Name)
+	assert.Equal(t, credentials[1].Username, environments.Environment(envName).Username)
 }
 
 func TestParseEnvsIntoMapWithExistingEnv(t *testing.T) {
 	envsToBeParsed := getValidEnvs()
 	credentials := getValidCredentials()
-	environments = newThreadSafeEnvironments()
+	environments := NewThreadSafeEnvironments()
 	existingEnv := envsToBeParsed[0]
-	environments.envMap[existingEnv.Name] = existingEnv
+	environments.EnvMap[existingEnv.Name] = existingEnv
 
-	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials)
+	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments)
 
 	assert.Equal(t, 0, len(removedEnvs))
-	assert.Equal(t, len(envsToBeParsed), environments.len())
+	assert.Equal(t, len(envsToBeParsed), environments.Len())
 	envName := envsToBeParsed[1].Name
-	assert.Equal(t, envName, environments.environment(envName).Name)
-	assert.Equal(t, credentials[1].Username, environments.environment(envName).Username)
+	assert.Equal(t, envName, environments.Environment(envName).Name)
+	assert.Equal(t, credentials[1].Username, environments.Environment(envName).Username)
 }
 
 func TestParseEnvsIntoMapWithNoCredentials(t *testing.T) {
 	envsToBeParsed := getValidEnvs()
 	credentials := []Credentials{}
-	environments = newThreadSafeEnvironments()
+	environments := NewThreadSafeEnvironments()
 
-	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials)
+	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments)
 
 	assert.Equal(t, 0, len(removedEnvs))
-	assert.Equal(t, len(envsToBeParsed), environments.len())
+	assert.Equal(t, len(envsToBeParsed), environments.Len())
 	envName := envsToBeParsed[1].Name
-	assert.Equal(t, envName, environments.environment(envName).Name)
+	assert.Equal(t, envName, environments.Environment(envName).Name)
 }
 
 func TestFilterInvalidEnvs(t *testing.T) {
@@ -108,7 +109,7 @@ func TestFilterInvalidEnvsWithEmptyName(t *testing.T) {
 	envsToBeFiltered := []Environment{
 		{
 			Name:     "",
-			ReadUrl:  "test",
+			ReadURL:  "test",
 			S3Url:    "test",
 			Username: "dummy",
 			Password: "dummy",
@@ -124,7 +125,7 @@ func TestFilterInvalidEnvsWithEmptyReadUrl(t *testing.T) {
 	envsToBeFiltered := []Environment{
 		{
 			Name:     "test",
-			ReadUrl:  "",
+			ReadURL:  "",
 			S3Url:    "test",
 			Username: "dummy",
 			Password: "dummy",
@@ -140,7 +141,7 @@ func TestFilterInvalidEnvsWithEmptyS3Url(t *testing.T) {
 	envsToBeFiltered := []Environment{
 		{
 			Name:     "test",
-			ReadUrl:  "test",
+			ReadURL:  "test",
 			S3Url:    "",
 			Username: "dummy",
 			Password: "dummy",
@@ -156,7 +157,7 @@ func TestFilterInvalidEnvsWithEmptyUsernameUrl(t *testing.T) {
 	envsToBeFiltered := []Environment{
 		{
 			Name:     "test",
-			ReadUrl:  "test",
+			ReadURL:  "test",
 			S3Url:    "test",
 			Username: "",
 			Password: "dummy",
@@ -172,7 +173,7 @@ func TestFilterInvalidEnvsWithEmptyPwd(t *testing.T) {
 	envsToBeFiltered := []Environment{
 		{
 			Name:     "test",
-			ReadUrl:  "test",
+			ReadURL:  "test",
 			S3Url:    "test",
 			Username: "test",
 			Password: "",
@@ -223,28 +224,30 @@ func TestUpdateValidationCredentialsInvalidConfig(t *testing.T) {
 }
 
 func TestConfigureFeedsWithEmptyListOfMetrics(t *testing.T) {
+	subscribedFeeds := map[string][]feeds.Feed{}
 	subscribedFeeds["test-feed"] = []feeds.Feed{
 		MockFeed{},
 	}
-	appConfig = &AppConfig{}
+	appConfig := &config.AppConfig{}
 
-	configureFileFeeds(make(map[string]Environment), []string{"test-feed"})
+	configureFileFeeds(make(map[string]Environment), []string{"test-feed"}, subscribedFeeds, appConfig)
 
 	assert.Equal(t, 0, len(subscribedFeeds))
 }
 
 func TestUpdateEnvsHappyFlow(t *testing.T) {
+	subscribedFeeds := map[string][]feeds.Feed{}
 	subscribedFeeds["test-feed"] = []feeds.Feed{
 		MockFeed{},
 	}
-	appConfig = &AppConfig{}
+	appConfig := &config.AppConfig{}
 	envsFileName := prepareFile(validEnvConfig)
 	envsFileContents, _ := ioutil.ReadFile(envsFileName)
 
 	envCredsFileName := prepareFile(validEnvCredentialsConfig)
 	credsFileContents, _ := ioutil.ReadFile(envCredsFileName)
 
-	err := updateEnvs(envsFileContents, credsFileContents)
+	err := updateEnvs(envsFileContents, credsFileContents, NewThreadSafeEnvironments(), subscribedFeeds, appConfig)
 
 	assert.Nil(t, err)
 	os.Remove(envsFileName)
@@ -254,7 +257,10 @@ func TestUpdateEnvsHappyFlow(t *testing.T) {
 func TestUpdateEnvsHappyNilEnvsFile(t *testing.T) {
 	envCredsFileName := prepareFile(validEnvCredentialsConfig)
 	credsFileContents, _ := ioutil.ReadFile(envCredsFileName)
-	err := updateEnvs(nil, credsFileContents)
+	subscribedFeeds := map[string][]feeds.Feed{}
+	appConfig := &config.AppConfig{}
+
+	err := updateEnvs(nil, credsFileContents, NewThreadSafeEnvironments(), subscribedFeeds, appConfig)
 
 	assert.NotNil(t, err)
 	os.Remove(envCredsFileName)
@@ -263,8 +269,10 @@ func TestUpdateEnvsHappyNilEnvsFile(t *testing.T) {
 func TestUpdateEnvsNilEnvCredentialsFile(t *testing.T) {
 	envsFileName := prepareFile(validEnvConfig)
 	envsFileContents, _ := ioutil.ReadFile(envsFileName)
+	subscribedFeeds := map[string][]feeds.Feed{}
+	appConfig := &config.AppConfig{}
 
-	err := updateEnvs(envsFileContents, nil)
+	err := updateEnvs(envsFileContents, nil, NewThreadSafeEnvironments(), subscribedFeeds, appConfig)
 
 	assert.NotNil(t, err)
 	os.Remove(envsFileName)
@@ -351,8 +359,8 @@ func TestIsFileChanged(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		configFilesHashValues = tc.configFilesHashValues
-		actualResult, actualHash, _ := isFileChanged(tc.fileContents, tc.fileName)
+		configFilesHashValues := tc.configFilesHashValues
+		actualResult, actualHash, _ := isFileChanged(tc.fileContents, tc.fileName, configFilesHashValues)
 		assert.Equal(t, tc.expectedResult, actualResult,
 			fmt.Sprintf("%s: File change was not detected correctly.", tc.caseDescription))
 		assert.Equal(t, tc.expectedHash, actualHash,
@@ -364,13 +372,15 @@ func TestUpdateEnvsIfChangedEnvFileDoesntExist(t *testing.T) {
 	credsFile := prepareFile(validEnvCredentialsConfig)
 	defer os.Remove(credsFile)
 
-	environments = newThreadSafeEnvironments()
-	configFilesHashValues = make(map[string]string)
+	environments := NewThreadSafeEnvironments()
+	configFilesHashValues := make(map[string]string)
+	subscribedFeeds := map[string][]feeds.Feed{}
+	appConfig := &config.AppConfig{}
 
-	err := updateEnvsIfChanged("thisFileDoesntexist", credsFile)
+	err := updateEnvsIfChanged("thisFileDoesntexist", credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying file which doesn't exist")
-	assert.Equal(t, 0, environments.len(), "No new environments should've been added")
+	assert.Equal(t, 0, environments.Len(), "No new environments should've been added")
 	assert.Equal(t, 0, len(configFilesHashValues), "No hashes should've been updated")
 }
 
@@ -378,24 +388,28 @@ func TestUpdateEnvsIfChangedCredsFileDoesntExist(t *testing.T) {
 	envsFile := prepareFile(validEnvConfig)
 	defer os.Remove(envsFile)
 
-	environments = newThreadSafeEnvironments()
-	configFilesHashValues = make(map[string]string)
+	environments := NewThreadSafeEnvironments()
+	configFilesHashValues := make(map[string]string)
+	subscribedFeeds := map[string][]feeds.Feed{}
+	appConfig := &config.AppConfig{}
 
-	err := updateEnvsIfChanged(envsFile, "thisFileDoesntexist")
+	err := updateEnvsIfChanged(envsFile, "thisFileDoesntexist", configFilesHashValues, environments, subscribedFeeds, appConfig)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying file which doesn't exist")
-	assert.Equal(t, 0, environments.len(), "No new environments should've been added")
+	assert.Equal(t, 0, environments.Len(), "No new environments should've been added")
 	assert.Equal(t, 0, len(configFilesHashValues), "No hashes should've been updated")
 }
 
 func TestUpdateEnvsIfChangedFilesDontExist(t *testing.T) {
-	environments = newThreadSafeEnvironments()
-	configFilesHashValues = make(map[string]string)
+	environments := NewThreadSafeEnvironments()
+	configFilesHashValues := make(map[string]string)
+	subscribedFeeds := map[string][]feeds.Feed{}
+	appConfig := &config.AppConfig{}
 
-	err := updateEnvsIfChanged("thisFileDoesntExist", "thisDoesntExistEither")
+	err := updateEnvsIfChanged("thisFileDoesntExist", "thisDoesntExistEither", configFilesHashValues, environments, subscribedFeeds, appConfig)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying files which don't exist")
-	assert.Equal(t, 0, environments.len(), "No new environments should've been added")
+	assert.Equal(t, 0, environments.Len(), "No new environments should've been added")
 	assert.Equal(t, 0, len(configFilesHashValues), "No hashes should've been updated")
 }
 
@@ -405,15 +419,16 @@ func TestUpdateEnvsIfChangedValidFiles(t *testing.T) {
 	credsFile := prepareFile(validEnvCredentialsConfig)
 	defer os.Remove(credsFile)
 
-	environments = newThreadSafeEnvironments()
-	configFilesHashValues = make(map[string]string)
+	environments := NewThreadSafeEnvironments()
+	configFilesHashValues := make(map[string]string)
+	subscribedFeeds := map[string][]feeds.Feed{}
 
 	//appConfig has to be non-nil for the actual update to work
-	appConfig = &AppConfig{}
-	err := updateEnvsIfChanged(envsFile, credsFile)
+	appConfig := &config.AppConfig{}
+	err := updateEnvsIfChanged(envsFile, credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig)
 
 	assert.Nil(t, err, "Got an error after supplying valid files")
-	assert.Equal(t, 1, environments.len(), "New environment should've been added")
+	assert.Equal(t, 1, environments.Len(), "New environment should've been added")
 	assert.Equal(t, 2, len(configFilesHashValues), "New hashes should've been added")
 }
 
@@ -423,27 +438,28 @@ func TestUpdateEnvsIfChangedNoChanges(t *testing.T) {
 	credsFile := prepareFile(validEnvCredentialsConfig)
 	defer os.Remove(credsFile)
 
-	environments = newThreadSafeEnvironments()
-	environments.envMap = map[string]Environment{
+	subscribedFeeds := map[string][]feeds.Feed{}
+	environments := NewThreadSafeEnvironments()
+	environments.EnvMap = map[string]Environment{
 		"test-env": {
 			Name:     "test-env",
 			Password: "test-pwd",
-			ReadUrl:  "https://test-env.ft.com",
+			ReadURL:  "https://test-env.ft.com",
 			S3Url:    "http://test.s3.amazonaws.com",
 			Username: "test-user",
 		},
 	}
-	configFilesHashValues = map[string]string{
+	configFilesHashValues := map[string]string{
 		envsFile:  "792c5a9eebad1a967faab8defd9e646b",
 		credsFile: "dfd8aecc21b7017c5e4f171e3279fc68",
 	}
 
 	//if the update works (which it shouldn't) we will have a failure
-	appConfig = nil
-	err := updateEnvsIfChanged(envsFile, credsFile)
+	var appConfig *config.AppConfig
+	err := updateEnvsIfChanged(envsFile, credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig)
 
 	assert.Nil(t, err, "Got an error after supplying valid files")
-	assert.Equal(t, 1, environments.len(), "Environments shouldn't have changed")
+	assert.Equal(t, 1, environments.Len(), "Environments shouldn't have changed")
 	assert.Equal(t, 2, len(configFilesHashValues), "Hashes shouldn't have changed")
 }
 
@@ -453,13 +469,15 @@ func TestUpdateEnvsIfChangedInvalidEnvsFile(t *testing.T) {
 	credsFile := prepareFile(validEnvCredentialsConfig)
 	defer os.Remove(credsFile)
 
-	environments = newThreadSafeEnvironments()
-	configFilesHashValues = make(map[string]string)
+	environments := NewThreadSafeEnvironments()
+	configFilesHashValues := make(map[string]string)
+	subscribedFeeds := map[string][]feeds.Feed{}
+	appConfig := &config.AppConfig{}
 
-	err := updateEnvsIfChanged(envsFile, credsFile)
+	err := updateEnvsIfChanged(envsFile, credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying invalid file")
-	assert.Equal(t, 0, environments.len(), "No new environment should've been added")
+	assert.Equal(t, 0, environments.Len(), "No new environment should've been added")
 	assert.Equal(t, 0, len(configFilesHashValues), "No new hashes should've been added")
 }
 
@@ -469,13 +487,15 @@ func TestUpdateEnvsIfChangedInvalidCredsFile(t *testing.T) {
 	credsFile := prepareFile(invalidJsonConfig)
 	defer os.Remove(credsFile)
 
-	environments = newThreadSafeEnvironments()
-	configFilesHashValues = make(map[string]string)
+	environments := NewThreadSafeEnvironments()
+	configFilesHashValues := make(map[string]string)
+	subscribedFeeds := map[string][]feeds.Feed{}
+	appConfig := &config.AppConfig{}
 
-	err := updateEnvsIfChanged(envsFile, credsFile)
+	err := updateEnvsIfChanged(envsFile, credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying invalid file")
-	assert.Equal(t, 0, environments.len(), "No new environment should've been added")
+	assert.Equal(t, 0, environments.Len(), "No new environment should've been added")
 	assert.Equal(t, 0, len(configFilesHashValues), "No new hashes should've been added")
 }
 
@@ -485,21 +505,23 @@ func TestUpdateEnvsIfChangedInvalidFiles(t *testing.T) {
 	credsFile := prepareFile(invalidJsonConfig)
 	defer os.Remove(credsFile)
 
-	environments = newThreadSafeEnvironments()
-	configFilesHashValues = make(map[string]string)
+	environments := NewThreadSafeEnvironments()
+	configFilesHashValues := make(map[string]string)
+	subscribedFeeds := map[string][]feeds.Feed{}
+	appConfig := &config.AppConfig{}
 
-	err := updateEnvsIfChanged(envsFile, credsFile)
+	err := updateEnvsIfChanged(envsFile, credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying invalid file")
-	assert.Equal(t, 0, environments.len(), "No new environment should've been added")
+	assert.Equal(t, 0, environments.Len(), "No new environment should've been added")
 	assert.Equal(t, 0, len(configFilesHashValues), "No new hashes should've been added")
 }
 
 func TestUpdateValidationCredentialsIfChangedFileDoesntExist(t *testing.T) {
 	validatorCredentials = ""
-	configFilesHashValues = make(map[string]string)
+	configFilesHashValues := make(map[string]string)
 
-	err := updateValidationCredentialsIfChanged("thisFileDoesntExist")
+	err := updateValidationCredentialsIfChanged("thisFileDoesntExist", configFilesHashValues)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying file which doesn't exist")
 	assert.Equal(t, 0, len(validatorCredentials), "No validator credentials should've been added")
@@ -511,9 +533,9 @@ func TestUpdateValidationCredentialsIfChangedInvalidFile(t *testing.T) {
 	defer os.Remove(validationCredsFile)
 
 	validatorCredentials = ""
-	configFilesHashValues = make(map[string]string)
+	configFilesHashValues := make(map[string]string)
 
-	err := updateValidationCredentialsIfChanged(validationCredsFile)
+	err := updateValidationCredentialsIfChanged(validationCredsFile, configFilesHashValues)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying file which doesn't exist")
 	assert.Equal(t, 0, len(validatorCredentials), "No validator credentials should've been added")
@@ -525,9 +547,9 @@ func TestUpdateValidationCredentialsIfChangedNewFile(t *testing.T) {
 	defer os.Remove(validationCredsFile)
 
 	validatorCredentials = ""
-	configFilesHashValues = make(map[string]string)
+	configFilesHashValues := make(map[string]string)
 
-	err := updateValidationCredentialsIfChanged(validationCredsFile)
+	err := updateValidationCredentialsIfChanged(validationCredsFile, configFilesHashValues)
 
 	assert.Nil(t, err, "Shouldn't get an error for valid file")
 	assert.Equal(t, "test-user:test-pwd", validatorCredentials, "New validator credentials should've been added")
@@ -539,11 +561,11 @@ func TestUpdateValidationCredentialsIfChangedFileUnchanged(t *testing.T) {
 	defer os.Remove(validationCredsFile)
 
 	validatorCredentials = "test-user:test-pwd"
-	configFilesHashValues = map[string]string{
+	configFilesHashValues := map[string]string{
 		validationCredsFile: "cc4d51dfe137ec8cbba8fd3ff24474be",
 	}
 
-	err := updateValidationCredentialsIfChanged(validationCredsFile)
+	err := updateValidationCredentialsIfChanged(validationCredsFile, configFilesHashValues)
 	assert.Nil(t, err, "Shouldn't get an error for valid file")
 	assert.Equal(t, "test-user:test-pwd", validatorCredentials, "Validator credentials shouldn't have changed")
 	assert.Equal(t, "cc4d51dfe137ec8cbba8fd3ff24474be", configFilesHashValues[validationCredsFile], "Hashes shouldn't have changed")
@@ -588,12 +610,12 @@ func getValidEnvs() []Environment {
 	return []Environment{
 		{
 			Name:    "test",
-			ReadUrl: "test-url",
+			ReadURL: "test-url",
 			S3Url:   "test-s3-url",
 		},
 		{
 			Name:    "test2",
-			ReadUrl: "test-url2",
+			ReadURL: "test-url2",
 			S3Url:   "test-s3-url2",
 		},
 	}

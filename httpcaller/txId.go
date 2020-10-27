@@ -1,4 +1,4 @@
-package checks
+package httpcaller
 
 import (
 	"strings"

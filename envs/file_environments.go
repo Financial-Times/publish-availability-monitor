@@ -1,4 +1,4 @@
-package main
+package envs
 
 import (
 	"bytes"
@@ -9,14 +9,24 @@ import (
 	"io"
 	"io/ioutil"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	log "github.com/Sirupsen/logrus"
 )
 
-func watchConfigFiles(wg *sync.WaitGroup, envsFileName string, envCredentialsFileName string, validationCredentialsFileName string, configRefreshPeriod int) {
+var validatorCredentials string
+
+type Credentials struct {
+	EnvName  string `json:"env-name"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+func WatchConfigFiles(wg *sync.WaitGroup, envsFileName string, envCredentialsFileName string, validationCredentialsFileName string, configRefreshPeriod int, configFilesHashValues map[string]string, environments *ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig) {
 	ticker := newTicker(0, time.Minute*time.Duration(configRefreshPeriod))
 	first := true
 	defer func() {
@@ -24,12 +34,12 @@ func watchConfigFiles(wg *sync.WaitGroup, envsFileName string, envCredentialsFil
 	}()
 
 	for range ticker.C {
-		err := updateEnvsIfChanged(envsFileName, envCredentialsFileName)
+		err := updateEnvsIfChanged(envsFileName, envCredentialsFileName, configFilesHashValues, environments, subscribedFeeds, appConfig)
 		if err != nil {
 			log.Errorf("Could not update envs config, error was: %s", err)
 		}
 
-		err = updateValidationCredentialsIfChanged(validationCredentialsFileName)
+		err = updateValidationCredentialsIfChanged(validationCredentialsFileName, configFilesHashValues)
 		if err != nil {
 			log.Errorf("Could not update validation credentials config, error was: %s", err)
 		}
@@ -63,15 +73,15 @@ func newTicker(delay, repeat time.Duration) *time.Ticker {
 	return ticker
 }
 
-func updateValidationCredentialsIfChanged(validationCredentialsFileName string) error {
+func updateValidationCredentialsIfChanged(validationCredentialsFileName string, configFilesHashValues map[string]string) error {
 	fileContents, err := ioutil.ReadFile(validationCredentialsFileName)
 	if err != nil {
-		return fmt.Errorf("could not read creds file [%v] because [%s]", envsFileName, err)
+		return fmt.Errorf("could not read creds file [%v] because [%s]", validationCredentialsFileName, err)
 	}
 
 	var validationCredentialsChanged bool
 	var credsNewHash string
-	if validationCredentialsChanged, credsNewHash, err = isFileChanged(fileContents, validationCredentialsFileName); err != nil {
+	if validationCredentialsChanged, credsNewHash, err = isFileChanged(fileContents, validationCredentialsFileName, configFilesHashValues); err != nil {
 		return fmt.Errorf("could not detect if creds file [%s] was changed because: [%s]", validationCredentialsFileName, err)
 	}
 
@@ -88,7 +98,7 @@ func updateValidationCredentialsIfChanged(validationCredentialsFileName string) 
 	return nil
 }
 
-func updateEnvsIfChanged(envsFileName string, envCredentialsFileName string) error {
+func updateEnvsIfChanged(envsFileName string, envCredentialsFileName string, configFilesHashValues map[string]string, environments *ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig) error {
 	var envsFileChanged, envCredentialsChanged bool
 	var envsNewHash, credsNewHash string
 
@@ -97,7 +107,7 @@ func updateEnvsIfChanged(envsFileName string, envCredentialsFileName string) err
 		return fmt.Errorf("could not read envs file [%s] because [%s]", envsFileName, err)
 	}
 
-	if envsFileChanged, envsNewHash, err = isFileChanged(envsfileContents, envsFileName); err != nil {
+	if envsFileChanged, envsNewHash, err = isFileChanged(envsfileContents, envsFileName, configFilesHashValues); err != nil {
 		return fmt.Errorf("could not detect if envs file [%s] was changed because [%s]", envsFileName, err)
 	}
 
@@ -106,7 +116,7 @@ func updateEnvsIfChanged(envsFileName string, envCredentialsFileName string) err
 		return fmt.Errorf("could not read creds file [%s] because [%s]", envCredentialsFileName, err)
 	}
 
-	if envCredentialsChanged, credsNewHash, err = isFileChanged(credsFileContents, envCredentialsFileName); err != nil {
+	if envCredentialsChanged, credsNewHash, err = isFileChanged(credsFileContents, envCredentialsFileName, configFilesHashValues); err != nil {
 		return fmt.Errorf("could not detect if credentials file [%s] was changed because [%s]", envCredentialsFileName, err)
 	}
 
@@ -114,7 +124,7 @@ func updateEnvsIfChanged(envsFileName string, envCredentialsFileName string) err
 		return nil
 	}
 
-	err = updateEnvs(envsfileContents, credsFileContents)
+	err = updateEnvs(envsfileContents, credsFileContents, environments, subscribedFeeds, appConfig)
 	if err != nil {
 		return fmt.Errorf("cannot update environments and credentials because [%s]", err)
 	}
@@ -123,7 +133,7 @@ func updateEnvsIfChanged(envsFileName string, envCredentialsFileName string) err
 	return nil
 }
 
-func isFileChanged(contents []byte, fileName string) (bool, string, error) {
+func isFileChanged(contents []byte, fileName string, configFilesHashValues map[string]string) (bool, string, error) {
 	currentHash, err := computeMD5Hash(contents)
 	if err != nil {
 		return false, "", fmt.Errorf("could not compute hash value for file [%s] because [%s]", fileName, err)
@@ -146,7 +156,7 @@ func computeMD5Hash(data []byte) (string, error) {
 	return hex.EncodeToString(hashValue), nil
 }
 
-func updateEnvs(envsFileData []byte, credsFileData []byte) error {
+func updateEnvs(envsFileData []byte, credsFileData []byte, environments *ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig) error {
 	log.Infof("Env config files changed. Updating envs")
 
 	jsonParser := json.NewDecoder(bytes.NewReader(envsFileData))
@@ -169,8 +179,8 @@ func updateEnvs(envsFileData []byte, credsFileData []byte) error {
 	environments.Lock()
 	defer environments.Unlock()
 
-	removedEnvs := parseEnvsIntoMap(validEnvs, envCredentials)
-	configureFileFeeds(environments.envMap, removedEnvs)
+	removedEnvs := parseEnvsIntoMap(validEnvs, envCredentials, environments)
+	configureFileFeeds(environments.EnvMap, removedEnvs, subscribedFeeds, appConfig)
 	environments.ready = true
 
 	return nil
@@ -189,7 +199,7 @@ func updateValidationCredentials(data []byte) error {
 	return nil
 }
 
-func configureFileFeeds(envMap map[string]Environment, removedEnvs []string) {
+func configureFileFeeds(EnvMap map[string]Environment, removedEnvs []string, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig) {
 	for _, envName := range removedEnvs {
 		feeds, found := subscribedFeeds[envName]
 		if found {
@@ -202,7 +212,7 @@ func configureFileFeeds(envMap map[string]Environment, removedEnvs []string) {
 	}
 
 	for _, metric := range appConfig.MetricConf {
-		for _, env := range envMap {
+		for _, env := range EnvMap {
 			var envFeeds []feeds.Feed
 			var found bool
 			if envFeeds, found = subscribedFeeds[env.Name]; !found {
@@ -219,7 +229,7 @@ func configureFileFeeds(envMap map[string]Environment, removedEnvs []string) {
 			}
 
 			if !found {
-				endpointUrl, err := url.Parse(env.ReadUrl + metric.Endpoint)
+				endpointURL, err := url.Parse(env.ReadURL + metric.Endpoint)
 				if err != nil {
 					log.Errorf("Cannot parse url [%v], error: [%v]", metric.Endpoint, err.Error())
 					continue
@@ -227,7 +237,7 @@ func configureFileFeeds(envMap map[string]Environment, removedEnvs []string) {
 
 				interval := appConfig.Threshold / metric.Granularity
 
-				if f := feeds.NewNotificationsFeed(metric.Alias, *endpointUrl, appConfig.Threshold, interval, env.Username, env.Password, metric.APIKey); f != nil {
+				if f := feeds.NewNotificationsFeed(metric.Alias, *endpointURL, appConfig.Threshold, interval, env.Username, env.Password, metric.APIKey); f != nil {
 					subscribedFeeds[env.Name] = append(envFeeds, f)
 					f.Start()
 				}
@@ -246,7 +256,7 @@ func filterInvalidEnvs(envsFromFile []Environment) []Environment {
 		}
 
 		//envs without read-url are invalid
-		if env.ReadUrl == "" {
+		if env.ReadURL == "" {
 			log.Errorf("Env with name %s does not have readUrl, skipping it", env.Name)
 			continue
 		}
@@ -262,7 +272,7 @@ func filterInvalidEnvs(envsFromFile []Environment) []Environment {
 	return validEnvs
 }
 
-func parseEnvsIntoMap(envs []Environment, envCredentials []Credentials) []string {
+func parseEnvsIntoMap(envs []Environment, envCredentials []Credentials, environments *ThreadSafeEnvironments) []string {
 	//enhance envs with credentials
 	for i, env := range envs {
 		for _, envCredentials := range envCredentials {
@@ -280,10 +290,10 @@ func parseEnvsIntoMap(envs []Environment, envCredentials []Credentials) []string
 
 	//remove envs that don't exist anymore
 	removedEnvs := make([]string, 0)
-	for envName := range environments.envMap {
+	for envName := range environments.EnvMap {
 		if !isEnvInSlice(envName, envs) {
 			log.Infof("removing environment from monitoring: %v", envName)
-			delete(environments.envMap, envName)
+			delete(environments.EnvMap, envName)
 			removedEnvs = append(removedEnvs, envName)
 		}
 	}
@@ -291,7 +301,7 @@ func parseEnvsIntoMap(envs []Environment, envCredentials []Credentials) []string
 	//update envs
 	for _, env := range envs {
 		envName := env.Name
-		environments.envMap[envName] = env
+		environments.EnvMap[envName] = env
 		log.Infof("Added environment to monitoring: %s", envName)
 	}
 
@@ -306,4 +316,13 @@ func isEnvInSlice(envName string, envs []Environment) bool {
 	}
 
 	return false
+}
+
+func GetValidationCredentials() (string, string) {
+	if strings.Contains(validatorCredentials, ":") {
+		unpw := strings.SplitN(validatorCredentials, ":", 2)
+		return unpw[0], unpw[1]
+	}
+
+	return "", ""
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	"github.com/Financial-Times/publish-availability-monitor/checks"
+	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/content"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	log "github.com/Sirupsen/logrus"
@@ -20,12 +21,16 @@ type MessageHandler interface {
 	HandleMessage(msg consumer.Message)
 }
 
-func NewKafkaMessageHandler(typeRes typeResolver) MessageHandler {
-	return &kafkaMessageHandler{typeRes: typeRes}
+func NewKafkaMessageHandler(typeRes typeResolver, appConfig *config.AppConfig) MessageHandler {
+	return &kafkaMessageHandler{
+		typeRes:   typeRes,
+		appConfig: appConfig,
+	}
 }
 
 type kafkaMessageHandler struct {
-	typeRes typeResolver
+	typeRes   typeResolver
+	appConfig *config.AppConfig
 }
 
 func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
@@ -51,10 +56,10 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 		return
 	}
 
-	var paramsToSchedule []*schedulerParam
+	var paramsToSchedule []*checks.SchedulerParam
 
-	for _, preCheck := range mainPreChecks() {
-		ok, scheduleParam := preCheck(publishedContent, tid, publishDate)
+	for _, preCheck := range checks.МainPreChecks() {
+		ok, scheduleParam := preCheck(publishedContent, tid, publishDate, h.appConfig, &metricContainer, environments)
 		if ok {
 			paramsToSchedule = append(paramsToSchedule, scheduleParam)
 		} else {
@@ -63,8 +68,8 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 		}
 	}
 
-	for _, preCheck := range additionalPreChecks() {
-		ok, scheduleParam := preCheck(publishedContent, tid, publishDate)
+	for _, preCheck := range checks.AdditionalPreChecks() {
+		ok, scheduleParam := preCheck(publishedContent, tid, publishDate, h.appConfig, &metricContainer, environments)
 		if ok {
 			paramsToSchedule = append(paramsToSchedule, scheduleParam)
 		}
@@ -88,7 +93,7 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 	}
 
 	for _, scheduleParam := range paramsToSchedule {
-		scheduleChecks(scheduleParam, subscribedFeeds, endpointSpecificChecks)
+		checks.ScheduleChecks(scheduleParam, subscribedFeeds, endpointSpecificChecks, h.appConfig, metricSink)
 	}
 }
 

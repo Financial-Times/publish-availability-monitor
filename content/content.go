@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/Financial-Times/publish-availability-monitor/checks"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	log "github.com/Sirupsen/logrus"
 )
@@ -48,7 +47,7 @@ func doExternalValidation(p validationParam, validCheck func(int) bool, deletedC
 
 	resp, err := httpCaller.DoCall(httpcaller.Config{ //nolint:bodyclose
 		HTTPMethod: "POST", URL: p.validationURL, Username: p.username, Password: p.password,
-		TxID:        checks.ConstructPamTxId(p.txID),
+		TxID:        httpcaller.ConstructPamTxId(p.txID),
 		ContentType: "application/json", Entity: bytes.NewReader(p.binaryContent)})
 
 	if err != nil {
