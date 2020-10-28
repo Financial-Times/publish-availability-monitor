@@ -30,9 +30,11 @@ type Healthcheck struct {
 	config          *config.AppConfig
 	consumer        consumer.MessageConsumer
 	metricContainer *models.PublishHistory
+	environments    *envs.ThreadSafeEnvironments
+	subscribedFeeds map[string][]feeds.Feed
 }
 
-func newHealthcheck(config *config.AppConfig, metricContainer *models.PublishHistory) *Healthcheck {
+func newHealthcheck(config *config.AppConfig, metricContainer *models.PublishHistory, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed) *Healthcheck {
 	httpClient := &http.Client{Timeout: requestTimeout * time.Millisecond}
 	c := consumer.NewConsumer(config.QueueConf, func(m consumer.Message) {}, httpClient)
 	return &Healthcheck{
@@ -40,6 +42,8 @@ func newHealthcheck(config *config.AppConfig, metricContainer *models.PublishHis
 		config:          config,
 		consumer:        c,
 		metricContainer: metricContainer,
+		environments:    environments,
+		subscribedFeeds: subscribedFeeds,
 	}
 }
 
@@ -73,7 +77,7 @@ func (h *Healthcheck) checkHealth() func(w http.ResponseWriter, r *http.Request)
 	checks[0] = h.messageQueueProxyReachable()
 	checks[1] = h.reflectPublishFailures()
 	checks[2] = h.validationServicesReachable()
-	checks[3] = isConsumingFromPushFeeds()
+	checks[3] = isConsumingFromPushFeeds(h.subscribedFeeds)
 
 	readEnvironmentChecks := h.readEnvironmentsReachable()
 	if len(readEnvironmentChecks) == 0 {
@@ -119,7 +123,7 @@ func gtgCheck(handler func() (string, error)) gtg.Status {
 	return gtg.Status{GoodToGo: true}
 }
 
-func isConsumingFromPushFeeds() fthealth.Check {
+func isConsumingFromPushFeeds(subscribedFeeds map[string][]feeds.Feed) fthealth.Check {
 	return fthealth.Check{
 		ID:               "IsConsumingFromNotificationsPushFeeds",
 		BusinessImpact:   "Publish metrics are not recorded. This will impact the SLA measurement.",
@@ -261,15 +265,15 @@ func checkServiceReachable(healthcheckURL string, username string, password stri
 }
 
 func (h *Healthcheck) readEnvironmentsReachable() []fthealth.Check {
-	for i := 0; !environments.AreReady() && i < 5; i++ {
+	for i := 0; !h.environments.AreReady() && i < 5; i++ {
 		log.Info("Environments not set, retry in 2s...")
 		time.Sleep(2 * time.Second)
 	}
 
-	hc := make([]fthealth.Check, environments.Len())
+	hc := make([]fthealth.Check, h.environments.Len())
 
 	i := 0
-	for _, envName := range environments.Names() {
+	for _, envName := range h.environments.Names() {
 		hc[i] = fthealth.Check{
 			ID:               envName + "-readEndpointsReachable",
 			BusinessImpact:   "Publish metrics might not be correct. False positive failures might be recorded. This will impact the SLA measurement.",
@@ -277,7 +281,7 @@ func (h *Healthcheck) readEnvironmentsReachable() []fthealth.Check {
 			PanicGuide:       pam_run_book_url,
 			Severity:         1,
 			TechnicalSummary: "Read services are not reachable/healthy",
-			Checker:          (&readEnvironmentHealthcheck{environments.Environment(envName), h.client, h.config}).checkReadEnvironmentReachable,
+			Checker:          (&readEnvironmentHealthcheck{h.environments.Environment(envName), h.client, h.config}).checkReadEnvironmentReachable,
 		}
 		i++
 	}

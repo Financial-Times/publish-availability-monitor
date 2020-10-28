@@ -34,13 +34,6 @@ var envCredentialsFileName = flag.String("envs-credentials-file-name", "/etc/pam
 var validatorCredentialsFileName = flag.String("validator-credentials-file-name", "/etc/pam/credentials/validator-credentials.json", "Path to json file that contains validation endpoints configuration")
 var configRefreshPeriod = flag.Int("config-refresh-period", 1, "Refresh period for configuration in minutes. By default it is 1 minute.")
 
-var environments = envs.NewThreadSafeEnvironments()
-
-var subscribedFeeds = make(map[string][]feeds.Feed)
-var metricSink = make(chan models.PublishMetric)
-var metricContainer models.PublishHistory
-
-var configFilesHashValues = make(map[string]string)
 var carouselTransactionIDRegExp = regexp.MustCompile(`^.+_carousel_[\d]{10}.*$`)
 
 func init() {
@@ -57,6 +50,11 @@ func main() {
 		return
 	}
 
+	var environments = envs.NewThreadSafeEnvironments()
+	var subscribedFeeds = make(map[string][]feeds.Feed)
+	var metricSink = make(chan models.PublishMetric)
+	var configFilesHashValues = make(map[string]string)
+
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
 
@@ -66,21 +64,21 @@ func main() {
 
 	wg.Wait()
 
-	metricContainer = models.PublishHistory{
+	metricContainer := &models.PublishHistory{
 		RWMutex:        sync.RWMutex{},
 		PublishMetrics: make([]models.PublishMetric, 0),
 	}
 
-	go startHTTPListener(appConfig)
+	go startHTTPListener(appConfig, environments, subscribedFeeds, metricContainer)
 
-	startAggregator(appConfig)
-	readMessages(appConfig)
+	startAggregator(appConfig, metricSink)
+	readMessages(appConfig, environments, subscribedFeeds, metricSink, metricContainer)
 }
 
-func startHTTPListener(appConfig *config.AppConfig) {
+func startHTTPListener(appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricContainer *models.PublishHistory) {
 	router := mux.NewRouter()
-	setupHealthchecks(router, appConfig)
-	router.HandleFunc("/__history", loadHistory)
+	setupHealthchecks(router, appConfig, environments, subscribedFeeds, metricContainer)
+	router.HandleFunc("/__history", loadHistory(metricContainer))
 
 	router.HandleFunc(status.PingPath, status.PingHandler)
 	router.HandleFunc(status.PingPathDW, status.PingHandler)
@@ -95,21 +93,23 @@ func startHTTPListener(appConfig *config.AppConfig) {
 	}
 }
 
-func setupHealthchecks(router *mux.Router, appConfig *config.AppConfig) {
-	hc := newHealthcheck(appConfig, &metricContainer)
+func setupHealthchecks(router *mux.Router, appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricContainer *models.PublishHistory) {
+	hc := newHealthcheck(appConfig, metricContainer, environments, subscribedFeeds)
 	router.HandleFunc("/__health", hc.checkHealth())
 	router.HandleFunc(status.GTGPath, status.NewGoodToGoHandler(hc.GTG))
 }
 
-func loadHistory(w http.ResponseWriter, r *http.Request) {
-	metricContainer.RLock()
-	for i := len(metricContainer.PublishMetrics) - 1; i >= 0; i-- {
-		fmt.Fprintf(w, "%d. %v\n\n", len(metricContainer.PublishMetrics)-i, metricContainer.PublishMetrics[i])
+func loadHistory(metricContainer *models.PublishHistory) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		metricContainer.RLock()
+		for i := len(metricContainer.PublishMetrics) - 1; i >= 0; i-- {
+			fmt.Fprintf(w, "%d. %v\n\n", len(metricContainer.PublishMetrics)-i, metricContainer.PublishMetrics[i])
+		}
+		metricContainer.RUnlock()
 	}
-	metricContainer.RUnlock()
 }
 
-func startAggregator(appConfig *config.AppConfig) {
+func startAggregator(appConfig *config.AppConfig, metricSink chan models.PublishMetric) {
 	var destinations []sender.MetricDestination
 
 	splunkFeeder := splunk.NewSplunkFeeder(appConfig.SplunkConf.LogPrefix)
@@ -118,7 +118,7 @@ func startAggregator(appConfig *config.AppConfig) {
 	go aggregator.Run()
 }
 
-func readMessages(appConfig *config.AppConfig) {
+func readMessages(appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricSink chan models.PublishMetric, metricContainer *models.PublishHistory) {
 	for !environments.AreReady() {
 		log.Info("Environments not set, retry in 3s...")
 		time.Sleep(3 * time.Second)
@@ -134,7 +134,7 @@ func readMessages(appConfig *config.AppConfig) {
 		break
 	}
 
-	h := NewKafkaMessageHandler(typeRes, appConfig)
+	h := NewKafkaMessageHandler(typeRes, appConfig, environments, subscribedFeeds, metricSink, metricContainer)
 	c := consumer.NewConsumer(appConfig.QueueConf, h.HandleMessage, &http.Client{})
 
 	var wg sync.WaitGroup

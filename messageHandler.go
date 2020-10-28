@@ -11,7 +11,10 @@ import (
 	"github.com/Financial-Times/publish-availability-monitor/checks"
 	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/content"
+	"github.com/Financial-Times/publish-availability-monitor/envs"
+	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
+	"github.com/Financial-Times/publish-availability-monitor/models"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -21,16 +24,24 @@ type MessageHandler interface {
 	HandleMessage(msg consumer.Message)
 }
 
-func NewKafkaMessageHandler(typeRes typeResolver, appConfig *config.AppConfig) MessageHandler {
+func NewKafkaMessageHandler(typeRes typeResolver, appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricSink chan models.PublishMetric, metricContainer *models.PublishHistory) MessageHandler {
 	return &kafkaMessageHandler{
-		typeRes:   typeRes,
-		appConfig: appConfig,
+		typeRes:         typeRes,
+		appConfig:       appConfig,
+		environments:    environments,
+		subscribedFeeds: subscribedFeeds,
+		metricSink:      metricSink,
+		metricContainer: metricContainer,
 	}
 }
 
 type kafkaMessageHandler struct {
-	typeRes   typeResolver
-	appConfig *config.AppConfig
+	typeRes         typeResolver
+	appConfig       *config.AppConfig
+	environments    *envs.ThreadSafeEnvironments
+	subscribedFeeds map[string][]feeds.Feed
+	metricSink      chan models.PublishMetric
+	metricContainer *models.PublishHistory
 }
 
 func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
@@ -59,7 +70,7 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 	var paramsToSchedule []*checks.SchedulerParam
 
 	for _, preCheck := range checks.МainPreChecks() {
-		ok, scheduleParam := preCheck(publishedContent, tid, publishDate, h.appConfig, &metricContainer, environments)
+		ok, scheduleParam := preCheck(publishedContent, tid, publishDate, h.appConfig, h.metricContainer, h.environments)
 		if ok {
 			paramsToSchedule = append(paramsToSchedule, scheduleParam)
 		} else {
@@ -69,7 +80,7 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 	}
 
 	for _, preCheck := range checks.AdditionalPreChecks() {
-		ok, scheduleParam := preCheck(publishedContent, tid, publishDate, h.appConfig, &metricContainer, environments)
+		ok, scheduleParam := preCheck(publishedContent, tid, publishDate, h.appConfig, h.metricContainer, h.environments)
 		if ok {
 			paramsToSchedule = append(paramsToSchedule, scheduleParam)
 		}
@@ -86,14 +97,14 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 		"S3":                      checks.NewS3Check(hC),
 		"enrichedContent":         checks.NewContentCheck(hC),
 		"lists":                   checks.NewContentCheck(hC),
-		"notifications":           checks.NewNotificationsCheck(hC, subscribedFeeds, "notifications"),
-		"notifications-push":      checks.NewNotificationsCheck(hC, subscribedFeeds, "notifications-push"),
-		"list-notifications":      checks.NewNotificationsCheck(hC, subscribedFeeds, "list-notifications"),
-		"list-notifications-push": checks.NewNotificationsCheck(hC, subscribedFeeds, "list-notifications-push"),
+		"notifications":           checks.NewNotificationsCheck(hC, h.subscribedFeeds, "notifications"),
+		"notifications-push":      checks.NewNotificationsCheck(hC, h.subscribedFeeds, "notifications-push"),
+		"list-notifications":      checks.NewNotificationsCheck(hC, h.subscribedFeeds, "list-notifications"),
+		"list-notifications-push": checks.NewNotificationsCheck(hC, h.subscribedFeeds, "list-notifications-push"),
 	}
 
 	for _, scheduleParam := range paramsToSchedule {
-		checks.ScheduleChecks(scheduleParam, subscribedFeeds, endpointSpecificChecks, h.appConfig, metricSink)
+		checks.ScheduleChecks(scheduleParam, h.subscribedFeeds, endpointSpecificChecks, h.appConfig, h.metricSink)
 	}
 }
 
