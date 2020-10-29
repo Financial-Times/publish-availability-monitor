@@ -1,4 +1,4 @@
-package checks
+package content
 
 import (
 	"fmt"
@@ -31,24 +31,24 @@ func NewHTTPDocStoreClient(docStoreAddress string, httpCaller httpcaller.Caller,
 }
 
 func (c *HTTPDocStoreClient) ContentQuery(authority string, identifier string, tid string) (status int, location string, err error) {
-	docStoreUrl, err := url.Parse(c.docStoreAddress + "/content-query")
+	docStoreURL, err := url.Parse(c.docStoreAddress + "/content-query")
 	if err != nil {
 		return -1, "", fmt.Errorf("invalid address docStoreAddress=%v", c.docStoreAddress)
 	}
 	query := url.Values{}
 	query.Add("identifierValue", identifier)
 	query.Add("identifierAuthority", authority)
-	docStoreUrl.RawQuery = query.Encode()
+	docStoreURL.RawQuery = query.Encode()
 
 	resp, err := c.httpCaller.DoCall(httpcaller.Config{
-		URL:      docStoreUrl.String(),
+		URL:      docStoreURL.String(),
 		Username: c.username,
 		Password: c.password,
 		TxID:     httpcaller.ConstructPamTxId(tid),
 	})
 
 	if err != nil {
-		return -1, "", fmt.Errorf("unsuccessful request for fetching canonical identifier for authority=%v identifier=%v url=%v, error was: %v", authority, identifier, docStoreUrl.String(), err.Error())
+		return -1, "", fmt.Errorf("unsuccessful request for fetching canonical identifier for authority=%v identifier=%v url=%v, error was: %v", authority, identifier, docStoreURL.String(), err.Error())
 	}
 	niceClose(resp)
 
@@ -56,13 +56,13 @@ func (c *HTTPDocStoreClient) ContentQuery(authority string, identifier string, t
 }
 
 func (c *HTTPDocStoreClient) IsUUIDPresent(uuid, tid string) (isPresent bool, err error) {
-	docStoreUrl, err := url.Parse(c.docStoreAddress + "/content/" + uuid)
+	docStoreURL, err := url.Parse(c.docStoreAddress + "/content/" + uuid)
 	if err != nil {
 		return false, fmt.Errorf("invalid address docStoreAddress=%v", c.docStoreAddress)
 	}
 
 	resp, err := c.httpCaller.DoCall(httpcaller.Config{
-		URL:      docStoreUrl.String(),
+		URL:      docStoreURL.String(),
 		Username: c.username,
 		Password: c.password,
 		TxID:     httpcaller.ConstructPamTxId(tid),

@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	"github.com/Financial-Times/publish-availability-monitor/checks"
 	"github.com/Financial-Times/publish-availability-monitor/config"
+	"github.com/Financial-Times/publish-availability-monitor/content"
 	"github.com/Financial-Times/publish-availability-monitor/envs"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
@@ -124,13 +124,13 @@ func readMessages(appConfig *config.AppConfig, environments *envs.ThreadSafeEnvi
 		time.Sleep(3 * time.Second)
 	}
 
-	var typeRes typeResolver
+	var typeRes content.TypeResolver
 	for _, envName := range environments.Names() {
 		env := environments.Environment(envName)
 		docStoreCaller := httpcaller.NewCaller(10)
-		docStoreClient := checks.NewHTTPDocStoreClient(env.ReadURL+appConfig.UUIDResolverURL, docStoreCaller, env.Username, env.Password)
-		uuidResolver := checks.NewHttpUUIDResolver(docStoreClient, readBrandMappings())
-		typeRes = NewMethodeTypeResolver(uuidResolver)
+		docStoreClient := content.NewHTTPDocStoreClient(env.ReadURL+appConfig.UUIDResolverURL, docStoreCaller, env.Username, env.Password)
+		uuidResolver := content.NewHTTPUUIDResolver(docStoreClient, readBrandMappings())
+		typeRes = content.NewMethodeTypeResolver(uuidResolver)
 		break
 	}
 

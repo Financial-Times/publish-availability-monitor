@@ -24,7 +24,7 @@ type MessageHandler interface {
 	HandleMessage(msg consumer.Message)
 }
 
-func NewKafkaMessageHandler(typeRes typeResolver, appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricSink chan models.PublishMetric, metricContainer *models.PublishHistory) MessageHandler {
+func NewKafkaMessageHandler(typeRes content.TypeResolver, appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricSink chan models.PublishMetric, metricContainer *models.PublishHistory) MessageHandler {
 	return &kafkaMessageHandler{
 		typeRes:         typeRes,
 		appConfig:       appConfig,
@@ -36,7 +36,7 @@ func NewKafkaMessageHandler(typeRes typeResolver, appConfig *config.AppConfig, e
 }
 
 type kafkaMessageHandler struct {
-	typeRes         typeResolver
+	typeRes         content.TypeResolver
 	appConfig       *config.AppConfig
 	environments    *envs.ThreadSafeEnvironments
 	subscribedFeeds map[string][]feeds.Feed
@@ -137,12 +137,12 @@ func (h *kafkaMessageHandler) unmarshalContent(msg consumer.Message) (content.Co
 		}
 		xml.Unmarshal([]byte(eomFile.Attributes), &eomFile.Source)
 		eomFile = eomFile.Initialize(binaryContent).(content.EomFile)
-		theType, resolvedUuid, err := h.typeRes.ResolveTypeAndUuid(eomFile, txID)
+		theType, resolvedUUID, err := h.typeRes.ResolveTypeAndUUID(eomFile, txID)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't map kafka message to methode Content while fetching its type and uuid. %v", err)
 		}
 		eomFile.Type = theType
-		eomFile.UUID = resolvedUuid
+		eomFile.UUID = resolvedUUID
 		return eomFile, nil
 	case "http://cmdb.ft.com/systems/wordpress":
 		var wordPressMsg content.WordPressMessage

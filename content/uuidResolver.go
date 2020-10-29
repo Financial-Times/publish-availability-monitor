@@ -1,4 +1,4 @@
-package checks
+package content
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ const (
 var uuidRegex = regexp.MustCompile(uuidPattern)
 
 type UUIDResolver interface {
-	ResolveIdentifier(serviceId, refField, tid string) (string, error)
+	ResolveIdentifier(serviceID, refField, tid string) (string, error)
 	ResolveOriginalUUID(uuid, tid string) (string, error)
 }
 
@@ -24,21 +24,21 @@ type httpResolver struct {
 	client        DocStoreClient
 }
 
-func NewHttpUUIDResolver(client DocStoreClient, brandMappings map[string]string) *httpResolver {
+func NewHTTPUUIDResolver(client DocStoreClient, brandMappings map[string]string) UUIDResolver {
 	return &httpResolver{client: client, brandMappings: brandMappings}
 }
 
-func (r *httpResolver) ResolveIdentifier(serviceId, refField, tid string) (string, error) {
-	mappingKey := strings.Split(serviceId, "?")[0]
+func (r *httpResolver) ResolveIdentifier(serviceID, refField, tid string) (string, error) {
+	mappingKey := strings.Split(serviceID, "?")[0]
 	mappingKey = strings.Split(mappingKey, "#")[0]
 	for key, value := range r.brandMappings {
 		if strings.Contains(mappingKey, key) {
 			authority := authorityPrefix + value
-			identifierValue := strings.Split(serviceId, "://")[0] + "://" + key + "/?p=" + refField
+			identifierValue := strings.Split(serviceID, "://")[0] + "://" + key + "/?p=" + refField
 			return r.resolveIdentifier(authority, identifierValue, tid)
 		}
 	}
-	return "", fmt.Errorf("couldn't find authority in mapping table tid=%v serviceId=%v refField=%v", tid, serviceId, refField)
+	return "", fmt.Errorf("couldn't find authority in mapping table tid=%v serviceId=%v refField=%v", tid, serviceID, refField)
 }
 
 func (r *httpResolver) ResolveOriginalUUID(uuid, tid string) (string, error) {
