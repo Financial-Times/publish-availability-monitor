@@ -44,7 +44,7 @@ func main() {
 	flag.Parse()
 
 	var err error
-	appConfig, err := ParseConfig(*configFileName)
+	appConfig, err := config.NewAppConfig(*configFileName)
 	if err != nil {
 		log.WithError(err).Error("Cannot load configuration")
 		return

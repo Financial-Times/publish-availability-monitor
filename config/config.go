@@ -1,8 +1,12 @@
 package config
 
 import (
+	"encoding/json"
+	"io/ioutil"
+
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	"github.com/Financial-Times/publish-availability-monitor/models"
+	log "github.com/Sirupsen/logrus"
 )
 
 // AppConfig holds the application's configuration
@@ -24,4 +28,22 @@ type SplunkConfig struct {
 // HealthConfig holds the application's healthchecks configuration
 type HealthConfig struct {
 	FailureThreshold int `json:"failureThreshold"`
+}
+
+// NewAppConfig opens the file at configFileName and unmarshals it into an AppConfig.
+func NewAppConfig(configFileName string) (*AppConfig, error) {
+	file, err := ioutil.ReadFile(configFileName)
+	if err != nil {
+		log.Errorf("Error reading configuration file [%v]: [%v]", configFileName, err.Error())
+		return nil, err
+	}
+
+	var conf AppConfig
+	err = json.Unmarshal(file, &conf)
+	if err != nil {
+		log.Errorf("Error unmarshalling configuration file [%v]: [%v]", configFileName, err.Error())
+		return nil, err
+	}
+
+	return &conf, nil
 }
