@@ -22,7 +22,6 @@ import (
 	"github.com/Financial-Times/publish-availability-monitor/logformat"
 	"github.com/Financial-Times/publish-availability-monitor/models"
 	"github.com/Financial-Times/publish-availability-monitor/sender"
-	"github.com/Financial-Times/publish-availability-monitor/splunk"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
@@ -112,7 +111,7 @@ func loadHistory(metricContainer *models.PublishHistory) func(w http.ResponseWri
 func startAggregator(appConfig *config.AppConfig, metricSink chan models.PublishMetric) {
 	var destinations []sender.MetricDestination
 
-	splunkFeeder := splunk.NewSplunkFeeder(appConfig.SplunkConf.LogPrefix)
+	splunkFeeder := sender.NewSplunkFeeder(appConfig.SplunkConf.LogPrefix)
 	destinations = append(destinations, splunkFeeder)
 	aggregator := sender.NewAggregator(metricSink, destinations)
 	go aggregator.Run()

@@ -1,4 +1,4 @@
-package splunk
+package sender
 
 import (
 	"log"
@@ -18,7 +18,6 @@ type SplunkFeeder struct {
 func NewSplunkFeeder(logPrefix string) *SplunkFeeder {
 	logger := log.New(os.Stdout, logPrefix, log.Ldate|log.Ltime|log.Lmicroseconds|log.LUTC)
 	return &SplunkFeeder{logger}
-
 }
 
 // Send logs pm into a file.
