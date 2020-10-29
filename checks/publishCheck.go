@@ -10,7 +10,7 @@ import (
 
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
-	"github.com/Financial-Times/publish-availability-monitor/models"
+	"github.com/Financial-Times/publish-availability-monitor/metrics"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -21,18 +21,18 @@ const DateLayout = time.RFC3339Nano
 // Holds all the information necessary to check content availability
 // at an endpoint, as well as store and send the results of the check.
 type PublishCheck struct {
-	Metric                 models.PublishMetric
+	Metric                 metrics.PublishMetric
 	username               string
 	password               string
 	Threshold              int
 	CheckInterval          int
-	ResultSink             chan models.PublishMetric
+	ResultSink             chan metrics.PublishMetric
 	endpointSpecificChecks map[string]EndpointSpecificCheck
 }
 
 // NewPublishCheck returns a PublishCheck ready to perform a check for pm.UUID, at the
 // pm.Endpoint.
-func NewPublishCheck(pm models.PublishMetric, username string, password string, t int, ci int, rs chan models.PublishMetric, endpointSpecificChecks map[string]EndpointSpecificCheck) *PublishCheck {
+func NewPublishCheck(pm metrics.PublishMetric, username string, password string, t int, ci int, rs chan metrics.PublishMetric, endpointSpecificChecks map[string]EndpointSpecificCheck) *PublishCheck {
 	return &PublishCheck{pm, username, password, t, ci, rs, endpointSpecificChecks}
 }
 

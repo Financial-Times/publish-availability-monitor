@@ -14,7 +14,7 @@ import (
 	"github.com/Financial-Times/publish-availability-monitor/envs"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
-	"github.com/Financial-Times/publish-availability-monitor/models"
+	"github.com/Financial-Times/publish-availability-monitor/metrics"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -24,7 +24,7 @@ type MessageHandler interface {
 	HandleMessage(msg consumer.Message)
 }
 
-func NewKafkaMessageHandler(typeRes content.TypeResolver, appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricSink chan models.PublishMetric, metricContainer *models.PublishHistory) MessageHandler {
+func NewKafkaMessageHandler(typeRes content.TypeResolver, appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.PublishMetricsHistory) MessageHandler {
 	return &kafkaMessageHandler{
 		typeRes:         typeRes,
 		appConfig:       appConfig,
@@ -40,8 +40,8 @@ type kafkaMessageHandler struct {
 	appConfig       *config.AppConfig
 	environments    *envs.ThreadSafeEnvironments
 	subscribedFeeds map[string][]feeds.Feed
-	metricSink      chan models.PublishMetric
-	metricContainer *models.PublishHistory
+	metricSink      chan metrics.PublishMetric
+	metricContainer *metrics.PublishMetricsHistory
 }
 
 func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {

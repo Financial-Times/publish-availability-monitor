@@ -20,7 +20,7 @@ import (
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/Financial-Times/publish-availability-monitor/logformat"
-	"github.com/Financial-Times/publish-availability-monitor/models"
+	"github.com/Financial-Times/publish-availability-monitor/metrics"
 	"github.com/Financial-Times/publish-availability-monitor/sender"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
 	log "github.com/Sirupsen/logrus"
@@ -51,7 +51,7 @@ func main() {
 
 	var environments = envs.NewThreadSafeEnvironments()
 	var subscribedFeeds = make(map[string][]feeds.Feed)
-	var metricSink = make(chan models.PublishMetric)
+	var metricSink = make(chan metrics.PublishMetric)
 	var configFilesHashValues = make(map[string]string)
 
 	wg := new(sync.WaitGroup)
@@ -63,9 +63,9 @@ func main() {
 
 	wg.Wait()
 
-	metricContainer := &models.PublishHistory{
+	metricContainer := &metrics.PublishMetricsHistory{
 		RWMutex:        sync.RWMutex{},
-		PublishMetrics: make([]models.PublishMetric, 0),
+		PublishMetrics: make([]metrics.PublishMetric, 0),
 	}
 
 	go startHTTPListener(appConfig, environments, subscribedFeeds, metricContainer)
@@ -74,7 +74,7 @@ func main() {
 	readMessages(appConfig, environments, subscribedFeeds, metricSink, metricContainer)
 }
 
-func startHTTPListener(appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricContainer *models.PublishHistory) {
+func startHTTPListener(appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricContainer *metrics.PublishMetricsHistory) {
 	router := mux.NewRouter()
 	setupHealthchecks(router, appConfig, environments, subscribedFeeds, metricContainer)
 	router.HandleFunc("/__history", loadHistory(metricContainer))
@@ -92,13 +92,13 @@ func startHTTPListener(appConfig *config.AppConfig, environments *envs.ThreadSaf
 	}
 }
 
-func setupHealthchecks(router *mux.Router, appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricContainer *models.PublishHistory) {
+func setupHealthchecks(router *mux.Router, appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricContainer *metrics.PublishMetricsHistory) {
 	hc := newHealthcheck(appConfig, metricContainer, environments, subscribedFeeds)
 	router.HandleFunc("/__health", hc.checkHealth())
 	router.HandleFunc(status.GTGPath, status.NewGoodToGoHandler(hc.GTG))
 }
 
-func loadHistory(metricContainer *models.PublishHistory) func(w http.ResponseWriter, r *http.Request) {
+func loadHistory(metricContainer *metrics.PublishMetricsHistory) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		metricContainer.RLock()
 		for i := len(metricContainer.PublishMetrics) - 1; i >= 0; i-- {
@@ -108,7 +108,7 @@ func loadHistory(metricContainer *models.PublishHistory) func(w http.ResponseWri
 	}
 }
 
-func startAggregator(appConfig *config.AppConfig, metricSink chan models.PublishMetric) {
+func startAggregator(appConfig *config.AppConfig, metricSink chan metrics.PublishMetric) {
 	var destinations []sender.MetricDestination
 
 	splunkFeeder := sender.NewSplunkFeeder(appConfig.SplunkConf.LogPrefix)
@@ -117,7 +117,7 @@ func startAggregator(appConfig *config.AppConfig, metricSink chan models.Publish
 	go aggregator.Run()
 }
 
-func readMessages(appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricSink chan models.PublishMetric, metricContainer *models.PublishHistory) {
+func readMessages(appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.PublishMetricsHistory) {
 	for !environments.AreReady() {
 		log.Info("Environments not set, retry in 3s...")
 		time.Sleep(3 * time.Second)

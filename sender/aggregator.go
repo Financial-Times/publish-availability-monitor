@@ -1,23 +1,23 @@
 package sender
 
-import "github.com/Financial-Times/publish-availability-monitor/models"
+import "github.com/Financial-Times/publish-availability-monitor/metrics"
 
 // MetricDestination is the interface which defines a method to send
 // PublishMetrics to a certain destination.
 type MetricDestination interface {
-	Send(pm models.PublishMetric)
+	Send(pm metrics.PublishMetric)
 }
 
 // Aggregator reads PublishMetrics from a channel and distributes them to
 // the configured MetricDestinations.
 type Aggregator struct {
-	publishMetricSource       chan models.PublishMetric
+	publishMetricSource       chan metrics.PublishMetric
 	publishMetricDestinations []MetricDestination
 }
 
 // NewAggregator returns an Aggregator which reads messages from inputChannel and
 // distributes them to destinations.
-func NewAggregator(inputChannel chan models.PublishMetric, destinations []MetricDestination) *Aggregator {
+func NewAggregator(inputChannel chan metrics.PublishMetric, destinations []MetricDestination) *Aggregator {
 	return &Aggregator{inputChannel, destinations}
 }
 

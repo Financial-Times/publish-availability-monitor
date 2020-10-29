@@ -1,4 +1,4 @@
-package models
+package metrics
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ type PublishMetric struct {
 	PublishDate     time.Time //the time WE get the message
 	Platform        string
 	PublishInterval Interval //the interval it was actually published in, ex. (10,20)
-	Config          MetricConfig
+	Config          Config
 	Endpoint        url.URL
 	TID             string
 	IsMarkedDeleted bool
@@ -39,8 +39,8 @@ type Interval struct {
 	UpperBound int
 }
 
-// MetricConfig is the configuration of a PublishMetric
-type MetricConfig struct {
+// Config is the configuration of a PublishMetric
+type Config struct {
 	Granularity  int      `json:"granularity"` //how we split up the threshold, ex. 120/12
 	Endpoint     string   `json:"endpoint"`
 	ContentTypes []string `json:"contentTypes"` //list of valid eom types for this metric
@@ -49,7 +49,7 @@ type MetricConfig struct {
 	APIKey       string   `json:"apiKey,omitempty"`
 }
 
-type PublishHistory struct {
+type PublishMetricsHistory struct {
 	sync.RWMutex
 	PublishMetrics []PublishMetric
 }

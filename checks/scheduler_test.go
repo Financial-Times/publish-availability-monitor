@@ -9,7 +9,7 @@ import (
 	"github.com/Financial-Times/publish-availability-monitor/content"
 	"github.com/Financial-Times/publish-availability-monitor/envs"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
-	"github.com/Financial-Times/publish-availability-monitor/models"
+	"github.com/Financial-Times/publish-availability-monitor/metrics"
 	"github.com/stretchr/testify/require"
 )
 
@@ -58,7 +58,7 @@ var mockArticleEomFile = content.EomFile{
 func TestScheduleChecksForS3AreCorrect(testing *testing.T) {
 	//redefine appConfig to have only S3
 	appConfig := &config.AppConfig{
-		MetricConf: []models.MetricConfig{
+		MetricConf: []metrics.Config{
 			{
 				Endpoint:    "/whatever/",
 				Granularity: 1,
@@ -93,7 +93,7 @@ func TestScheduleChecksForS3AreCorrect(testing *testing.T) {
 func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 	//redefine appConfig to have only Content
 	appConfig := &config.AppConfig{
-		MetricConf: []models.MetricConfig{
+		MetricConf: []metrics.Config{
 			{
 				Endpoint:    "/whatever/",
 				Granularity: 1,
@@ -127,7 +127,7 @@ func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 
 func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testing.T) {
 	appConfig := &config.AppConfig{
-		MetricConf: []models.MetricConfig{
+		MetricConf: []metrics.Config{
 			{
 				Endpoint:    "/internalcomponents/",
 				Granularity: 1,
@@ -164,7 +164,7 @@ func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testi
 
 func TestScheduleChecksForDynamicContentWithInternalComponentsAreCorrect(testing *testing.T) {
 	appConfig := &config.AppConfig{
-		MetricConf: []models.MetricConfig{
+		MetricConf: []metrics.Config{
 			{
 				Endpoint:    "/internalcomponents/",
 				Granularity: 1,
@@ -200,10 +200,10 @@ func TestScheduleChecksForDynamicContentWithInternalComponentsAreCorrect(testing
 	require.Equal(testing, readURL+"/internalcomponents/", capturingMetrics.PublishMetrics[0].Endpoint.String())
 }
 
-func runScheduleChecks(testing *testing.T, content content.Content, mockEnvironments *envs.ThreadSafeEnvironments, appConfig *config.AppConfig) *models.PublishHistory {
-	capturingMetrics := &models.PublishHistory{
+func runScheduleChecks(testing *testing.T, content content.Content, mockEnvironments *envs.ThreadSafeEnvironments, appConfig *config.AppConfig) *metrics.PublishMetricsHistory {
+	capturingMetrics := &metrics.PublishMetricsHistory{
 		RWMutex:        sync.RWMutex{},
-		PublishMetrics: make([]models.PublishMetric, 0),
+		PublishMetrics: make([]metrics.PublishMetric, 0),
 	}
 
 	tid := "tid_1234"
@@ -216,7 +216,7 @@ func runScheduleChecks(testing *testing.T, content content.Content, mockEnvironm
 	//redefine map to avoid actual checks
 	endpointSpecificChecks := map[string]EndpointSpecificCheck{}
 	//redefine metricSink to avoid hang
-	metricSink := make(chan models.PublishMetric, 2)
+	metricSink := make(chan metrics.PublishMetric, 2)
 	subscribedFeeds := map[string][]feeds.Feed{}
 
 	ScheduleChecks(&SchedulerParam{content, publishDate, tid, true, capturingMetrics, mockEnvironments}, subscribedFeeds, endpointSpecificChecks, appConfig, metricSink)

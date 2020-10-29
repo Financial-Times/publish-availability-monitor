@@ -17,7 +17,7 @@ import (
 	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/envs"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
-	"github.com/Financial-Times/publish-availability-monitor/models"
+	"github.com/Financial-Times/publish-availability-monitor/metrics"
 	"github.com/Financial-Times/service-status-go/gtg"
 	log "github.com/Sirupsen/logrus"
 )
@@ -29,12 +29,12 @@ type Healthcheck struct {
 	client          *http.Client
 	config          *config.AppConfig
 	consumer        consumer.MessageConsumer
-	metricContainer *models.PublishHistory
+	metricContainer *metrics.PublishMetricsHistory
 	environments    *envs.ThreadSafeEnvironments
 	subscribedFeeds map[string][]feeds.Feed
 }
 
-func newHealthcheck(config *config.AppConfig, metricContainer *models.PublishHistory, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed) *Healthcheck {
+func newHealthcheck(config *config.AppConfig, metricContainer *metrics.PublishMetricsHistory, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed) *Healthcheck {
 	httpClient := &http.Client{Timeout: requestTimeout * time.Millisecond}
 	c := consumer.NewConsumer(config.QueueConf, func(m consumer.Message) {}, httpClient)
 	return &Healthcheck{

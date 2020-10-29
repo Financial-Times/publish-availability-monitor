@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
-	"github.com/Financial-Times/publish-availability-monitor/models"
+	"github.com/Financial-Times/publish-availability-monitor/metrics"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +18,7 @@ func TestIsCurrentOperationFinished_S3Check_Finished(t *testing.T) {
 	s3Check := &S3Check{
 		mockHTTPCaller(t, "", buildResponse(200, "imagebytes")),
 	}
-	finished, _ := s3Check.isCurrentOperationFinished(NewPublishCheck(models.PublishMetric{}, "", "", 0, 0, nil, nil))
+	finished, _ := s3Check.isCurrentOperationFinished(NewPublishCheck(metrics.PublishMetric{}, "", "", 0, 0, nil, nil))
 	assert.True(t, finished, "operation should have finished successfully")
 }
 
@@ -38,7 +38,7 @@ func TestIsCurrentOperationFinished_S3Check_Empty(t *testing.T) {
 	s3Check := &S3Check{
 		mockHTTPCaller(t, "", buildResponse(200, "")),
 	}
-	finished, _ := s3Check.isCurrentOperationFinished(NewPublishCheck(models.PublishMetric{}, "", "", 0, 0, nil, nil))
+	finished, _ := s3Check.isCurrentOperationFinished(NewPublishCheck(metrics.PublishMetric{}, "", "", 0, 0, nil, nil))
 	assert.False(t, finished, "operation should not have finished")
 }
 
@@ -46,7 +46,7 @@ func TestIsCurrentOperationFinished_S3Check_NotFinished(t *testing.T) {
 	s3Check := &S3Check{
 		mockHTTPCaller(t, "", buildResponse(404, "")),
 	}
-	finished, _ := s3Check.isCurrentOperationFinished(NewPublishCheck(models.PublishMetric{}, "", "", 0, 0, nil, nil))
+	finished, _ := s3Check.isCurrentOperationFinished(NewPublishCheck(metrics.PublishMetric{}, "", "", 0, 0, nil, nil))
 	assert.False(t, finished, "operation should not have finished")
 }
 
@@ -54,7 +54,7 @@ func TestIsCurrentOperationFinished_S3Check_NotFinished_On_403(t *testing.T) {
 	s3Check := &S3Check{
 		mockHTTPCaller(t, "", buildResponse(403, "")),
 	}
-	finished, _ := s3Check.isCurrentOperationFinished(NewPublishCheck(models.PublishMetric{}, "", "", 0, 0, nil, nil))
+	finished, _ := s3Check.isCurrentOperationFinished(NewPublishCheck(metrics.PublishMetric{}, "", "", 0, 0, nil, nil))
 	assert.False(t, finished, "operation should not have finished")
 }
 
@@ -249,7 +249,7 @@ type publishMetricBuilder interface {
 	withTID(string) publishMetricBuilder
 	withMarkedDeleted(bool) publishMetricBuilder
 	withPublishDate(time.Time) publishMetricBuilder
-	build() models.PublishMetric
+	build() metrics.PublishMetric
 }
 
 //PublishMetricBuilder implementation
@@ -293,8 +293,8 @@ func (b *pmBuilder) withPublishDate(publishDate time.Time) publishMetricBuilder 
 	return b
 }
 
-func (b *pmBuilder) build() models.PublishMetric {
-	return models.PublishMetric{
+func (b *pmBuilder) build() metrics.PublishMetric {
+	return metrics.PublishMetric{
 		UUID:            b.UUID,
 		Endpoint:        b.endpoint,
 		Platform:        b.platform,

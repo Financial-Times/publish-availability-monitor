@@ -9,7 +9,7 @@ import (
 	"github.com/Financial-Times/publish-availability-monitor/content"
 	"github.com/Financial-Times/publish-availability-monitor/envs"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
-	"github.com/Financial-Times/publish-availability-monitor/models"
+	"github.com/Financial-Times/publish-availability-monitor/metrics"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -22,11 +22,11 @@ type SchedulerParam struct {
 	publishDate     time.Time
 	tid             string
 	isMarkedDeleted bool
-	metricContainer *models.PublishHistory
+	metricContainer *metrics.PublishMetricsHistory
 	environments    *envs.ThreadSafeEnvironments
 }
 
-func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, endpointSpecificChecks map[string]EndpointSpecificCheck, appConfig *config.AppConfig, metricSink chan models.PublishMetric) {
+func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, endpointSpecificChecks map[string]EndpointSpecificCheck, appConfig *config.AppConfig, metricSink chan metrics.PublishMetric) {
 	for _, metric := range appConfig.MetricConf {
 		if !validType(metric.ContentTypes, p.contentToCheck.GetType()) {
 			continue
@@ -53,12 +53,12 @@ func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 					continue
 				}
 
-				var publishMetric = models.PublishMetric{
+				var publishMetric = metrics.PublishMetric{
 					UUID:            p.contentToCheck.GetUUID(),
 					PublishOK:       false,
 					PublishDate:     p.publishDate,
 					Platform:        name,
-					PublishInterval: models.Interval{},
+					PublishInterval: metrics.Interval{},
 					Config:          metric,
 					Endpoint:        *endpointURL,
 					TID:             p.tid,
@@ -71,12 +71,12 @@ func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 			}
 		} else {
 			// generate a generic failure metric so that the absence of monitoring is logged
-			var publishMetric = models.PublishMetric{
+			var publishMetric = metrics.PublishMetric{
 				UUID:            p.contentToCheck.GetUUID(),
 				PublishOK:       false,
 				PublishDate:     p.publishDate,
 				Platform:        "none",
-				PublishInterval: models.Interval{},
+				PublishInterval: metrics.Interval{},
 				Config:          metric,
 				Endpoint:        url.URL{},
 				TID:             p.tid,
@@ -88,7 +88,7 @@ func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 	}
 }
 
-func scheduleCheck(check PublishCheck, metricContainer *models.PublishHistory) {
+func scheduleCheck(check PublishCheck, metricContainer *metrics.PublishMetricsHistory) {
 	//the date the SLA expires for this publish event
 	publishSLA := check.Metric.PublishDate.Add(time.Duration(check.Threshold) * time.Second)
 
@@ -145,7 +145,7 @@ func scheduleCheck(check PublishCheck, metricContainer *models.PublishHistory) {
 
 			lower := (checkNr - 1) * check.CheckInterval
 			upper := checkNr * check.CheckInterval
-			check.Metric.PublishInterval = models.Interval{
+			check.Metric.PublishInterval = metrics.Interval{
 				LowerBound: lower,
 				UpperBound: upper,
 			}
@@ -170,7 +170,7 @@ func scheduleCheck(check PublishCheck, metricContainer *models.PublishHistory) {
 
 }
 
-func updateHistory(metricContainer *models.PublishHistory, newPublishResult models.PublishMetric) {
+func updateHistory(metricContainer *metrics.PublishMetricsHistory, newPublishResult metrics.PublishMetric) {
 	metricContainer.Lock()
 	if len(metricContainer.PublishMetrics) == 10 {
 		metricContainer.PublishMetrics = metricContainer.PublishMetrics[1:len(metricContainer.PublishMetrics)]
