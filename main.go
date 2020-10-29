@@ -68,15 +68,25 @@ func main() {
 		PublishMetrics: make([]metrics.PublishMetric, 0),
 	}
 
-	go startHTTPListener(appConfig, environments, subscribedFeeds, metricContainer)
+	go startHTTPServer(appConfig, environments, subscribedFeeds, metricContainer)
 
-	startAggregator(appConfig, metricSink)
-	readMessages(appConfig, environments, subscribedFeeds, metricSink, metricContainer)
+	metricDestinations := []sender.MetricDestination{
+		sender.NewSplunkFeeder(appConfig.SplunkConf.LogPrefix),
+	}
+
+	aggregator := sender.NewAggregator(metricSink, metricDestinations)
+	go aggregator.Run()
+
+	readKafkaMessages(appConfig, environments, subscribedFeeds, metricSink, metricContainer)
 }
 
-func startHTTPListener(appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricContainer *metrics.PublishMetricsHistory) {
+func startHTTPServer(appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricContainer *metrics.PublishMetricsHistory) {
 	router := mux.NewRouter()
-	setupHealthchecks(router, appConfig, environments, subscribedFeeds, metricContainer)
+
+	hc := newHealthcheck(appConfig, metricContainer, environments, subscribedFeeds)
+	router.HandleFunc("/__health", hc.checkHealth())
+	router.HandleFunc(status.GTGPath, status.NewGoodToGoHandler(hc.GTG))
+
 	router.HandleFunc("/__history", loadHistory(metricContainer))
 
 	router.HandleFunc(status.PingPath, status.PingHandler)
@@ -92,12 +102,6 @@ func startHTTPListener(appConfig *config.AppConfig, environments *envs.ThreadSaf
 	}
 }
 
-func setupHealthchecks(router *mux.Router, appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricContainer *metrics.PublishMetricsHistory) {
-	hc := newHealthcheck(appConfig, metricContainer, environments, subscribedFeeds)
-	router.HandleFunc("/__health", hc.checkHealth())
-	router.HandleFunc(status.GTGPath, status.NewGoodToGoHandler(hc.GTG))
-}
-
 func loadHistory(metricContainer *metrics.PublishMetricsHistory) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		metricContainer.RLock()
@@ -108,16 +112,7 @@ func loadHistory(metricContainer *metrics.PublishMetricsHistory) func(w http.Res
 	}
 }
 
-func startAggregator(appConfig *config.AppConfig, metricSink chan metrics.PublishMetric) {
-	var destinations []sender.MetricDestination
-
-	splunkFeeder := sender.NewSplunkFeeder(appConfig.SplunkConf.LogPrefix)
-	destinations = append(destinations, splunkFeeder)
-	aggregator := sender.NewAggregator(metricSink, destinations)
-	go aggregator.Run()
-}
-
-func readMessages(appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.PublishMetricsHistory) {
+func readKafkaMessages(appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.PublishMetricsHistory) {
 	for !environments.AreReady() {
 		log.Info("Environments not set, retry in 3s...")
 		time.Sleep(3 * time.Second)

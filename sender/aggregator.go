@@ -15,7 +15,7 @@ type Aggregator struct {
 	publishMetricDestinations []MetricDestination
 }
 
-// NewAggregator returns an Aggregator which reads messages from inputChannel and
+// NewAggregator returns an Aggregator which reads metrics from inputChannel and
 // distributes them to destinations.
 func NewAggregator(inputChannel chan metrics.PublishMetric, destinations []MetricDestination) *Aggregator {
 	return &Aggregator{inputChannel, destinations}
