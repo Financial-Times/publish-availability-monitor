@@ -83,7 +83,7 @@ func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 				IsMarkedDeleted: p.isMarkedDeleted,
 			}
 			metricSink <- publishMetric
-			updateHistory(p.metricContainer, publishMetric)
+			p.metricContainer.Update(publishMetric)
 		}
 	}
 }
@@ -151,7 +151,7 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 			}
 
 			check.ResultSink <- check.Metric
-			updateHistory(metricContainer, check.Metric)
+			metricContainer.Update(check.Metric)
 			return
 		}
 		checkNr++
@@ -163,20 +163,11 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 			//if we get here, checks were unsuccessful
 			check.Metric.PublishOK = false
 			check.ResultSink <- check.Metric
-			updateHistory(metricContainer, check.Metric)
+			metricContainer.Update(check.Metric)
 			return
 		}
 	}
 
-}
-
-func updateHistory(metricContainer *metrics.History, newPublishResult metrics.PublishMetric) {
-	metricContainer.Lock()
-	if len(metricContainer.PublishMetrics) == 10 {
-		metricContainer.PublishMetrics = metricContainer.PublishMetrics[1:len(metricContainer.PublishMetrics)]
-	}
-	metricContainer.PublishMetrics = append(metricContainer.PublishMetrics, newPublishResult)
-	metricContainer.Unlock()
 }
 
 func validType(validTypes []string, eomType string) bool {

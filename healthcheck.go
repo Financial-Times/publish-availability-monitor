@@ -179,15 +179,7 @@ func (h *Healthcheck) reflectPublishFailures() fthealth.Check {
 }
 
 func (h *Healthcheck) checkForPublishFailures() (string, error) {
-	h.metricContainer.RLock()
-	failures := make(map[string]struct{})
-	var emptyStruct struct{}
-	for i := 0; i < len(h.metricContainer.PublishMetrics); i++ {
-		if !h.metricContainer.PublishMetrics[i].PublishOK {
-			failures[h.metricContainer.PublishMetrics[i].UUID] = emptyStruct
-		}
-	}
-	h.metricContainer.RUnlock()
+	failures := h.metricContainer.GetFailures()
 
 	failureThreshold := 2 //default
 	if h.config.HealthConf.FailureThreshold != 0 {

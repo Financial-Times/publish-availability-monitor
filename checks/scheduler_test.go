@@ -83,11 +83,10 @@ func TestScheduleChecksForS3AreCorrect(testing *testing.T) {
 	})
 
 	capturingMetrics := runScheduleChecks(testing, validImageEomFile, mockEnvironments, appConfig)
-	defer capturingMetrics.RUnlock()
 
 	require.NotNil(testing, capturingMetrics)
-	require.Equal(testing, 1, len(capturingMetrics.PublishMetrics))
-	require.Equal(testing, s3URL+"/whatever/", capturingMetrics.PublishMetrics[0].Endpoint.String())
+	require.Equal(testing, 1, capturingMetrics.Len())
+	require.Equal(testing, s3URL+"/whatever/", capturingMetrics.First().Endpoint.String())
 }
 
 func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
@@ -118,11 +117,10 @@ func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 	})
 
 	capturingMetrics := runScheduleChecks(testing, validImageEomFile, mockEnvironments, appConfig)
-	defer capturingMetrics.RUnlock()
 
 	require.NotNil(testing, capturingMetrics)
-	require.Equal(testing, 1, len(capturingMetrics.PublishMetrics))
-	require.Equal(testing, readURL+"/whatever/", capturingMetrics.PublishMetrics[0].Endpoint.String())
+	require.Equal(testing, 1, capturingMetrics.Len())
+	require.Equal(testing, readURL+"/whatever/", capturingMetrics.First().Endpoint.String())
 }
 
 func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testing.T) {
@@ -155,11 +153,10 @@ func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testi
 	mockArticleEomFile.Type = "InternalComponents"
 
 	capturingMetrics := runScheduleChecks(testing, mockArticleEomFile, mockEnvironments, appConfig)
-	defer capturingMetrics.RUnlock()
 
 	require.NotNil(testing, capturingMetrics)
-	require.Equal(testing, 1, len(capturingMetrics.PublishMetrics))
-	require.Equal(testing, readURL+"/internalcomponents/", capturingMetrics.PublishMetrics[0].Endpoint.String())
+	require.Equal(testing, 1, capturingMetrics.Len())
+	require.Equal(testing, readURL+"/internalcomponents/", capturingMetrics.First().Endpoint.String())
 }
 
 func TestScheduleChecksForDynamicContentWithInternalComponentsAreCorrect(testing *testing.T) {
@@ -193,11 +190,10 @@ func TestScheduleChecksForDynamicContentWithInternalComponentsAreCorrect(testing
 	mockArticleEomFile.Type = "EOM::CompoundStory_DynamicContent"
 
 	capturingMetrics := runScheduleChecks(testing, mockArticleEomFile, mockEnvironments, appConfig)
-	defer capturingMetrics.RUnlock()
 
 	require.NotNil(testing, capturingMetrics)
-	require.Equal(testing, 1, len(capturingMetrics.PublishMetrics))
-	require.Equal(testing, readURL+"/internalcomponents/", capturingMetrics.PublishMetrics[0].Endpoint.String())
+	require.Equal(testing, 1, capturingMetrics.Len())
+	require.Equal(testing, readURL+"/internalcomponents/", capturingMetrics.First().Endpoint.String())
 }
 
 func runScheduleChecks(testing *testing.T, content content.Content, mockEnvironments *envs.Environments, appConfig *config.AppConfig) *metrics.History {
@@ -218,12 +214,10 @@ func runScheduleChecks(testing *testing.T, content content.Content, mockEnvironm
 
 	ScheduleChecks(&SchedulerParam{content, publishDate, tid, true, capturingMetrics, mockEnvironments}, subscribedFeeds, endpointSpecificChecks, appConfig, metricSink)
 	for {
-		capturingMetrics.RLock()
-		if len(capturingMetrics.PublishMetrics) == mockEnvironments.Len() {
-			return capturingMetrics // with a read lock
+		if capturingMetrics.Len() == mockEnvironments.Len() {
+			return capturingMetrics
 		}
 
-		capturingMetrics.RUnlock()
 		time.Sleep(1 * time.Second)
 	}
 }

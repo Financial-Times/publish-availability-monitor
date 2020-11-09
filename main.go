@@ -100,11 +100,7 @@ func startHTTPServer(appConfig *config.AppConfig, environments *envs.Environment
 
 func loadHistory(metricContainer *metrics.History) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		metricContainer.RLock()
-		for i := len(metricContainer.PublishMetrics) - 1; i >= 0; i-- {
-			fmt.Fprintf(w, "%d. %v\n\n", len(metricContainer.PublishMetrics)-i, metricContainer.PublishMetrics[i])
-		}
-		metricContainer.RUnlock()
+		fmt.Fprint(w, metricContainer.String())
 	}
 }
 
