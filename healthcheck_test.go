@@ -96,7 +96,7 @@ func TestPublishNoFailuresForSameUUIDs(t *testing.T) {
 	}
 
 	testMetrics := []metrics.PublishMetric{publishMetric1, publishMetric2, publishMetric3}
-	testPublishHistory := metrics.NewPublishMetricsHistory(testMetrics)
+	testPublishHistory := metrics.NewHistory(testMetrics)
 
 	testHealthcheck := Healthcheck{
 		config:          &config.AppConfig{},
@@ -149,7 +149,7 @@ func TestPublishFailureForDistinctUUIDs(t *testing.T) {
 	}
 
 	testMetrics := []metrics.PublishMetric{publishMetric1, publishMetric2, publishMetric3}
-	testPublishHistory := metrics.NewPublishMetricsHistory(testMetrics)
+	testPublishHistory := metrics.NewHistory(testMetrics)
 
 	testHealthcheck := Healthcheck{
 		config:          &config.AppConfig{},

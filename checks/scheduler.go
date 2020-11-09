@@ -22,7 +22,7 @@ type SchedulerParam struct {
 	publishDate     time.Time
 	tid             string
 	isMarkedDeleted bool
-	metricContainer *metrics.PublishMetricsHistory
+	metricContainer *metrics.History
 	environments    *envs.Environments
 }
 
@@ -88,7 +88,7 @@ func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 	}
 }
 
-func scheduleCheck(check PublishCheck, metricContainer *metrics.PublishMetricsHistory) {
+func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 	//the date the SLA expires for this publish event
 	publishSLA := check.Metric.PublishDate.Add(time.Duration(check.Threshold) * time.Second)
 
@@ -170,7 +170,7 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.PublishMetricsHi
 
 }
 
-func updateHistory(metricContainer *metrics.PublishMetricsHistory, newPublishResult metrics.PublishMetric) {
+func updateHistory(metricContainer *metrics.History, newPublishResult metrics.PublishMetric) {
 	metricContainer.Lock()
 	if len(metricContainer.PublishMetrics) == 10 {
 		metricContainer.PublishMetrics = metricContainer.PublishMetrics[1:len(metricContainer.PublishMetrics)]

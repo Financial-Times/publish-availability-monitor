@@ -62,7 +62,7 @@ func main() {
 
 	wg.Wait()
 
-	metricContainer := metrics.NewPublishMetricsHistory(make([]metrics.PublishMetric, 0))
+	metricContainer := metrics.NewHistory(make([]metrics.PublishMetric, 0))
 
 	go startHTTPServer(appConfig, environments, subscribedFeeds, metricContainer)
 
@@ -76,7 +76,7 @@ func main() {
 	readKafkaMessages(appConfig, environments, subscribedFeeds, metricSink, metricContainer)
 }
 
-func startHTTPServer(appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricContainer *metrics.PublishMetricsHistory) {
+func startHTTPServer(appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricContainer *metrics.History) {
 	router := mux.NewRouter()
 
 	hc := newHealthcheck(appConfig, metricContainer, environments, subscribedFeeds)
@@ -98,7 +98,7 @@ func startHTTPServer(appConfig *config.AppConfig, environments *envs.Environment
 	}
 }
 
-func loadHistory(metricContainer *metrics.PublishMetricsHistory) func(w http.ResponseWriter, r *http.Request) {
+func loadHistory(metricContainer *metrics.History) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		metricContainer.RLock()
 		for i := len(metricContainer.PublishMetrics) - 1; i >= 0; i-- {
@@ -108,7 +108,7 @@ func loadHistory(metricContainer *metrics.PublishMetricsHistory) func(w http.Res
 	}
 }
 
-func readKafkaMessages(appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.PublishMetricsHistory) {
+func readKafkaMessages(appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.History) {
 	for !environments.AreReady() {
 		log.Info("Environments not set, retry in 3s...")
 		time.Sleep(3 * time.Second)

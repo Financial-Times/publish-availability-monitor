@@ -29,12 +29,12 @@ type Healthcheck struct {
 	client          *http.Client
 	config          *config.AppConfig
 	consumer        consumer.MessageConsumer
-	metricContainer *metrics.PublishMetricsHistory
+	metricContainer *metrics.History
 	environments    *envs.Environments
 	subscribedFeeds map[string][]feeds.Feed
 }
 
-func newHealthcheck(config *config.AppConfig, metricContainer *metrics.PublishMetricsHistory, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed) *Healthcheck {
+func newHealthcheck(config *config.AppConfig, metricContainer *metrics.History, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed) *Healthcheck {
 	httpClient := &http.Client{Timeout: requestTimeout * time.Millisecond}
 	c := consumer.NewConsumer(config.QueueConf, func(m consumer.Message) {}, httpClient)
 	return &Healthcheck{

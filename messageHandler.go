@@ -24,7 +24,7 @@ type MessageHandler interface {
 	HandleMessage(msg consumer.Message)
 }
 
-func NewKafkaMessageHandler(typeRes content.TypeResolver, appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.PublishMetricsHistory) MessageHandler {
+func NewKafkaMessageHandler(typeRes content.TypeResolver, appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.History) MessageHandler {
 	return &kafkaMessageHandler{
 		typeRes:         typeRes,
 		appConfig:       appConfig,
@@ -41,7 +41,7 @@ type kafkaMessageHandler struct {
 	environments    *envs.Environments
 	subscribedFeeds map[string][]feeds.Feed
 	metricSink      chan metrics.PublishMetric
-	metricContainer *metrics.PublishMetricsHistory
+	metricContainer *metrics.History
 }
 
 func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {

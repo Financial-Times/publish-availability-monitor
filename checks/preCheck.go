@@ -14,20 +14,20 @@ import (
 
 var uuidDeriver = uuidutils.NewUUIDDeriverWith(uuidutils.IMAGE_SET)
 
-func МainPreChecks() []func(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.PublishMetricsHistory, environments *envs.Environments) (bool, *SchedulerParam) {
-	return []func(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.PublishMetricsHistory, environments *envs.Environments) (bool, *SchedulerParam){
+func МainPreChecks() []func(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.History, environments *envs.Environments) (bool, *SchedulerParam) {
+	return []func(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.History, environments *envs.Environments) (bool, *SchedulerParam){
 		mainPreCheck,
 	}
 }
 
-func AdditionalPreChecks() []func(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.PublishMetricsHistory, environments *envs.Environments) (bool, *SchedulerParam) {
-	return []func(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.PublishMetricsHistory, environments *envs.Environments) (bool, *SchedulerParam){
+func AdditionalPreChecks() []func(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.History, environments *envs.Environments) (bool, *SchedulerParam) {
+	return []func(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.History, environments *envs.Environments) (bool, *SchedulerParam){
 		imagePreCheck,
 		internalComponentsPreCheck,
 	}
 }
 
-func mainPreCheck(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.PublishMetricsHistory, environments *envs.Environments) (bool, *SchedulerParam) {
+func mainPreCheck(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.History, environments *envs.Environments) (bool, *SchedulerParam) {
 	uuid := publishedContent.GetUUID()
 	validationEndpointKey := getValidationEndpointKey(publishedContent, tid, uuid)
 	var validationEndpoint string
@@ -57,7 +57,7 @@ func mainPreCheck(publishedContent content.Content, tid string, publishDate time
 
 // for images we need to check their corresponding image sets
 // the image sets don't have messages of their own so we need to create one
-func imagePreCheck(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.PublishMetricsHistory, environments *envs.Environments) (bool, *SchedulerParam) {
+func imagePreCheck(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.History, environments *envs.Environments) (bool, *SchedulerParam) {
 	if publishedContent.GetType() != "Image" {
 		return false, nil
 	}
@@ -77,7 +77,7 @@ func imagePreCheck(publishedContent content.Content, tid string, publishDate tim
 }
 
 // if this is normal content, schedule checks for internal components also
-func internalComponentsPreCheck(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.PublishMetricsHistory, environments *envs.Environments) (bool, *SchedulerParam) {
+func internalComponentsPreCheck(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.History, environments *envs.Environments) (bool, *SchedulerParam) {
 	if publishedContent.GetType() != "EOM::CompoundStory" {
 		return false, nil
 	}

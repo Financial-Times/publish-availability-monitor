@@ -2,13 +2,13 @@ package metrics
 
 import "sync"
 
-type PublishMetricsHistory struct {
+type History struct {
 	sync.RWMutex
 	PublishMetrics []PublishMetric
 }
 
-func NewPublishMetricsHistory(metrics []PublishMetric) *PublishMetricsHistory {
-	return &PublishMetricsHistory{
+func NewHistory(metrics []PublishMetric) *History {
+	return &History{
 		sync.RWMutex{},
 		metrics,
 	}

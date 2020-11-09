@@ -200,8 +200,8 @@ func TestScheduleChecksForDynamicContentWithInternalComponentsAreCorrect(testing
 	require.Equal(testing, readURL+"/internalcomponents/", capturingMetrics.PublishMetrics[0].Endpoint.String())
 }
 
-func runScheduleChecks(testing *testing.T, content content.Content, mockEnvironments *envs.Environments, appConfig *config.AppConfig) *metrics.PublishMetricsHistory {
-	capturingMetrics := metrics.NewPublishMetricsHistory(make([]metrics.PublishMetric, 0))
+func runScheduleChecks(testing *testing.T, content content.Content, mockEnvironments *envs.Environments, appConfig *config.AppConfig) *metrics.History {
+	capturingMetrics := metrics.NewHistory(make([]metrics.PublishMetric, 0))
 
 	tid := "tid_1234"
 	publishDate, err := time.Parse(DateLayout, "2016-01-08T14:22:06.271Z")
