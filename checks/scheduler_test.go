@@ -74,13 +74,14 @@ func TestScheduleChecksForS3AreCorrect(testing *testing.T) {
 	var mockEnvironments = envs.NewEnvironments()
 	readURL := "http://env1.example.org"
 	s3URL := "http://s1.example.org"
-	mockEnvironments.EnvMap["env1"] = envs.Environment{
+
+	mockEnvironments.SetEnvironment("env1", envs.Environment{
 		Name:     "env1",
 		ReadURL:  readURL,
 		S3Url:    s3URL,
 		Username: "user1",
 		Password: "pass1",
-	}
+	})
 
 	capturingMetrics := runScheduleChecks(testing, validImageEomFile, mockEnvironments, appConfig)
 	defer capturingMetrics.RUnlock()
@@ -109,13 +110,13 @@ func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 	var mockEnvironments = envs.NewEnvironments()
 	readURL := "http://env1.example.org"
 	s3URL := "http://s1.example.org"
-	mockEnvironments.EnvMap["env1"] = envs.Environment{
+	mockEnvironments.SetEnvironment("env1", envs.Environment{
 		Name:     "env1",
 		ReadURL:  readURL,
 		S3Url:    s3URL,
 		Username: "user1",
 		Password: "pass1",
-	}
+	})
 
 	capturingMetrics := runScheduleChecks(testing, validImageEomFile, mockEnvironments, appConfig)
 	defer capturingMetrics.RUnlock()
@@ -144,13 +145,13 @@ func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testi
 	readURL := "http://env1.example.org"
 	s3URL := "http://s1.example.org"
 
-	mockEnvironments.EnvMap["env1"] = envs.Environment{
+	mockEnvironments.SetEnvironment("env1", envs.Environment{
 		Name:     "env1",
 		ReadURL:  readURL,
 		S3Url:    s3URL,
 		Username: "user1",
 		Password: "pass1",
-	}
+	})
 
 	mockArticleEomFile.Type = "InternalComponents"
 
@@ -182,13 +183,13 @@ func TestScheduleChecksForDynamicContentWithInternalComponentsAreCorrect(testing
 	readURL := "http://env1.example.org"
 	s3URL := "http://s1.example.org"
 
-	mockEnvironments.EnvMap["env1"] = envs.Environment{
+	mockEnvironments.SetEnvironment("env1", envs.Environment{
 		Name:     "env1",
 		ReadURL:  readURL,
 		S3Url:    s3URL,
 		Username: "user1",
 		Password: "pass1",
-	}
+	})
 
 	mockArticleEomFile.Type = "EOM::CompoundStory_DynamicContent"
 

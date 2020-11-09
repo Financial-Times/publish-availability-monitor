@@ -57,8 +57,7 @@ func TestParseEnvsIntoMapWithRemovedEnv(t *testing.T) {
 	envsToBeParsed := getValidEnvs()
 	credentials := getValidCredentials()
 	environments := NewEnvironments()
-	environments.EnvMap["removed-env"] = Environment{}
-
+	environments.SetEnvironment("removed-env", Environment{})
 	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments)
 
 	assert.Equal(t, 1, len(removedEnvs))
@@ -73,7 +72,7 @@ func TestParseEnvsIntoMapWithExistingEnv(t *testing.T) {
 	credentials := getValidCredentials()
 	environments := NewEnvironments()
 	existingEnv := envsToBeParsed[0]
-	environments.EnvMap[existingEnv.Name] = existingEnv
+	environments.SetEnvironment(existingEnv.Name, existingEnv)
 
 	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments)
 
@@ -230,7 +229,7 @@ func TestConfigureFeedsWithEmptyListOfMetrics(t *testing.T) {
 	}
 	appConfig := &config.AppConfig{}
 
-	configureFileFeeds(make(map[string]Environment), []string{"test-feed"}, subscribedFeeds, appConfig)
+	configureFileFeeds(make([]Environment, 0), []string{"test-feed"}, subscribedFeeds, appConfig)
 
 	assert.Equal(t, 0, len(subscribedFeeds))
 }
@@ -440,15 +439,14 @@ func TestUpdateEnvsIfChangedNoChanges(t *testing.T) {
 
 	subscribedFeeds := map[string][]feeds.Feed{}
 	environments := NewEnvironments()
-	environments.EnvMap = map[string]Environment{
-		"test-env": {
-			Name:     "test-env",
-			Password: "test-pwd",
-			ReadURL:  "https://test-env.ft.com",
-			S3Url:    "http://test.s3.amazonaws.com",
-			Username: "test-user",
-		},
-	}
+	environments.SetEnvironment("test-env", Environment{
+		Name:     "test-env",
+		Password: "test-pwd",
+		ReadURL:  "https://test-env.ft.com",
+		S3Url:    "http://test.s3.amazonaws.com",
+		Username: "test-user",
+	})
+
 	configFilesHashValues := map[string]string{
 		envsFile:  "792c5a9eebad1a967faab8defd9e646b",
 		credsFile: "dfd8aecc21b7017c5e4f171e3279fc68",

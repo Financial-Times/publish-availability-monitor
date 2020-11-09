@@ -176,12 +176,9 @@ func updateEnvs(envsFileData []byte, credsFileData []byte, environments *Environ
 		return fmt.Errorf("cannot parse credentials because [%s]", err)
 	}
 
-	environments.mu.Lock()
-	defer environments.mu.Unlock()
-
 	removedEnvs := parseEnvsIntoMap(validEnvs, envCredentials, environments)
-	configureFileFeeds(environments.EnvMap, removedEnvs, subscribedFeeds, appConfig)
-	environments.ready = true
+	configureFileFeeds(environments.Values(), removedEnvs, subscribedFeeds, appConfig)
+	environments.SetReady(true)
 
 	return nil
 }
@@ -199,7 +196,7 @@ func updateValidationCredentials(data []byte) error {
 	return nil
 }
 
-func configureFileFeeds(EnvMap map[string]Environment, removedEnvs []string, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig) {
+func configureFileFeeds(envs []Environment, removedEnvs []string, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig) {
 	for _, envName := range removedEnvs {
 		feeds, found := subscribedFeeds[envName]
 		if found {
@@ -212,7 +209,7 @@ func configureFileFeeds(EnvMap map[string]Environment, removedEnvs []string, sub
 	}
 
 	for _, metric := range appConfig.MetricConf {
-		for _, env := range EnvMap {
+		for _, env := range envs {
 			var envFeeds []feeds.Feed
 			var found bool
 			if envFeeds, found = subscribedFeeds[env.Name]; !found {
@@ -290,10 +287,11 @@ func parseEnvsIntoMap(envs []Environment, envCredentials []Credentials, environm
 
 	//remove envs that don't exist anymore
 	removedEnvs := make([]string, 0)
-	for envName := range environments.EnvMap {
+	envNames := environments.Names()
+	for _, envName := range envNames {
 		if !isEnvInSlice(envName, envs) {
 			log.Infof("removing environment from monitoring: %v", envName)
-			delete(environments.EnvMap, envName)
+			environments.RemoveEnvironment(envName)
 			removedEnvs = append(removedEnvs, envName)
 		}
 	}
@@ -301,7 +299,7 @@ func parseEnvsIntoMap(envs []Environment, envCredentials []Credentials, environm
 	//update envs
 	for _, env := range envs {
 		envName := env.Name
-		environments.EnvMap[envName] = env
+		environments.SetEnvironment(envName, env)
 		log.Infof("Added environment to monitoring: %s", envName)
 	}
 

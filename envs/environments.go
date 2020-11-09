@@ -16,14 +16,14 @@ type Environment struct {
 // Environments provides a thread-safe collection of Environment structs
 type Environments struct {
 	mu     *sync.RWMutex
-	EnvMap map[string]Environment
+	envMap map[string]Environment
 	ready  bool
 }
 
 func NewEnvironments() *Environments {
 	return &Environments{
 		mu:     &sync.RWMutex{},
-		EnvMap: make(map[string]Environment),
+		envMap: make(map[string]Environment),
 		ready:  false,
 	}
 }
@@ -31,7 +31,7 @@ func NewEnvironments() *Environments {
 func (e *Environments) Len() int {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
-	return len(e.EnvMap)
+	return len(e.envMap)
 }
 
 func (e *Environments) Names() []string {
@@ -41,7 +41,7 @@ func (e *Environments) Names() []string {
 	names := make([]string, e.Len())
 
 	i := 0
-	for name := range e.EnvMap {
+	for name := range e.envMap {
 		names[i] = name
 		i++
 	}
@@ -49,10 +49,43 @@ func (e *Environments) Names() []string {
 	return names
 }
 
+func (e *Environments) Values() []Environment {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	vals := make([]Environment, e.Len())
+
+	i := 0
+	for _, val := range e.envMap {
+		vals[i] = val
+		i++
+	}
+
+	return vals
+}
+
+func (e *Environments) SetEnvironment(name string, env Environment) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.envMap[name] = env
+}
+
+func (e *Environments) RemoveEnvironment(name string) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	delete(e.envMap, name)
+}
+
 func (e *Environments) Environment(name string) Environment {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
-	return e.EnvMap[name]
+	return e.envMap[name]
+}
+
+func (e *Environments) SetReady(val bool) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.ready = val
 }
 
 func (e *Environments) AreReady() bool {
