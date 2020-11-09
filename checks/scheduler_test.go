@@ -1,7 +1,6 @@
 package checks
 
 import (
-	"sync"
 	"testing"
 	"time"
 
@@ -202,10 +201,7 @@ func TestScheduleChecksForDynamicContentWithInternalComponentsAreCorrect(testing
 }
 
 func runScheduleChecks(testing *testing.T, content content.Content, mockEnvironments *envs.Environments, appConfig *config.AppConfig) *metrics.PublishMetricsHistory {
-	capturingMetrics := &metrics.PublishMetricsHistory{
-		RWMutex:        sync.RWMutex{},
-		PublishMetrics: make([]metrics.PublishMetric, 0),
-	}
+	capturingMetrics := metrics.NewPublishMetricsHistory(make([]metrics.PublishMetric, 0))
 
 	tid := "tid_1234"
 	publishDate, err := time.Parse(DateLayout, "2016-01-08T14:22:06.271Z")

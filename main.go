@@ -62,10 +62,7 @@ func main() {
 
 	wg.Wait()
 
-	metricContainer := &metrics.PublishMetricsHistory{
-		RWMutex:        sync.RWMutex{},
-		PublishMetrics: make([]metrics.PublishMetric, 0),
-	}
+	metricContainer := metrics.NewPublishMetricsHistory(make([]metrics.PublishMetric, 0))
 
 	go startHTTPServer(appConfig, environments, subscribedFeeds, metricContainer)
 

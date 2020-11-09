@@ -3,7 +3,6 @@ package metrics
 import (
 	"fmt"
 	"net/url"
-	"sync"
 	"time"
 )
 
@@ -47,9 +46,4 @@ type Config struct {
 	Alias        string   `json:"alias"`
 	Health       string   `json:"health,omitempty"`
 	APIKey       string   `json:"apiKey,omitempty"`
-}
-
-type PublishMetricsHistory struct {
-	sync.RWMutex
-	PublishMetrics []PublishMetric
 }

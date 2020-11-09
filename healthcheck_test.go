@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/url"
-	"sync"
 	"testing"
 	"time"
 
@@ -97,14 +96,11 @@ func TestPublishNoFailuresForSameUUIDs(t *testing.T) {
 	}
 
 	testMetrics := []metrics.PublishMetric{publishMetric1, publishMetric2, publishMetric3}
-	testPublishHistory := metrics.PublishMetricsHistory{
-		RWMutex:        sync.RWMutex{},
-		PublishMetrics: testMetrics,
-	}
+	testPublishHistory := metrics.NewPublishMetricsHistory(testMetrics)
 
 	testHealthcheck := Healthcheck{
 		config:          &config.AppConfig{},
-		metricContainer: &testPublishHistory,
+		metricContainer: testPublishHistory,
 	}
 	_, err := testHealthcheck.checkForPublishFailures()
 
@@ -153,14 +149,11 @@ func TestPublishFailureForDistinctUUIDs(t *testing.T) {
 	}
 
 	testMetrics := []metrics.PublishMetric{publishMetric1, publishMetric2, publishMetric3}
-	testPublishHistory := metrics.PublishMetricsHistory{
-		RWMutex:        sync.RWMutex{},
-		PublishMetrics: testMetrics,
-	}
+	testPublishHistory := metrics.NewPublishMetricsHistory(testMetrics)
 
 	testHealthcheck := Healthcheck{
 		config:          &config.AppConfig{},
-		metricContainer: &testPublishHistory,
+		metricContainer: testPublishHistory,
 	}
 	_, err := testHealthcheck.checkForPublishFailures()
 
