@@ -176,8 +176,8 @@ func updateEnvs(envsFileData []byte, credsFileData []byte, environments *Environ
 		return fmt.Errorf("cannot parse credentials because [%s]", err)
 	}
 
-	environments.Lock()
-	defer environments.Unlock()
+	environments.mu.Lock()
+	defer environments.mu.Unlock()
 
 	removedEnvs := parseEnvsIntoMap(validEnvs, envCredentials, environments)
 	configureFileFeeds(environments.EnvMap, removedEnvs, subscribedFeeds, appConfig)
