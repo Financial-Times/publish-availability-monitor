@@ -26,7 +26,7 @@ type Credentials struct {
 	Password string `json:"password"`
 }
 
-func WatchConfigFiles(wg *sync.WaitGroup, envsFileName string, envCredentialsFileName string, validationCredentialsFileName string, configRefreshPeriod int, configFilesHashValues map[string]string, environments *ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig) {
+func WatchConfigFiles(wg *sync.WaitGroup, envsFileName string, envCredentialsFileName string, validationCredentialsFileName string, configRefreshPeriod int, configFilesHashValues map[string]string, environments *Environments, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig) {
 	ticker := newTicker(0, time.Minute*time.Duration(configRefreshPeriod))
 	first := true
 	defer func() {
@@ -98,7 +98,7 @@ func updateValidationCredentialsIfChanged(validationCredentialsFileName string, 
 	return nil
 }
 
-func updateEnvsIfChanged(envsFileName string, envCredentialsFileName string, configFilesHashValues map[string]string, environments *ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig) error {
+func updateEnvsIfChanged(envsFileName string, envCredentialsFileName string, configFilesHashValues map[string]string, environments *Environments, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig) error {
 	var envsFileChanged, envCredentialsChanged bool
 	var envsNewHash, credsNewHash string
 
@@ -156,7 +156,7 @@ func computeMD5Hash(data []byte) (string, error) {
 	return hex.EncodeToString(hashValue), nil
 }
 
-func updateEnvs(envsFileData []byte, credsFileData []byte, environments *ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig) error {
+func updateEnvs(envsFileData []byte, credsFileData []byte, environments *Environments, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig) error {
 	log.Infof("Env config files changed. Updating envs")
 
 	jsonParser := json.NewDecoder(bytes.NewReader(envsFileData))
@@ -272,7 +272,7 @@ func filterInvalidEnvs(envsFromFile []Environment) []Environment {
 	return validEnvs
 }
 
-func parseEnvsIntoMap(envs []Environment, envCredentials []Credentials, environments *ThreadSafeEnvironments) []string {
+func parseEnvsIntoMap(envs []Environment, envCredentials []Credentials, environments *Environments) []string {
 	//enhance envs with credentials
 	for i, env := range envs {
 		for _, envCredentials := range envCredentials {

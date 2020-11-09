@@ -42,7 +42,7 @@ const (
 func TestParseEnvsIntoMap(t *testing.T) {
 	envsToBeParsed := getValidEnvs()
 	credentials := getValidCredentials()
-	environments := NewThreadSafeEnvironments()
+	environments := NewEnvironments()
 
 	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments)
 
@@ -56,7 +56,7 @@ func TestParseEnvsIntoMap(t *testing.T) {
 func TestParseEnvsIntoMapWithRemovedEnv(t *testing.T) {
 	envsToBeParsed := getValidEnvs()
 	credentials := getValidCredentials()
-	environments := NewThreadSafeEnvironments()
+	environments := NewEnvironments()
 	environments.EnvMap["removed-env"] = Environment{}
 
 	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments)
@@ -71,7 +71,7 @@ func TestParseEnvsIntoMapWithRemovedEnv(t *testing.T) {
 func TestParseEnvsIntoMapWithExistingEnv(t *testing.T) {
 	envsToBeParsed := getValidEnvs()
 	credentials := getValidCredentials()
-	environments := NewThreadSafeEnvironments()
+	environments := NewEnvironments()
 	existingEnv := envsToBeParsed[0]
 	environments.EnvMap[existingEnv.Name] = existingEnv
 
@@ -87,7 +87,7 @@ func TestParseEnvsIntoMapWithExistingEnv(t *testing.T) {
 func TestParseEnvsIntoMapWithNoCredentials(t *testing.T) {
 	envsToBeParsed := getValidEnvs()
 	credentials := []Credentials{}
-	environments := NewThreadSafeEnvironments()
+	environments := NewEnvironments()
 
 	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments)
 
@@ -247,7 +247,7 @@ func TestUpdateEnvsHappyFlow(t *testing.T) {
 	envCredsFileName := prepareFile(validEnvCredentialsConfig)
 	credsFileContents, _ := ioutil.ReadFile(envCredsFileName)
 
-	err := updateEnvs(envsFileContents, credsFileContents, NewThreadSafeEnvironments(), subscribedFeeds, appConfig)
+	err := updateEnvs(envsFileContents, credsFileContents, NewEnvironments(), subscribedFeeds, appConfig)
 
 	assert.Nil(t, err)
 	os.Remove(envsFileName)
@@ -260,7 +260,7 @@ func TestUpdateEnvsHappyNilEnvsFile(t *testing.T) {
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
 
-	err := updateEnvs(nil, credsFileContents, NewThreadSafeEnvironments(), subscribedFeeds, appConfig)
+	err := updateEnvs(nil, credsFileContents, NewEnvironments(), subscribedFeeds, appConfig)
 
 	assert.NotNil(t, err)
 	os.Remove(envCredsFileName)
@@ -272,7 +272,7 @@ func TestUpdateEnvsNilEnvCredentialsFile(t *testing.T) {
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
 
-	err := updateEnvs(envsFileContents, nil, NewThreadSafeEnvironments(), subscribedFeeds, appConfig)
+	err := updateEnvs(envsFileContents, nil, NewEnvironments(), subscribedFeeds, appConfig)
 
 	assert.NotNil(t, err)
 	os.Remove(envsFileName)
@@ -372,7 +372,7 @@ func TestUpdateEnvsIfChangedEnvFileDoesntExist(t *testing.T) {
 	credsFile := prepareFile(validEnvCredentialsConfig)
 	defer os.Remove(credsFile)
 
-	environments := NewThreadSafeEnvironments()
+	environments := NewEnvironments()
 	configFilesHashValues := make(map[string]string)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
@@ -388,7 +388,7 @@ func TestUpdateEnvsIfChangedCredsFileDoesntExist(t *testing.T) {
 	envsFile := prepareFile(validEnvConfig)
 	defer os.Remove(envsFile)
 
-	environments := NewThreadSafeEnvironments()
+	environments := NewEnvironments()
 	configFilesHashValues := make(map[string]string)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
@@ -401,7 +401,7 @@ func TestUpdateEnvsIfChangedCredsFileDoesntExist(t *testing.T) {
 }
 
 func TestUpdateEnvsIfChangedFilesDontExist(t *testing.T) {
-	environments := NewThreadSafeEnvironments()
+	environments := NewEnvironments()
 	configFilesHashValues := make(map[string]string)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
@@ -419,7 +419,7 @@ func TestUpdateEnvsIfChangedValidFiles(t *testing.T) {
 	credsFile := prepareFile(validEnvCredentialsConfig)
 	defer os.Remove(credsFile)
 
-	environments := NewThreadSafeEnvironments()
+	environments := NewEnvironments()
 	configFilesHashValues := make(map[string]string)
 	subscribedFeeds := map[string][]feeds.Feed{}
 
@@ -439,7 +439,7 @@ func TestUpdateEnvsIfChangedNoChanges(t *testing.T) {
 	defer os.Remove(credsFile)
 
 	subscribedFeeds := map[string][]feeds.Feed{}
-	environments := NewThreadSafeEnvironments()
+	environments := NewEnvironments()
 	environments.EnvMap = map[string]Environment{
 		"test-env": {
 			Name:     "test-env",
@@ -469,7 +469,7 @@ func TestUpdateEnvsIfChangedInvalidEnvsFile(t *testing.T) {
 	credsFile := prepareFile(validEnvCredentialsConfig)
 	defer os.Remove(credsFile)
 
-	environments := NewThreadSafeEnvironments()
+	environments := NewEnvironments()
 	configFilesHashValues := make(map[string]string)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
@@ -487,7 +487,7 @@ func TestUpdateEnvsIfChangedInvalidCredsFile(t *testing.T) {
 	credsFile := prepareFile(invalidJsonConfig)
 	defer os.Remove(credsFile)
 
-	environments := NewThreadSafeEnvironments()
+	environments := NewEnvironments()
 	configFilesHashValues := make(map[string]string)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
@@ -505,7 +505,7 @@ func TestUpdateEnvsIfChangedInvalidFiles(t *testing.T) {
 	credsFile := prepareFile(invalidJsonConfig)
 	defer os.Remove(credsFile)
 
-	environments := NewThreadSafeEnvironments()
+	environments := NewEnvironments()
 	configFilesHashValues := make(map[string]string)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}

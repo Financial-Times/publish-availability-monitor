@@ -71,7 +71,7 @@ func TestScheduleChecksForS3AreCorrect(testing *testing.T) {
 		Threshold: 1,
 	}
 
-	var mockEnvironments = envs.NewThreadSafeEnvironments()
+	var mockEnvironments = envs.NewEnvironments()
 	readURL := "http://env1.example.org"
 	s3URL := "http://s1.example.org"
 	mockEnvironments.EnvMap["env1"] = envs.Environment{
@@ -106,7 +106,7 @@ func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 		Threshold: 1,
 	}
 
-	var mockEnvironments = envs.NewThreadSafeEnvironments()
+	var mockEnvironments = envs.NewEnvironments()
 	readURL := "http://env1.example.org"
 	s3URL := "http://s1.example.org"
 	mockEnvironments.EnvMap["env1"] = envs.Environment{
@@ -140,7 +140,7 @@ func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testi
 		Threshold: 1,
 	}
 
-	var mockEnvironments = envs.NewThreadSafeEnvironments()
+	var mockEnvironments = envs.NewEnvironments()
 	readURL := "http://env1.example.org"
 	s3URL := "http://s1.example.org"
 
@@ -178,7 +178,7 @@ func TestScheduleChecksForDynamicContentWithInternalComponentsAreCorrect(testing
 		Threshold: 1,
 	}
 
-	var mockEnvironments = envs.NewThreadSafeEnvironments()
+	var mockEnvironments = envs.NewEnvironments()
 	readURL := "http://env1.example.org"
 	s3URL := "http://s1.example.org"
 
@@ -200,7 +200,7 @@ func TestScheduleChecksForDynamicContentWithInternalComponentsAreCorrect(testing
 	require.Equal(testing, readURL+"/internalcomponents/", capturingMetrics.PublishMetrics[0].Endpoint.String())
 }
 
-func runScheduleChecks(testing *testing.T, content content.Content, mockEnvironments *envs.ThreadSafeEnvironments, appConfig *config.AppConfig) *metrics.PublishMetricsHistory {
+func runScheduleChecks(testing *testing.T, content content.Content, mockEnvironments *envs.Environments, appConfig *config.AppConfig) *metrics.PublishMetricsHistory {
 	capturingMetrics := &metrics.PublishMetricsHistory{
 		RWMutex:        sync.RWMutex{},
 		PublishMetrics: make([]metrics.PublishMetric, 0),

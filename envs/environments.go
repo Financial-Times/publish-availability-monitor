@@ -13,23 +13,24 @@ type Environment struct {
 	Password string `json:"password"`
 }
 
-type ThreadSafeEnvironments struct {
+// Environments provides a thread-safe collection of Environment structs
+type Environments struct {
 	*sync.RWMutex
 	EnvMap map[string]Environment
 	ready  bool
 }
 
-func NewThreadSafeEnvironments() *ThreadSafeEnvironments {
-	return &ThreadSafeEnvironments{&sync.RWMutex{}, make(map[string]Environment), false}
+func NewEnvironments() *Environments {
+	return &Environments{&sync.RWMutex{}, make(map[string]Environment), false}
 }
 
-func (tse *ThreadSafeEnvironments) Len() int {
+func (tse *Environments) Len() int {
 	tse.RLock()
 	defer tse.RUnlock()
 	return len(tse.EnvMap)
 }
 
-func (tse *ThreadSafeEnvironments) Names() []string {
+func (tse *Environments) Names() []string {
 	tse.RLock()
 	defer tse.RUnlock()
 	var s []string
@@ -39,13 +40,13 @@ func (tse *ThreadSafeEnvironments) Names() []string {
 	return s
 }
 
-func (tse *ThreadSafeEnvironments) Environment(name string) Environment {
+func (tse *Environments) Environment(name string) Environment {
 	tse.RLock()
 	defer tse.RUnlock()
 	return tse.EnvMap[name]
 }
 
-func (tse *ThreadSafeEnvironments) AreReady() bool {
+func (tse *Environments) AreReady() bool {
 	tse.RLock()
 	defer tse.RUnlock()
 	return tse.ready

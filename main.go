@@ -49,7 +49,7 @@ func main() {
 		return
 	}
 
-	var environments = envs.NewThreadSafeEnvironments()
+	var environments = envs.NewEnvironments()
 	var subscribedFeeds = make(map[string][]feeds.Feed)
 	var metricSink = make(chan metrics.PublishMetric)
 	var configFilesHashValues = make(map[string]string)
@@ -80,7 +80,7 @@ func main() {
 	readKafkaMessages(appConfig, environments, subscribedFeeds, metricSink, metricContainer)
 }
 
-func startHTTPServer(appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricContainer *metrics.PublishMetricsHistory) {
+func startHTTPServer(appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricContainer *metrics.PublishMetricsHistory) {
 	router := mux.NewRouter()
 
 	hc := newHealthcheck(appConfig, metricContainer, environments, subscribedFeeds)
@@ -112,7 +112,7 @@ func loadHistory(metricContainer *metrics.PublishMetricsHistory) func(w http.Res
 	}
 }
 
-func readKafkaMessages(appConfig *config.AppConfig, environments *envs.ThreadSafeEnvironments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.PublishMetricsHistory) {
+func readKafkaMessages(appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.PublishMetricsHistory) {
 	for !environments.AreReady() {
 		log.Info("Environments not set, retry in 3s...")
 		time.Sleep(3 * time.Second)

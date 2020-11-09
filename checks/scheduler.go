@@ -23,7 +23,7 @@ type SchedulerParam struct {
 	tid             string
 	isMarkedDeleted bool
 	metricContainer *metrics.PublishMetricsHistory
-	environments    *envs.ThreadSafeEnvironments
+	environments    *envs.Environments
 }
 
 func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, endpointSpecificChecks map[string]EndpointSpecificCheck, appConfig *config.AppConfig, metricSink chan metrics.PublishMetric) {
