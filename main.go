@@ -21,7 +21,6 @@ import (
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/Financial-Times/publish-availability-monitor/logformat"
 	"github.com/Financial-Times/publish-availability-monitor/metrics"
-	"github.com/Financial-Times/publish-availability-monitor/sender"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
@@ -70,11 +69,11 @@ func main() {
 
 	go startHTTPServer(appConfig, environments, subscribedFeeds, metricContainer)
 
-	metricDestinations := []sender.MetricDestination{
-		sender.NewSplunkFeeder(appConfig.SplunkConf.LogPrefix),
+	metricDestinations := []metrics.Destination{
+		metrics.NewSplunkFeeder(appConfig.SplunkConf.LogPrefix),
 	}
 
-	aggregator := sender.NewAggregator(metricSink, metricDestinations)
+	aggregator := metrics.NewAggregator(metricSink, metricDestinations)
 	go aggregator.Run()
 
 	readKafkaMessages(appConfig, environments, subscribedFeeds, metricSink, metricContainer)
