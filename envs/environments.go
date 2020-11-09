@@ -33,11 +33,16 @@ func (tse *Environments) Len() int {
 func (tse *Environments) Names() []string {
 	tse.RLock()
 	defer tse.RUnlock()
-	var s []string
-	for n := range tse.EnvMap {
-		s = append(s, n)
+
+	names := make([]string, tse.Len())
+
+	i := 0
+	for name := range tse.EnvMap {
+		names[i] = name
+		i++
 	}
-	return s
+
+	return names
 }
 
 func (tse *Environments) Environment(name string) Environment {
