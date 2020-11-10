@@ -18,42 +18,44 @@ const carouselUnconventionalRepublishTID = "republish_-10bd337c-66d4-48d9-ab8a-e
 const carouselGeneratedTID = "tid_ofcysuifp0_carousel_1488384556_gentx"
 const naturalTID = "tid_xltcnbckvq"
 
-func TestIsIgnorableMessage_naturalMessage(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
-	if h.isIgnorableMessage(naturalTID) {
-		t.Error("Normal message marked as ignorable")
+func TestIsIgnorableMessage(t *testing.T) {
+	tests := map[string]struct {
+		TransactionID  string
+		ExpectedResult bool
+	}{
+		"normal message should not be ignored": {
+			TransactionID:  naturalTID,
+			ExpectedResult: false,
+		},
+		"synthetic message should be ignored": {
+			TransactionID:  syntheticTID,
+			ExpectedResult: true,
+		},
+		"carousel republish message should be ignored": {
+			TransactionID:  carouselRepublishTID,
+			ExpectedResult: true,
+		},
+		"carousel unconventional republish message should be ignored": {
+			TransactionID:  carouselUnconventionalRepublishTID,
+			ExpectedResult: true,
+		},
+		"carousel generated message should be ignored": {
+			TransactionID:  carouselGeneratedTID,
+			ExpectedResult: true,
+		},
 	}
-}
 
-func TestIsIgnorableMessage_syntheticMessage(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			typeRes := new(MockTypeResolver)
+			h := kafkaMessageHandler{typeRes: typeRes}
 
-	if !h.isIgnorableMessage(syntheticTID) {
-		t.Error("Synthetic message marked as normal")
-	}
-}
+			got := h.isIgnorableMessage(test.TransactionID)
 
-func TestIsIgnorableMessage_carouselRepublishMessage(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
-	if !h.isIgnorableMessage(carouselRepublishTID) {
-		t.Error("Carousel republish message marked as normal")
-	}
-	if !h.isIgnorableMessage(carouselUnconventionalRepublishTID) {
-		t.Error("Carousel republish message marked as normal")
-	}
-}
-
-func TestIsIgnorableMessage_carouselGeneratedMessage(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
-	if !h.isIgnorableMessage(carouselGeneratedTID) {
-		t.Error("Carousel generated message marked as normal")
+			if got != test.ExpectedResult {
+				t.Fatalf("expected %v, got %v", test.ExpectedResult, got)
+			}
+		})
 	}
 }
 
