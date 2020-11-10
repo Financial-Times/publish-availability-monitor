@@ -2,7 +2,6 @@ package logformat
 
 import (
 	"fmt"
-	"regexp"
 	"runtime"
 	"strings"
 
@@ -16,19 +15,6 @@ const (
 
 // Our default SLF4J format is: "%-5p [%d{ISO8601, GMT}] %c: %X{transaction_id} %m [%thread]%n%xEx"
 type SLF4JFormatter struct {
-	stackPattern  *regexp.Regexp
-	vendorPattern *regexp.Regexp
-}
-
-func NewSLF4JFormatter(pattern string) *SLF4JFormatter {
-	var p, v *regexp.Regexp
-	if pattern != "" {
-		p = regexp.MustCompile(pattern)
-		v = regexp.MustCompile(pattern + "vendor/.*")
-	}
-
-	f := SLF4JFormatter{p, v}
-	return &f
 }
 
 func (f *SLF4JFormatter) Format(entry *log.Entry) ([]byte, error) {
@@ -55,16 +41,10 @@ func (f *SLF4JFormatter) Format(entry *log.Entry) ([]byte, error) {
 }
 
 func (f *SLF4JFormatter) findCodeLocation() string {
-	if f.stackPattern == nil {
-		return ""
-	}
-
 	// start at 2 because we know 0 and 1 are within this file
 	for i := 2; i < 10; i++ {
 		_, file, lineNum, ok := runtime.Caller(i)
-		// find stack entry that matches the specified pattern
-		// but exclude vendored code (which likely matches the pattern regardless)
-		if ok && f.stackPattern.MatchString(file) && !f.vendorPattern.MatchString(file) {
+		if ok {
 			return fmt.Sprintf("%s:%v:", file[strings.LastIndex(file, "/")+1:], lineNum)
 		}
 	}

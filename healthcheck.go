@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -11,7 +13,11 @@ import (
 
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	"github.com/Financial-Times/publish-availability-monitor/checks"
+	"github.com/Financial-Times/publish-availability-monitor/config"
+	"github.com/Financial-Times/publish-availability-monitor/envs"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
+	"github.com/Financial-Times/publish-availability-monitor/metrics"
 	"github.com/Financial-Times/service-status-go/gtg"
 	log "github.com/Sirupsen/logrus"
 )
@@ -21,12 +27,14 @@ const requestTimeout = 4500
 // Healthcheck offers methods to measure application health.
 type Healthcheck struct {
 	client          *http.Client
-	config          *AppConfig
+	config          *config.AppConfig
 	consumer        consumer.MessageConsumer
-	metricContainer *publishHistory
+	metricContainer *metrics.History
+	environments    *envs.Environments
+	subscribedFeeds map[string][]feeds.Feed
 }
 
-func newHealthcheck(config *AppConfig, metricContainer *publishHistory) *Healthcheck {
+func newHealthcheck(config *config.AppConfig, metricContainer *metrics.History, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed) *Healthcheck {
 	httpClient := &http.Client{Timeout: requestTimeout * time.Millisecond}
 	c := consumer.NewConsumer(config.QueueConf, func(m consumer.Message) {}, httpClient)
 	return &Healthcheck{
@@ -34,12 +42,15 @@ func newHealthcheck(config *AppConfig, metricContainer *publishHistory) *Healthc
 		config:          config,
 		consumer:        c,
 		metricContainer: metricContainer,
+		environments:    environments,
+		subscribedFeeds: subscribedFeeds,
 	}
 }
 
 type readEnvironmentHealthcheck struct {
-	env    Environment
-	client *http.Client
+	env       envs.Environment
+	client    *http.Client
+	appConfig *config.AppConfig
 }
 
 const pam_run_book_url = "https://runbooks.in.ft.com/publish-availability-monitor"
@@ -66,7 +77,7 @@ func (h *Healthcheck) checkHealth() func(w http.ResponseWriter, r *http.Request)
 	checks[0] = h.messageQueueProxyReachable()
 	checks[1] = h.reflectPublishFailures()
 	checks[2] = h.validationServicesReachable()
-	checks[3] = isConsumingFromPushFeeds()
+	checks[3] = isConsumingFromPushFeeds(h.subscribedFeeds)
 
 	readEnvironmentChecks := h.readEnvironmentsReachable()
 	if len(readEnvironmentChecks) == 0 {
@@ -112,7 +123,7 @@ func gtgCheck(handler func() (string, error)) gtg.Status {
 	return gtg.Status{GoodToGo: true}
 }
 
-func isConsumingFromPushFeeds() fthealth.Check {
+func isConsumingFromPushFeeds(subscribedFeeds map[string][]feeds.Feed) fthealth.Check {
 	return fthealth.Check{
 		ID:               "IsConsumingFromNotificationsPushFeeds",
 		BusinessImpact:   "Publish metrics are not recorded. This will impact the SLA measurement.",
@@ -168,16 +179,7 @@ func (h *Healthcheck) reflectPublishFailures() fthealth.Check {
 }
 
 func (h *Healthcheck) checkForPublishFailures() (string, error) {
-	h.metricContainer.RLock()
-	failures := make(map[string]struct{})
-	var emptyStruct struct{}
-	for i := 0; i < len(h.metricContainer.publishMetrics); i++ {
-
-		if !h.metricContainer.publishMetrics[i].publishOK {
-			failures[h.metricContainer.publishMetrics[i].UUID] = emptyStruct
-		}
-	}
-	h.metricContainer.RUnlock()
+	failures := h.metricContainer.GetFailures()
 
 	failureThreshold := 2 //default
 	if h.config.HealthConf.FailureThreshold != 0 {
@@ -213,7 +215,7 @@ func (h *Healthcheck) checkValidationServicesReachable() (string, error) {
 			log.Errorf("Validation Service URL: [%s]. Err: [%v]", url, err.Error())
 			continue
 		}
-		username, password := getValidationCredentials()
+		username, password := envs.GetValidationCredentials()
 		go checkServiceReachable(healthcheckURL, username, password, h.client, hcErrs, &wg)
 	}
 
@@ -255,15 +257,15 @@ func checkServiceReachable(healthcheckURL string, username string, password stri
 }
 
 func (h *Healthcheck) readEnvironmentsReachable() []fthealth.Check {
-	for i := 0; !environments.areReady() && i < 5; i++ {
+	for i := 0; !h.environments.AreReady() && i < 5; i++ {
 		log.Info("Environments not set, retry in 2s...")
 		time.Sleep(2 * time.Second)
 	}
 
-	hc := make([]fthealth.Check, environments.len())
+	hc := make([]fthealth.Check, h.environments.Len())
 
 	i := 0
-	for _, envName := range environments.names() {
+	for _, envName := range h.environments.Names() {
 		hc[i] = fthealth.Check{
 			ID:               envName + "-readEndpointsReachable",
 			BusinessImpact:   "Publish metrics might not be correct. False positive failures might be recorded. This will impact the SLA measurement.",
@@ -271,7 +273,7 @@ func (h *Healthcheck) readEnvironmentsReachable() []fthealth.Check {
 			PanicGuide:       pam_run_book_url,
 			Severity:         1,
 			TechnicalSummary: "Read services are not reachable/healthy",
-			Checker:          (&readEnvironmentHealthcheck{environments.environment(envName), h.client}).checkReadEnvironmentReachable,
+			Checker:          (&readEnvironmentHealthcheck{h.environments.Environment(envName), h.client, h.config}).checkReadEnvironmentReachable,
 		}
 		i++
 	}
@@ -280,19 +282,19 @@ func (h *Healthcheck) readEnvironmentsReachable() []fthealth.Check {
 
 func (h *readEnvironmentHealthcheck) checkReadEnvironmentReachable() (string, error) {
 	var wg sync.WaitGroup
-	hcErrs := make(chan error, len(appConfig.MetricConf))
+	hcErrs := make(chan error, len(h.appConfig.MetricConf))
 
-	for _, metric := range appConfig.MetricConf {
+	for _, metric := range h.appConfig.MetricConf {
 		var endpointURL *url.URL
 		var err error
 		var username, password string
-		if absoluteUrlRegex.MatchString(metric.Endpoint) {
+		if checks.AbsoluteURLRegex.MatchString(metric.Endpoint) {
 			endpointURL, err = url.Parse(metric.Endpoint)
 		} else {
 			if metric.Alias == "S3" {
 				endpointURL, err = url.Parse(h.env.S3Url + metric.Endpoint)
 			} else {
-				endpointURL, err = url.Parse(h.env.ReadUrl + metric.Endpoint)
+				endpointURL, err = url.Parse(h.env.ReadURL + metric.Endpoint)
 				username = h.env.Username
 				password = h.env.Password
 			}
@@ -354,4 +356,15 @@ func buildFtHealthcheckUrl(endpoint url.URL, health string) (string, error) {
 
 func buildAwsHealthcheckUrl(serviceUrl string) (string, error) {
 	return serviceUrl + "healthCheckDummyFile", nil
+}
+
+func cleanupResp(resp *http.Response) {
+	_, err := io.Copy(ioutil.Discard, resp.Body)
+	if err != nil {
+		log.Warnf("[%v]", err)
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		log.Warnf("[%v]", err)
+	}
 }

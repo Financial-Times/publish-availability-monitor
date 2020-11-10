@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Financial-Times/publish-availability-monitor/checks"
+	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,11 +17,11 @@ func TestIsVideoValid_Valid(t *testing.T) {
 	}
 
 	txId := "tid_1234"
-	pamTxId := checks.ConstructPamTxId(txId)
+	pamTxID := httpcaller.ConstructPamTxId(txId)
 
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "/map", req.RequestURI)
-		assert.Equal(t, pamTxId, req.Header.Get("X-Request-Id"))
+		assert.Equal(t, pamTxID, req.Header.Get("X-Request-Id"))
 
 		defer req.Body.Close()
 		reqBody, err := ioutil.ReadAll(req.Body)
@@ -47,11 +47,11 @@ func TestIsVideoValid_failedExternalValidation(t *testing.T) {
 	}
 
 	txId := "tid_1234"
-	pamTxId := checks.ConstructPamTxId(txId)
+	pamTxID := httpcaller.ConstructPamTxId(txId)
 
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		assert.Equal(t, "/map", req.RequestURI)
-		assert.Equal(t, pamTxId, req.Header.Get("X-Request-Id"))
+		assert.Equal(t, pamTxID, req.Header.Get("X-Request-Id"))
 
 		defer req.Body.Close()
 		reqBody, err := ioutil.ReadAll(req.Body)

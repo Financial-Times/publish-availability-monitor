@@ -22,4 +22,4 @@ sed -i "s \"VIDEO_MAPPER_URL\" \"$VIDEO_MAPPER_URL\" " /config.json
 sed -i "s \"WORDPRESS_MAPPER_URL\" \"$WORDPRESS_MAPPER_URL\" " /config.json
 sed -i "s \"UUID_RESOLVER_URL\" \"$UUID_RESOLVER_URL\" " /config.json
 
-exec ./publish-availability-monitor -config /config.json -etcd-peers $ETCD_PEERS
+exec ./publish-availability-monitor -config /config.json

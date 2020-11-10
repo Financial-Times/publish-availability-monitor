@@ -8,13 +8,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Financial-Times/publish-availability-monitor/checks"
+	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	log "github.com/Sirupsen/logrus"
 )
 
 type baseNotificationsFeed struct {
 	feedName          string
-	httpCaller        checks.HttpCaller
+	httpCaller        httpcaller.Caller
 	baseUrl           string
 	username          string
 	password          string
@@ -48,7 +48,7 @@ func (f *baseNotificationsFeed) SetCredentials(username string, password string)
 	f.password = password
 }
 
-func (f *baseNotificationsFeed) SetHttpCaller(httpCaller checks.HttpCaller) {
+func (f *baseNotificationsFeed) SetHTTPCaller(httpCaller httpcaller.Caller) {
 	f.httpCaller = httpCaller
 }
 

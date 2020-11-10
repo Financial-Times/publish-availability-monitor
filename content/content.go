@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/Financial-Times/publish-availability-monitor/checks"
+	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -33,10 +33,10 @@ type validationParam struct {
 	contentType   string
 }
 
-var httpCaller checks.HttpCaller
+var httpCaller httpcaller.Caller
 
 func init() {
-	httpCaller = checks.NewHttpCaller(10)
+	httpCaller = httpcaller.NewCaller(10)
 }
 
 func doExternalValidation(p validationParam, validCheck func(int) bool, deletedCheck func(...int) bool) ValidationResponse {
@@ -45,9 +45,9 @@ func doExternalValidation(p validationParam, validCheck func(int) bool, deletedC
 		return ValidationResponse{false, deletedCheck()}
 	}
 
-	resp, err := httpCaller.DoCall(checks.Config{
-		HttpMethod: "POST", Url: p.validationURL, Username: p.username, Password: p.password,
-		TxId:        checks.ConstructPamTxId(p.txID),
+	resp, err := httpCaller.DoCall(httpcaller.Config{ //nolint:bodyclose
+		HTTPMethod: "POST", URL: p.validationURL, Username: p.username, Password: p.password,
+		TxID:        httpcaller.ConstructPamTxId(p.txID),
 		ContentType: "application/json", Entity: bytes.NewReader(p.binaryContent)})
 
 	if err != nil {

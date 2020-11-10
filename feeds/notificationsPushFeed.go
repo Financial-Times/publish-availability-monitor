@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Financial-Times/publish-availability-monitor/checks"
+	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -29,7 +29,7 @@ func (f *NotificationsPushFeed) Start() {
 	f.stopFeed = false
 	go func() {
 		if f.httpCaller == nil {
-			f.httpCaller = checks.NewHttpCaller(0)
+			f.httpCaller = httpcaller.NewCaller(0)
 		}
 
 		for f.consumeFeed() {
@@ -64,7 +64,7 @@ func (f *NotificationsPushFeed) isConsuming() bool {
 
 func (f *NotificationsPushFeed) consumeFeed() bool {
 	txId := f.buildNotificationsTxId()
-	resp, err := f.httpCaller.DoCall(checks.Config{Url: f.baseUrl, Username: f.username, Password: f.password, ApiKey: f.apiKey, TxId: txId})
+	resp, err := f.httpCaller.DoCall(httpcaller.Config{URL: f.baseUrl, Username: f.username, Password: f.password, APIKey: f.apiKey, TxID: txId})
 
 	if err != nil {
 		log.WithField("transaction_id", txId).Errorf("Sending request: [%v]", err)
@@ -130,6 +130,11 @@ func (f *NotificationsPushFeed) storeNotifications(notifications []Notification)
 			history = make([]*Notification, 0)
 		}
 
+		// Linter warning: Implicit memory aliasing in for loop. (gosec)
+		// The implementation is based on the assumption that notification-push service
+		// will push notifications slice containing only a single item which migh lead to bugs in the future.
+		// If the "notifications" slice contains more than one item
+		// for every iteration the code will capture only the first one.
 		history = append(history, &n)
 		f.notifications[uuid] = history
 	}

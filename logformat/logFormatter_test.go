@@ -11,7 +11,7 @@ import (
 )
 
 func TestInfoLogging(t *testing.T) {
-	f := NewSLF4JFormatter(`.*/github\.com/Financial-Times/.*`)
+	f := &SLF4JFormatter{}
 
 	now := time.Now().Round(time.Millisecond)
 	msg := "Hello world"
@@ -31,7 +31,7 @@ func TestInfoLogging(t *testing.T) {
 }
 
 func TestWarnLogging(t *testing.T) {
-	f := NewSLF4JFormatter(`.*/github\.com/Financial-Times/.*`)
+	f := &SLF4JFormatter{}
 
 	now := time.Now().Round(time.Millisecond)
 	msg := "Uh-oh!"
@@ -51,7 +51,7 @@ func TestWarnLogging(t *testing.T) {
 }
 
 func TestErrorLogging(t *testing.T) {
-	f := NewSLF4JFormatter(`.*/github\.com/Financial-Times/.*`)
+	f := &SLF4JFormatter{}
 
 	now := time.Now().Round(time.Millisecond)
 	msg := "Terrible!"
@@ -71,7 +71,7 @@ func TestErrorLogging(t *testing.T) {
 }
 
 func TestTxIdLogging(t *testing.T) {
-	f := NewSLF4JFormatter(`.*/github\.com/Financial-Times/.*`)
+	f := &SLF4JFormatter{}
 
 	now := time.Now().Round(time.Millisecond)
 	msg := "Hello world"

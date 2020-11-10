@@ -95,18 +95,6 @@ __Note that deployment to FTP2 is no longer supported.__
 The app checks environments configuration as well as validation credentials every minute (configurable) and it reloads them if changes are detected.
 The monitor can check publication across several different environments, provided each environment can be accessed by a single host URL. 
 
-Configurations can be read either from ETCD or from files. 
-If the `ETCD_PEERS` environment variable is set to `NOT_AVAILABLE`, then the configs will be read from files, otherwise from ETCD. 
-
-## ETCD-based configuration
-The monitor reads from `etcd` and watches for changes in the following paths:
-
-`/ft/config/monitoring/read-urls`: a comma-separated list of _name_`:`_value_ pairs, mapping from environment name to base read URL, e.g. `env1:http://foo.example.org,env2:http://bar.example.org`
-
-`/ft/config/monitoring/s3-image-bucket-urls`: a comma-separated list of _name_`:`_value_ pairs, mapping from environment name to base S3 URL, e.g. `env1:http://s3bucket1.org,env2:http://s3bucket2.org`
-
-`/ft/_credentials/publish-read/read-credentials`: a comma-separated list of _name_`:`_username_`:`_password_ tuples, mapping from environment name to basic HTTP credentials, e.g. `env1:scott:tiger,env2:friend:frodo`. The _name_ must match a name in the read-urls key; if an environment does not require authentication, credentials should be omitted.
-
 ## File-based configuration
 ### JSON example for environments configuration:
  <pre>
