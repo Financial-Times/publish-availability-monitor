@@ -18,6 +18,7 @@ type AppConfig struct {
 	HealthConf          HealthConfig         `json:"healthConfig"`
 	ValidationEndpoints map[string]string    `json:"validationEndpoints"` //contentType to validation endpoint mapping, ex. { "EOM::Story": "http://methode-article-transformer/content-transform" }
 	UUIDResolverURL     string               `json:"uuidResolverUrl"`
+	Capabilities        []Capability         `json:"capabilities"`
 }
 
 // SplunkConfig holds the SplunkFeeder-specific configuration
@@ -28,6 +29,13 @@ type SplunkConfig struct {
 // HealthConfig holds the application's healthchecks configuration
 type HealthConfig struct {
 	FailureThreshold int `json:"failureThreshold"`
+}
+
+// Capability represents business capability configuration
+type Capability struct {
+	Name        string   `json:"name"`
+	MetricAlias string   `json:"metricAlias"`
+	TestIDs     []string `json:"testIDs"`
 }
 
 // NewAppConfig opens the file at configFileName and unmarshals it into an AppConfig.

@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/content"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 const wordpressType = "wordpress"
-
 const syntheticTID = "SYNTHETIC-REQ-MONe4d2885f-1140-400b-9407-921e1c7378cd"
 const carouselRepublishTID = "tid_ofcysuifp0_carousel_1488384556"
 const carouselUnconventionalRepublishTID = "republish_-10bd337c-66d4-48d9-ab8a-e8441fa2ec98_carousel_1493606135"
@@ -56,6 +56,27 @@ func TestIsIgnorableMessage(t *testing.T) {
 				t.Fatalf("expected %v, got %v", test.ExpectedResult, got)
 			}
 		})
+	}
+}
+
+func TestTestIsIgnorableMessage_SyntheticE2ETest(t *testing.T) {
+	typeRes := new(MockTypeResolver)
+	cfg := &config.AppConfig{
+		Capabilities: []config.Capability{
+			{
+				TestIDs: []string{"e4d2885f-1140-400b-9407-921e1c7378cd"},
+			},
+		},
+	}
+
+	mh := NewKafkaMessageHandler(typeRes, cfg, nil, nil, nil, nil)
+	kmh := mh.(*kafkaMessageHandler)
+
+	got := kmh.isIgnorableMessage(syntheticTID)
+	expected := false
+
+	if got != expected {
+		t.Fatalf("expected %v, got %v", expected, got)
 	}
 }
 
