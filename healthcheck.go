@@ -231,7 +231,7 @@ func (h *Healthcheck) checkValidationServicesReachable() (string, error) {
 
 func checkServiceReachable(healthcheckURL string, username string, password string, client *http.Client, hcRes chan<- error, wg *sync.WaitGroup) {
 	defer wg.Done()
-	log.Infof("Checking: %s", healthcheckURL)
+	log.Debugf("Checking: %s", healthcheckURL)
 
 	req, err := http.NewRequest("GET", healthcheckURL, nil)
 	if err != nil {
