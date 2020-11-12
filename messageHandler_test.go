@@ -49,8 +49,13 @@ func TestIsIgnorableMessage(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			typeRes := new(MockTypeResolver)
 			h := kafkaMessageHandler{typeRes: typeRes}
+			kafkaMessage := consumer.Message{
+				Headers: map[string]string{
+					"X-Request-Id": test.TransactionID,
+				},
+			}
 
-			got := h.isIgnorableMessage(test.TransactionID)
+			got := h.isIgnorableMessage(kafkaMessage)
 
 			if got != test.ExpectedResult {
 				t.Fatalf("expected %v, got %v", test.ExpectedResult, got)
@@ -72,7 +77,13 @@ func TestTestIsIgnorableMessage_SyntheticE2ETest(t *testing.T) {
 	mh := NewKafkaMessageHandler(typeRes, cfg, nil, nil, nil, nil)
 	kmh := mh.(*kafkaMessageHandler)
 
-	got := kmh.isIgnorableMessage(syntheticTID)
+	kafkaMessage := consumer.Message{
+		Headers: map[string]string{
+			"X-Request-Id": syntheticTID,
+		},
+	}
+
+	got := kmh.isIgnorableMessage(kafkaMessage)
 	expected := false
 
 	if got != expected {

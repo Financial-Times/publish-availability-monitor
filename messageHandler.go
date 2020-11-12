@@ -59,7 +59,7 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 	tid := msg.Headers["X-Request-Id"]
 	log.Infof("Received message with TID [%v]", tid)
 
-	if h.isIgnorableMessage(tid) {
+	if h.isIgnorableMessage(msg) {
 		log.Infof("Message [%v] is ignorable. Skipping...", tid)
 		return
 	}
@@ -119,19 +119,25 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 	}
 }
 
-func (h *kafkaMessageHandler) isIgnorableMessage(tid string) bool {
+func (h *kafkaMessageHandler) isIgnorableMessage(msg consumer.Message) bool {
+	tid := msg.Headers["X-Request-Id"]
+
 	isSyntetic := h.isSyntheticTransactionID(tid)
-	if isSyntetic && h.IsE2ETest(tid) {
+	isE2ETest := h.isE2ETestTransactionID(tid)
+	isCarousel := h.isContentCarouselTransactionID(tid)
+
+	if isSyntetic && isE2ETest {
 		return false
 	}
-	return isSyntetic || h.isContentCarouselTransactionID(tid)
+
+	return isSyntetic || isCarousel
 }
 
 func (h *kafkaMessageHandler) isSyntheticTransactionID(tid string) bool {
 	return strings.HasPrefix(tid, "SYNTHETIC")
 }
 
-func (h *kafkaMessageHandler) IsE2ETest(tid string) bool {
+func (h *kafkaMessageHandler) isE2ETestTransactionID(tid string) bool {
 	for testUUID := range h.e2eTestUUIDs {
 		if strings.Contains(tid, testUUID) {
 			log.Infof("Message [%v] is E2E Test.", tid)
