@@ -37,6 +37,7 @@ func (wordPressMessage WordPressMessage) Validate(extValEndpoint string, txId st
 		txId,
 		wordPressMessage.GetUUID(),
 		wordPressMessage.GetType(),
+		false,
 	}
 
 	return doExternalValidation(

@@ -87,7 +87,8 @@
         "EOM::CompoundStory",
         "EOM::CompoundStory_External_CPH",
         "EOM::CompoundStory_Internal_CPH",
-        "wordpress"
+        "wordpress",
+        "application/vnd.ft-upp-article-internal+json"
       ]
     },
     {
@@ -126,7 +127,8 @@
     "Image": "METHODE_IMAGE_MODEL_MAPPER_URL",
     "InternalComponents": "METHODE_ARTICLE_INTERNAL_COMPONENTS_MAPPER_URL",
     "video": "VIDEO_MAPPER_URL",
-    "wordpress": "WORDPRESS_MAPPER_URL"
+    "wordpress": "WORDPRESS_MAPPER_URL",
+    "application/vnd.ft-upp-article-internal+json": "UPP_INTERNAL_ARTICLE_VALIDATOR_URL"
   },
   "uuidResolverUrl": "UUID_RESOLVER_URL",
   "capabilities": [

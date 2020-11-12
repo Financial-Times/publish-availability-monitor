@@ -24,13 +24,14 @@ type ValidationResponse struct {
 }
 
 type validationParam struct {
-	binaryContent []byte
-	validationURL string
-	username      string
-	password      string
-	txID          string
-	uuid          string
-	contentType   string
+	binaryContent    []byte
+	validationURL    string
+	username         string
+	password         string
+	txID             string
+	uuid             string
+	contentType      string
+	isGenericPublish bool
 }
 
 var httpCaller httpcaller.Caller
@@ -45,10 +46,15 @@ func doExternalValidation(p validationParam, validCheck func(int) bool, deletedC
 		return ValidationResponse{false, deletedCheck()}
 	}
 
+	contentType := "application/json"
+	if p.isGenericPublish {
+		contentType = p.contentType
+	}
+
 	resp, err := httpCaller.DoCall(httpcaller.Config{ //nolint:bodyclose
 		HTTPMethod: "POST", URL: p.validationURL, Username: p.username, Password: p.password,
 		TxID:        httpcaller.ConstructPamTxId(p.txID),
-		ContentType: "application/json", Entity: bytes.NewReader(p.binaryContent)})
+		ContentType: contentType, Entity: bytes.NewReader(p.binaryContent)})
 
 	if err != nil {
 		log.Warnf("External validation for content uuid=[%s] transaction_id=[%s] validationURL=[%s], creating validation request error: [%v]. Skipping external validation.", p.uuid, p.txID, p.validationURL, err)

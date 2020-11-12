@@ -90,6 +90,8 @@ spec:
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.video_mapper }}"
         - name: WORDPRESS_MAPPER_URL
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.wordpress_mapper }}"
+        - name: UPP_INTERNAL_ARTICLE_VALIDATOR_URL
+          value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_internal_article_validator }}"
         - name: UUID_RESOLVER_URL
           value: "{{ .Values.envs.uuid_resolver_url }}"
         ports:

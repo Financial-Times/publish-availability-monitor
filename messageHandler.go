@@ -64,17 +64,17 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 		return
 	}
 
+	publishedContent, err := h.unmarshalContent(msg)
+	if err != nil {
+		log.Warnf("Cannot unmarshal message [%v], error: [%v]", tid, err.Error())
+		return
+	}
+
 	publishDateString := msg.Headers["Message-Timestamp"]
 	publishDate, err := time.Parse(checks.DateLayout, publishDateString)
 	if err != nil {
 		log.Errorf("Cannot parse publish date [%v] from message [%v], error: [%v]",
 			publishDateString, tid, err.Error())
-		return
-	}
-
-	publishedContent, err := h.unmarshalContent(msg)
-	if err != nil {
-		log.Warnf("Cannot unmarshal message [%v], error: [%v]", tid, err.Error())
 		return
 	}
 
@@ -190,6 +190,17 @@ func (h *kafkaMessageHandler) unmarshalContent(msg consumer.Message) (content.Co
 			return nil, err
 		}
 		return video.Initialize(binaryContent), nil
+	case "http://cmdb.ft.com/systems/cct":
+		var genericContent content.GenericContent
+		err := json.Unmarshal(binaryContent, &genericContent)
+		if err != nil {
+			return nil, err
+		}
+
+		genericContent = genericContent.Initialize(binaryContent).(content.GenericContent)
+		genericContent.Type = msg.Headers["Content-Type"]
+
+		return genericContent, nil
 	default:
 		return nil, fmt.Errorf("unsupported content with system ID: [%s]", systemID)
 	}

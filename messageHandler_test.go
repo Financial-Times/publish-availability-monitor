@@ -326,6 +326,20 @@ func TestIsValidExternalCPH(t *testing.T) {
 	}
 }
 
+func TestUnmarshalContent_GenericContent(t *testing.T) {
+	h := kafkaMessageHandler{}
+
+	resultContent, err := h.unmarshalContent(validGenericContentMessage)
+	assert.NoError(t, err)
+
+	genericContent, ok := resultContent.(content.GenericContent)
+	assert.True(t, ok)
+
+	assert.Equal(t, "077f5ac2-0491-420e-a5d0-982e0f86204b", genericContent.UUID)
+	assert.Equal(t, validGenericContentMessage.Headers["Content-Type"], genericContent.Type)
+	assert.Equal(t, []byte(validGenericContentMessage.Body), genericContent.BinaryContent)
+}
+
 var invalidMethodeMessageWrongJSONFormat = consumer.Message{
 	Headers: map[string]string{
 		"Origin-System-Id": "http://cmdb.ft.com/systems/methode-web-pub",
@@ -424,6 +438,46 @@ var validContentPlaceholder = consumer.Message{
 		"type": "EOM::CompoundStory",
 		"attributes": "<ObjectMetadata><EditorialNotes><Sources><Source><SourceCode>ContentPlaceholder</SourceCode></Source></Sources></EditorialNotes></ObjectMetadata>"
 	}`,
+}
+
+var validGenericContentMessage = consumer.Message{
+	Headers: map[string]string{
+		"Origin-System-Id": "http://cmdb.ft.com/systems/cct",
+		"X-Request-Id":     "tid_0123wxyz",
+		"Content-Type":     "application/vnd.ft-upp-article-internal",
+	},
+	Body: `{
+		"uuid": "077f5ac2-0491-420e-a5d0-982e0f86204b",
+		"title": "A title",
+		"type": "Article",
+		"byline": "A byline",
+		"identifiers": [
+		  {
+			"authority": "an authority",
+			"identifierValue": "some identifier value"
+		  },
+		  {
+			"authority": "another authority",
+			"identifierValue": "some other identifier value"
+		  }
+		],
+		"publishedDate": "2014-12-23T20:45:54.000Z",
+		"firstPublishedDate": "2014-12-22T20:45:54.000Z",
+		"bodyXML": "<body>Lorem ipsum</body>",
+		"editorialDesk": "some string editorial desk identifier",
+		"description": "Some descriptive explanation for this content",
+		"mainImage": "0000aa3c-0056-506b-2b73-ed90e21b3e64",
+		"standout": {
+		  "editorsChoice": false,
+		  "exclusive": false,
+		  "scoop": false
+		},
+		"webUrl": "http://some.external.url.com/content",
+		"canBeSyndicated" : "verify",
+		"accessLevel" : "premium",
+		"canBeDistributed": "no",
+		"someUnknownProperty" : " is totally fine, we don't validate for unknown fields/properties"
+	  }`,
 }
 
 type MockTypeResolver struct {
