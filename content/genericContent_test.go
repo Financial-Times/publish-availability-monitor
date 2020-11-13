@@ -19,7 +19,7 @@ func TestGenericContent_Validate(t *testing.T) {
 		"valid generic content": {
 			Content: GenericContent{
 				UUID: "077f5ac2-0491-420e-a5d0-982e0f86204b",
-				Type: "application/vnd.ft-upp-article-internal+json",
+				Type: "application/vnd.ft-upp-article-internal",
 				BinaryContent: []byte(`{
 					"uuid": "077f5ac2-0491-420e-a5d0-982e0f86204b",
 					"title": "A title",
@@ -53,7 +53,7 @@ func TestGenericContent_Validate(t *testing.T) {
 		"generic content with failed external validatotion is invalid": {
 			Content: GenericContent{
 				UUID:          "077f5ac2-0491-420e-a5d0-982e0f86204b",
-				Type:          "application/vnd.ft-upp-article-internal+json",
+				Type:          "application/vnd.ft-upp-article-internal",
 				BinaryContent: []byte(`invalid payload`),
 			},
 			ExternalValidationResponseCode: http.StatusUnsupportedMediaType,
@@ -68,7 +68,7 @@ func TestGenericContent_Validate(t *testing.T) {
 				assert.Equal(t, "/validate", req.RequestURI)
 				assert.Equal(t, httpcaller.ConstructPamTxId(txID), req.Header.Get("X-Request-Id"))
 				assert.Equal(t, "POST", req.Method)
-				assert.Equal(t, test.Content.Type, req.Header.Get("Content-Type"))
+				assert.Equal(t, test.Content.Type+"+json", req.Header.Get("Content-Type"))
 
 				reqBody, err := ioutil.ReadAll(req.Body)
 				assert.NoError(t, err)

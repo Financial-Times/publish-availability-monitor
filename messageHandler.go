@@ -24,16 +24,7 @@ type MessageHandler interface {
 	HandleMessage(msg consumer.Message)
 }
 
-func NewKafkaMessageHandler(typeRes content.TypeResolver, appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.History) MessageHandler {
-	e2eTestUUIDs := map[string]bool{}
-	for _, c := range appConfig.Capabilities {
-		for _, id := range c.TestIDs {
-			if !e2eTestUUIDs[id] {
-				e2eTestUUIDs[id] = true
-			}
-		}
-	}
-
+func NewKafkaMessageHandler(typeRes content.TypeResolver, appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.History, e2eTestUUIDs []string) MessageHandler {
 	return &kafkaMessageHandler{
 		typeRes:         typeRes,
 		appConfig:       appConfig,
@@ -52,7 +43,7 @@ type kafkaMessageHandler struct {
 	subscribedFeeds map[string][]feeds.Feed
 	metricSink      chan metrics.PublishMetric
 	metricContainer *metrics.History
-	e2eTestUUIDs    map[string]bool
+	e2eTestUUIDs    []string
 }
 
 func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
@@ -115,7 +106,7 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 	}
 
 	for _, scheduleParam := range paramsToSchedule {
-		checks.ScheduleChecks(scheduleParam, h.subscribedFeeds, endpointSpecificChecks, h.appConfig, h.metricSink)
+		checks.ScheduleChecks(scheduleParam, h.subscribedFeeds, endpointSpecificChecks, h.appConfig, h.metricSink, h.e2eTestUUIDs)
 	}
 }
 
@@ -123,10 +114,11 @@ func (h *kafkaMessageHandler) isIgnorableMessage(msg consumer.Message) bool {
 	tid := msg.Headers["X-Request-Id"]
 
 	isSyntetic := h.isSyntheticTransactionID(tid)
-	isE2ETest := h.isE2ETestTransactionID(tid)
+	isE2ETest := config.IsE2ETestTransactionID(tid, h.e2eTestUUIDs)
 	isCarousel := h.isContentCarouselTransactionID(tid)
 
 	if isSyntetic && isE2ETest {
+		log.Infof("Message [%v] is E2E Test.", tid)
 		return false
 	}
 
@@ -135,17 +127,6 @@ func (h *kafkaMessageHandler) isIgnorableMessage(msg consumer.Message) bool {
 
 func (h *kafkaMessageHandler) isSyntheticTransactionID(tid string) bool {
 	return strings.HasPrefix(tid, "SYNTHETIC")
-}
-
-func (h *kafkaMessageHandler) isE2ETestTransactionID(tid string) bool {
-	for testUUID := range h.e2eTestUUIDs {
-		if strings.Contains(tid, testUUID) {
-			log.Infof("Message [%v] is E2E Test.", tid)
-			return true
-		}
-	}
-
-	return false
 }
 
 func (h *kafkaMessageHandler) isContentCarouselTransactionID(tid string) bool {

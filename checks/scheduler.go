@@ -26,9 +26,15 @@ type SchedulerParam struct {
 	environments    *envs.Environments
 }
 
-func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, endpointSpecificChecks map[string]EndpointSpecificCheck, appConfig *config.AppConfig, metricSink chan metrics.PublishMetric) {
+func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, endpointSpecificChecks map[string]EndpointSpecificCheck, appConfig *config.AppConfig, metricSink chan metrics.PublishMetric, e2eTestUUIDs []string) {
+	isE2ETest := config.IsE2ETestTransactionID(p.tid, e2eTestUUIDs)
+
 	for _, metric := range appConfig.MetricConf {
-		if !validType(metric.ContentTypes, p.contentToCheck.GetType()) {
+		if !validType(metric.ContentTypes, p.contentToCheck.GetType()) && !isE2ETest {
+			continue
+		}
+
+		if isE2ETest && !appConfig.IsCapabilityMetric(metric.Alias) {
 			continue
 		}
 

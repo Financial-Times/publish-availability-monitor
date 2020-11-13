@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/content"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -66,15 +65,9 @@ func TestIsIgnorableMessage(t *testing.T) {
 
 func TestTestIsIgnorableMessage_SyntheticE2ETest(t *testing.T) {
 	typeRes := new(MockTypeResolver)
-	cfg := &config.AppConfig{
-		Capabilities: []config.Capability{
-			{
-				TestIDs: []string{"e4d2885f-1140-400b-9407-921e1c7378cd"},
-			},
-		},
-	}
+	e2eTestUUIDs := []string{"e4d2885f-1140-400b-9407-921e1c7378cd"}
 
-	mh := NewKafkaMessageHandler(typeRes, cfg, nil, nil, nil, nil)
+	mh := NewKafkaMessageHandler(typeRes, nil, nil, nil, nil, nil, e2eTestUUIDs)
 	kmh := mh.(*kafkaMessageHandler)
 
 	kafkaMessage := consumer.Message{
