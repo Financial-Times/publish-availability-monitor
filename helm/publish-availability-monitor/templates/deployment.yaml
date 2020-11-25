@@ -35,6 +35,8 @@ spec:
         resources:
 {{ toYaml .Values.resources | indent 12 }}
         env:
+        - name: ENVIRONMENT
+          value: "{{ .Values.envs.environment }}"
         - name: KAFKA_TOPIC
           value: "{{ .Values.envs.kafka_topic }}"
         - name: KAFKA_PROXY_HOST
@@ -75,6 +77,13 @@ spec:
             secretKeyRef:
               name: publish-availability-monitor-secrets
               key: notifications_push.api_key
+        - name: GRAPHITE_ADDRESS
+          value: "{{ .Values.envs.graphite_address }}"
+        - name: GRAPHITE_UUID
+          valueFrom:
+            secretKeyRef:
+              name: publish-availability-monitor-secrets
+              key: graphite.uuid
         {{- $base_url := default .Values.cluster.delivery.url .Values.envs.validation_endpoints.base_url }}
         - name: METHODE_ARTICLE_VALIDATION_URL
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.methode_article_mapper }}"

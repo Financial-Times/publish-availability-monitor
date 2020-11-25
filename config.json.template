@@ -132,9 +132,12 @@
   "uuidResolverUrl": "UUID_RESOLVER_URL",
   "capabilities": [
     {
-      "name": "Push Notifications Capability",
+      "name": "push-notifications",
       "metricAlias": "notifications-push",
       "testIDs": ["427f2a19-2ae7-47c1-b580-c225fa0a0199"]
     }
-  ]
+  ],
+  "graphiteAddress": "GRAPHITE_ADDRESS",
+  "graphiteUUID": "GRAPHITE_UUID",
+  "environment": "ENVIRONMENT"
 }

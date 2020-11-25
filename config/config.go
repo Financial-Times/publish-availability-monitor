@@ -19,6 +19,9 @@ type AppConfig struct {
 	ValidationEndpoints map[string]string    `json:"validationEndpoints"` //contentType to validation endpoint mapping, ex. { "EOM::Story": "http://methode-article-transformer/content-transform" }
 	UUIDResolverURL     string               `json:"uuidResolverUrl"`
 	Capabilities        []Capability         `json:"capabilities"`
+	GraphiteAddress     string               `json:"graphiteAddress"`
+	GraphiteUUID        string               `json:"graphiteUUID"`
+	Environment         string               `json:"environment"`
 }
 
 // MetricConfig is the configuration of a PublishMetric
@@ -66,14 +69,14 @@ func NewAppConfig(configFileName string) (*AppConfig, error) {
 	return &conf, nil
 }
 
-func (cfg *AppConfig) IsCapabilityMetric(alias string) bool {
+func (cfg *AppConfig) GetCapability(metricAlias string) *Capability {
 	for _, c := range cfg.Capabilities {
-		if c.MetricAlias == alias {
-			return true
+		if c.MetricAlias == metricAlias {
+			return &c
 		}
 	}
 
-	return false
+	return nil
 }
 
 func IsE2ETestTransactionID(tid string, e2eTestUUIDs []string) bool {

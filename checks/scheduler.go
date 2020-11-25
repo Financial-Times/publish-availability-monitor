@@ -34,8 +34,12 @@ func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 			continue
 		}
 
-		if isE2ETest && !appConfig.IsCapabilityMetric(metric.Alias) {
-			continue
+		var capability *config.Capability
+		if isE2ETest {
+			capability = appConfig.GetCapability(metric.Alias)
+			if capability == nil {
+				continue
+			}
 		}
 
 		if p.environments.Len() > 0 {
@@ -69,6 +73,7 @@ func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 					Endpoint:        *endpointURL,
 					TID:             p.tid,
 					IsMarkedDeleted: p.isMarkedDeleted,
+					Capability:      capability,
 				}
 
 				var checkInterval = appConfig.Threshold / metric.Granularity
@@ -87,6 +92,7 @@ func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 				Endpoint:        url.URL{},
 				TID:             p.tid,
 				IsMarkedDeleted: p.isMarkedDeleted,
+				Capability:      capability,
 			}
 			metricSink <- publishMetric
 			p.metricContainer.Update(publishMetric)

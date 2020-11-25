@@ -75,11 +75,15 @@ func main() {
 		}
 	}
 
-	metricDestinations := []metrics.Destination{
+	publishMetricDestinations := []metrics.Destination{
 		metrics.NewSplunkFeeder(appConfig.SplunkConf.LogPrefix),
 	}
 
-	aggregator := metrics.NewAggregator(metricSink, metricDestinations, e2eTestUUIDs)
+	capabilityMetricDestinations := []metrics.Destination{
+		metrics.NewGraphiteSender(appConfig),
+	}
+
+	aggregator := metrics.NewAggregator(metricSink, publishMetricDestinations, capabilityMetricDestinations)
 	go aggregator.Run()
 
 	readKafkaMessages(appConfig, environments, subscribedFeeds, metricSink, metricContainer, e2eTestUUIDs)

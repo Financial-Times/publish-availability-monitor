@@ -19,6 +19,7 @@ type PublishMetric struct {
 	Endpoint        url.URL
 	TID             string
 	IsMarkedDeleted bool
+	Capability      *config.Capability
 }
 
 func (pm PublishMetric) String() string {
