@@ -151,22 +151,25 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 			tickerChan.Stop()
 			return
 		}
+
+		lower := (checkNr - 1) * check.CheckInterval
+		upper := checkNr * check.CheckInterval
+		check.Metric.PublishInterval = metrics.Interval{
+			LowerBound: lower,
+			UpperBound: upper,
+		}
+
 		if checkSuccessful {
 			tickerChan.Stop()
 			check.Metric.PublishOK = true
-
-			lower := (checkNr - 1) * check.CheckInterval
-			upper := checkNr * check.CheckInterval
-			check.Metric.PublishInterval = metrics.Interval{
-				LowerBound: lower,
-				UpperBound: upper,
-			}
 
 			check.ResultSink <- check.Metric
 			metricContainer.Update(check.Metric)
 			return
 		}
+
 		checkNr++
+
 		select {
 		case <-tickerChan.C:
 			continue
