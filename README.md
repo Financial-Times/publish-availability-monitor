@@ -2,7 +2,7 @@
 [![Circle CI](https://circleci.com/gh/Financial-Times/publish-availability-monitor/tree/master.png?style=shield)](https://circleci.com/gh/Financial-Times/publish-availability-monitor/tree/master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Financial-Times/publish-availability-monitor)](https://goreportcard.com/report/github.com/Financial-Times/publish-availability-monitor) [![Coverage Status](https://coveralls.io/repos/github/Financial-Times/publish-availability-monitor/badge.svg?branch=master)](https://coveralls.io/github/Financial-Times/publish-availability-monitor?branch=master) [![codecov](https://codecov.io/gh/Financial-Times/publish-availability-monitor/branch/master/graph/badge.svg)](https://codecov.io/gh/Financial-Times/publish-availability-monitor)
 
-Monitors publish availability and collects related metrics. Collected metrics are sent to various systems (ex. Splunk).
+Monitors publish availability and collects related metrics. Collected metrics are sent to various systems (ex. Splunk, Graphite).
 
 # Installation
 
@@ -136,6 +136,10 @@ The monitor can check publication across several different environments, provide
  </pre>
  
 Checks that have already been initiated are unaffected by changes to the values above.
+
+### Capability monitoring
+The service performs monitoring of [business capabilities](https://tech.in.ft.com/guides/monitoring/how-to-capability-monitoring) by listening for specific e2e publishes on Kafka and reusing the existing endpoint configuration for scheduling the checks.
+All capability monotoring metrics are send to [Graphite](https://graphitev2-api.ft.com/) and are located under `Metrics/content-metadata/capability-monitoring` directory.
 
 ### Kubernetes details
 In K8s we're using the File-based configuration for environments, and the files are actually contents
