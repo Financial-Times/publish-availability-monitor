@@ -44,7 +44,7 @@ func (gs *GraphiteSender) Send(pm PublishMetric) {
 	timeMetricValue := pm.PublishInterval.UpperBound
 	timeMetric := fmt.Sprintf("%s %d %d\n", timeMetricName, timeMetricValue, time.Now().Unix())
 
-	conn, err := net.Dial("tcp", gs.graphiteAddress)
+	conn, err := net.DialTimeout("tcp", gs.graphiteAddress, 10*time.Second)
 	if err != nil {
 		log.WithError(err).Error("Cannot connect to Graphite")
 		return
