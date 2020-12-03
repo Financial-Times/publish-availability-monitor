@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/url"
 	"time"
+
+	"github.com/Financial-Times/publish-availability-monitor/config"
 )
 
 // PublishMetric holds the information about the metric we are measuring.
@@ -13,10 +15,11 @@ type PublishMetric struct {
 	PublishDate     time.Time //the time WE get the message
 	Platform        string
 	PublishInterval Interval //the interval it was actually published in, ex. (10,20)
-	Config          Config
+	Config          config.MetricConfig
 	Endpoint        url.URL
 	TID             string
 	IsMarkedDeleted bool
+	Capability      *config.Capability
 }
 
 func (pm PublishMetric) String() string {
@@ -36,14 +39,4 @@ func (pm PublishMetric) String() string {
 type Interval struct {
 	LowerBound int
 	UpperBound int
-}
-
-// Config is the configuration of a PublishMetric
-type Config struct {
-	Granularity  int      `json:"granularity"` //how we split up the threshold, ex. 120/12
-	Endpoint     string   `json:"endpoint"`
-	ContentTypes []string `json:"contentTypes"` //list of valid eom types for this metric
-	Alias        string   `json:"alias"`
-	Health       string   `json:"health,omitempty"`
-	APIKey       string   `json:"apiKey,omitempty"`
 }

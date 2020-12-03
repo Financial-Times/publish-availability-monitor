@@ -51,6 +51,7 @@ func (eomfile EomFile) Validate(externalValidationEndpoint string, txID string, 
 		txID,
 		eomfile.GetUUID(),
 		eomfile.GetType(),
+		false,
 	}
 
 	return doExternalValidation(

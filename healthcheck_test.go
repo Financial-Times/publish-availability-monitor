@@ -55,7 +55,7 @@ func TestBuildAwsHealthcheckUrl(t *testing.T) {
 }
 
 func TestPublishNoFailuresForSameUUIDs(t *testing.T) {
-	metricConfig := metrics.Config{}
+	metricConfig := config.MetricConfig{}
 	interval := metrics.Interval{LowerBound: 5, UpperBound: 5}
 	newUrl := url.URL{}
 	t0 := time.Now()
@@ -108,7 +108,7 @@ func TestPublishNoFailuresForSameUUIDs(t *testing.T) {
 }
 
 func TestPublishFailureForDistinctUUIDs(t *testing.T) {
-	metricConfig := metrics.Config{}
+	metricConfig := config.MetricConfig{}
 	interval := metrics.Interval{LowerBound: 5, UpperBound: 5}
 	newUrl := url.URL{}
 	t0 := time.Now()

@@ -66,14 +66,27 @@ func main() {
 
 	go startHTTPServer(appConfig, environments, subscribedFeeds, metricContainer)
 
-	metricDestinations := []metrics.Destination{
+	var e2eTestUUIDs []string
+	for _, c := range appConfig.Capabilities {
+		for _, id := range c.TestIDs {
+			if !sliceContains(e2eTestUUIDs, id) {
+				e2eTestUUIDs = append(e2eTestUUIDs, id)
+			}
+		}
+	}
+
+	publishMetricDestinations := []metrics.Destination{
 		metrics.NewSplunkFeeder(appConfig.SplunkConf.LogPrefix),
 	}
 
-	aggregator := metrics.NewAggregator(metricSink, metricDestinations)
+	capabilityMetricDestinations := []metrics.Destination{
+		metrics.NewGraphiteSender(appConfig),
+	}
+
+	aggregator := metrics.NewAggregator(metricSink, publishMetricDestinations, capabilityMetricDestinations)
 	go aggregator.Run()
 
-	readKafkaMessages(appConfig, environments, subscribedFeeds, metricSink, metricContainer)
+	readKafkaMessages(appConfig, environments, subscribedFeeds, metricSink, metricContainer, e2eTestUUIDs)
 }
 
 func startHTTPServer(appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricContainer *metrics.History) {
@@ -104,7 +117,7 @@ func loadHistory(metricContainer *metrics.History) func(w http.ResponseWriter, r
 	}
 }
 
-func readKafkaMessages(appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.History) {
+func readKafkaMessages(appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.History, e2eTestUUIDs []string) {
 	for !environments.AreReady() {
 		log.Info("Environments not set, retry in 3s...")
 		time.Sleep(3 * time.Second)
@@ -120,7 +133,7 @@ func readKafkaMessages(appConfig *config.AppConfig, environments *envs.Environme
 		break
 	}
 
-	h := NewKafkaMessageHandler(typeRes, appConfig, environments, subscribedFeeds, metricSink, metricContainer)
+	h := NewKafkaMessageHandler(typeRes, appConfig, environments, subscribedFeeds, metricSink, metricContainer, e2eTestUUIDs)
 	c := consumer.NewConsumer(appConfig.QueueConf, h.HandleMessage, &http.Client{})
 
 	var wg sync.WaitGroup
@@ -151,4 +164,13 @@ func readBrandMappings() map[string]string {
 		os.Exit(1)
 	}
 	return brandMappings
+}
+
+func sliceContains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }

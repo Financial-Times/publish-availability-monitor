@@ -57,7 +57,7 @@ var mockArticleEomFile = content.EomFile{
 func TestScheduleChecksForS3AreCorrect(testing *testing.T) {
 	//redefine appConfig to have only S3
 	appConfig := &config.AppConfig{
-		MetricConf: []metrics.Config{
+		MetricConf: []config.MetricConfig{
 			{
 				Endpoint:    "/whatever/",
 				Granularity: 1,
@@ -92,7 +92,7 @@ func TestScheduleChecksForS3AreCorrect(testing *testing.T) {
 func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 	//redefine appConfig to have only Content
 	appConfig := &config.AppConfig{
-		MetricConf: []metrics.Config{
+		MetricConf: []config.MetricConfig{
 			{
 				Endpoint:    "/whatever/",
 				Granularity: 1,
@@ -125,7 +125,7 @@ func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 
 func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testing.T) {
 	appConfig := &config.AppConfig{
-		MetricConf: []metrics.Config{
+		MetricConf: []config.MetricConfig{
 			{
 				Endpoint:    "/internalcomponents/",
 				Granularity: 1,
@@ -161,7 +161,7 @@ func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testi
 
 func TestScheduleChecksForDynamicContentWithInternalComponentsAreCorrect(testing *testing.T) {
 	appConfig := &config.AppConfig{
-		MetricConf: []metrics.Config{
+		MetricConf: []config.MetricConfig{
 			{
 				Endpoint:    "/internalcomponents/",
 				Granularity: 1,
@@ -212,7 +212,7 @@ func runScheduleChecks(testing *testing.T, content content.Content, mockEnvironm
 	metricSink := make(chan metrics.PublishMetric, 2)
 	subscribedFeeds := map[string][]feeds.Feed{}
 
-	ScheduleChecks(&SchedulerParam{content, publishDate, tid, true, capturingMetrics, mockEnvironments}, subscribedFeeds, endpointSpecificChecks, appConfig, metricSink)
+	ScheduleChecks(&SchedulerParam{content, publishDate, tid, true, capturingMetrics, mockEnvironments}, subscribedFeeds, endpointSpecificChecks, appConfig, metricSink, nil)
 	for {
 		if capturingMetrics.Len() == mockEnvironments.Len() {
 			return capturingMetrics

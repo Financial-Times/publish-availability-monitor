@@ -26,10 +26,20 @@ type SchedulerParam struct {
 	environments    *envs.Environments
 }
 
-func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, endpointSpecificChecks map[string]EndpointSpecificCheck, appConfig *config.AppConfig, metricSink chan metrics.PublishMetric) {
+func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, endpointSpecificChecks map[string]EndpointSpecificCheck, appConfig *config.AppConfig, metricSink chan metrics.PublishMetric, e2eTestUUIDs []string) {
+	isE2ETest := config.IsE2ETestTransactionID(p.tid, e2eTestUUIDs)
+
 	for _, metric := range appConfig.MetricConf {
-		if !validType(metric.ContentTypes, p.contentToCheck.GetType()) {
+		if !validType(metric.ContentTypes, p.contentToCheck.GetType()) && !isE2ETest {
 			continue
+		}
+
+		var capability *config.Capability
+		if isE2ETest {
+			capability = appConfig.GetCapability(metric.Alias)
+			if capability == nil {
+				continue
+			}
 		}
 
 		if p.environments.Len() > 0 {
@@ -63,6 +73,7 @@ func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 					Endpoint:        *endpointURL,
 					TID:             p.tid,
 					IsMarkedDeleted: p.isMarkedDeleted,
+					Capability:      capability,
 				}
 
 				var checkInterval = appConfig.Threshold / metric.Granularity
@@ -81,6 +92,7 @@ func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 				Endpoint:        url.URL{},
 				TID:             p.tid,
 				IsMarkedDeleted: p.isMarkedDeleted,
+				Capability:      capability,
 			}
 			metricSink <- publishMetric
 			p.metricContainer.Update(publishMetric)
@@ -139,22 +151,25 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 			tickerChan.Stop()
 			return
 		}
+
+		lower := (checkNr - 1) * check.CheckInterval
+		upper := checkNr * check.CheckInterval
+		check.Metric.PublishInterval = metrics.Interval{
+			LowerBound: lower,
+			UpperBound: upper,
+		}
+
 		if checkSuccessful {
 			tickerChan.Stop()
 			check.Metric.PublishOK = true
-
-			lower := (checkNr - 1) * check.CheckInterval
-			upper := checkNr * check.CheckInterval
-			check.Metric.PublishInterval = metrics.Interval{
-				LowerBound: lower,
-				UpperBound: upper,
-			}
 
 			check.ResultSink <- check.Metric
 			metricContainer.Update(check.Metric)
 			return
 		}
+
 		checkNr++
+
 		select {
 		case <-tickerChan.C:
 			continue

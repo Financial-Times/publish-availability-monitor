@@ -3,9 +3,9 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
+	"strings"
 
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	"github.com/Financial-Times/publish-availability-monitor/metrics"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -13,11 +13,25 @@ import (
 type AppConfig struct {
 	Threshold           int                  `json:"threshold"` //pub SLA in seconds, ex. 120
 	QueueConf           consumer.QueueConfig `json:"queueConfig"`
-	MetricConf          []metrics.Config     `json:"metricConfig"`
+	MetricConf          []MetricConfig       `json:"metricConfig"`
 	SplunkConf          SplunkConfig         `json:"splunk-config"`
 	HealthConf          HealthConfig         `json:"healthConfig"`
 	ValidationEndpoints map[string]string    `json:"validationEndpoints"` //contentType to validation endpoint mapping, ex. { "EOM::Story": "http://methode-article-transformer/content-transform" }
 	UUIDResolverURL     string               `json:"uuidResolverUrl"`
+	Capabilities        []Capability         `json:"capabilities"`
+	GraphiteAddress     string               `json:"graphiteAddress"`
+	GraphiteUUID        string               `json:"graphiteUUID"`
+	Environment         string               `json:"environment"`
+}
+
+// MetricConfig is the configuration of a PublishMetric
+type MetricConfig struct {
+	Granularity  int      `json:"granularity"` //how we split up the threshold, ex. 120/12
+	Endpoint     string   `json:"endpoint"`
+	ContentTypes []string `json:"contentTypes"` //list of valid eom types for this metric
+	Alias        string   `json:"alias"`
+	Health       string   `json:"health,omitempty"`
+	APIKey       string   `json:"apiKey,omitempty"`
 }
 
 // SplunkConfig holds the SplunkFeeder-specific configuration
@@ -28,6 +42,13 @@ type SplunkConfig struct {
 // HealthConfig holds the application's healthchecks configuration
 type HealthConfig struct {
 	FailureThreshold int `json:"failureThreshold"`
+}
+
+// Capability represents business capability configuration
+type Capability struct {
+	Name        string   `json:"name"`
+	MetricAlias string   `json:"metricAlias"`
+	TestIDs     []string `json:"testIDs"`
 }
 
 // NewAppConfig opens the file at configFileName and unmarshals it into an AppConfig.
@@ -46,4 +67,24 @@ func NewAppConfig(configFileName string) (*AppConfig, error) {
 	}
 
 	return &conf, nil
+}
+
+func (cfg *AppConfig) GetCapability(metricAlias string) *Capability {
+	for _, c := range cfg.Capabilities {
+		if c.MetricAlias == metricAlias {
+			return &c
+		}
+	}
+
+	return nil
+}
+
+func IsE2ETestTransactionID(tid string, e2eTestUUIDs []string) bool {
+	for _, testUUID := range e2eTestUUIDs {
+		if strings.Contains(tid, testUUID) {
+			return true
+		}
+	}
+
+	return false
 }

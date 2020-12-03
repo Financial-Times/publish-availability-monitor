@@ -24,7 +24,7 @@ type MessageHandler interface {
 	HandleMessage(msg consumer.Message)
 }
 
-func NewKafkaMessageHandler(typeRes content.TypeResolver, appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.History) MessageHandler {
+func NewKafkaMessageHandler(typeRes content.TypeResolver, appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.History, e2eTestUUIDs []string) MessageHandler {
 	return &kafkaMessageHandler{
 		typeRes:         typeRes,
 		appConfig:       appConfig,
@@ -32,6 +32,7 @@ func NewKafkaMessageHandler(typeRes content.TypeResolver, appConfig *config.AppC
 		subscribedFeeds: subscribedFeeds,
 		metricSink:      metricSink,
 		metricContainer: metricContainer,
+		e2eTestUUIDs:    e2eTestUUIDs,
 	}
 }
 
@@ -42,14 +43,21 @@ type kafkaMessageHandler struct {
 	subscribedFeeds map[string][]feeds.Feed
 	metricSink      chan metrics.PublishMetric
 	metricContainer *metrics.History
+	e2eTestUUIDs    []string
 }
 
 func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 	tid := msg.Headers["X-Request-Id"]
 	log.Infof("Received message with TID [%v]", tid)
 
-	if h.isIgnorableMessage(tid) {
+	if h.isIgnorableMessage(msg) {
 		log.Infof("Message [%v] is ignorable. Skipping...", tid)
+		return
+	}
+
+	publishedContent, err := h.unmarshalContent(msg)
+	if err != nil {
+		log.Warnf("Cannot unmarshal message [%v], error: [%v]", tid, err.Error())
 		return
 	}
 
@@ -58,12 +66,6 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 	if err != nil {
 		log.Errorf("Cannot parse publish date [%v] from message [%v], error: [%v]",
 			publishDateString, tid, err.Error())
-		return
-	}
-
-	publishedContent, err := h.unmarshalContent(msg)
-	if err != nil {
-		log.Warnf("Cannot unmarshal message [%v], error: [%v]", tid, err.Error())
 		return
 	}
 
@@ -104,12 +106,23 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 	}
 
 	for _, scheduleParam := range paramsToSchedule {
-		checks.ScheduleChecks(scheduleParam, h.subscribedFeeds, endpointSpecificChecks, h.appConfig, h.metricSink)
+		checks.ScheduleChecks(scheduleParam, h.subscribedFeeds, endpointSpecificChecks, h.appConfig, h.metricSink, h.e2eTestUUIDs)
 	}
 }
 
-func (h *kafkaMessageHandler) isIgnorableMessage(tid string) bool {
-	return h.isSyntheticTransactionID(tid) || h.isContentCarouselTransactionID(tid)
+func (h *kafkaMessageHandler) isIgnorableMessage(msg consumer.Message) bool {
+	tid := msg.Headers["X-Request-Id"]
+
+	isSyntetic := h.isSyntheticTransactionID(tid)
+	isE2ETest := config.IsE2ETestTransactionID(tid, h.e2eTestUUIDs)
+	isCarousel := h.isContentCarouselTransactionID(tid)
+
+	if isSyntetic && isE2ETest {
+		log.Infof("Message [%v] is E2E Test.", tid)
+		return false
+	}
+
+	return isSyntetic || isCarousel
 }
 
 func (h *kafkaMessageHandler) isSyntheticTransactionID(tid string) bool {
@@ -158,6 +171,17 @@ func (h *kafkaMessageHandler) unmarshalContent(msg consumer.Message) (content.Co
 			return nil, err
 		}
 		return video.Initialize(binaryContent), nil
+	case "http://cmdb.ft.com/systems/cct":
+		var genericContent content.GenericContent
+		err := json.Unmarshal(binaryContent, &genericContent)
+		if err != nil {
+			return nil, err
+		}
+
+		genericContent = genericContent.Initialize(binaryContent).(content.GenericContent)
+		genericContent.Type = msg.Headers["Content-Type"]
+
+		return genericContent, nil
 	default:
 		return nil, fmt.Errorf("unsupported content with system ID: [%s]", systemID)
 	}

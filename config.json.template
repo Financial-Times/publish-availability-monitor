@@ -126,7 +126,18 @@
     "Image": "METHODE_IMAGE_MODEL_MAPPER_URL",
     "InternalComponents": "METHODE_ARTICLE_INTERNAL_COMPONENTS_MAPPER_URL",
     "video": "VIDEO_MAPPER_URL",
-    "wordpress": "WORDPRESS_MAPPER_URL"
+    "wordpress": "WORDPRESS_MAPPER_URL",
+    "application/vnd.ft-upp-article-internal": "UPP_INTERNAL_ARTICLE_VALIDATOR_URL"
   },
-  "uuidResolverUrl": "UUID_RESOLVER_URL"
+  "uuidResolverUrl": "UUID_RESOLVER_URL",
+  "capabilities": [
+    {
+      "name": "push-notifications",
+      "metricAlias": "notifications-push",
+      "testIDs": ["427f2a19-2ae7-47c1-b580-c225fa0a0199"]
+    }
+  ],
+  "graphiteAddress": "GRAPHITE_ADDRESS",
+  "graphiteUUID": "GRAPHITE_UUID",
+  "environment": "ENVIRONMENT"
 }

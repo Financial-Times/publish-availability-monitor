@@ -11,49 +11,76 @@ import (
 )
 
 const wordpressType = "wordpress"
-
 const syntheticTID = "SYNTHETIC-REQ-MONe4d2885f-1140-400b-9407-921e1c7378cd"
 const carouselRepublishTID = "tid_ofcysuifp0_carousel_1488384556"
 const carouselUnconventionalRepublishTID = "republish_-10bd337c-66d4-48d9-ab8a-e8441fa2ec98_carousel_1493606135"
 const carouselGeneratedTID = "tid_ofcysuifp0_carousel_1488384556_gentx"
 const naturalTID = "tid_xltcnbckvq"
 
-func TestIsIgnorableMessage_naturalMessage(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
+func TestIsIgnorableMessage(t *testing.T) {
+	tests := map[string]struct {
+		TransactionID  string
+		ExpectedResult bool
+	}{
+		"normal message should not be ignored": {
+			TransactionID:  naturalTID,
+			ExpectedResult: false,
+		},
+		"synthetic message should be ignored": {
+			TransactionID:  syntheticTID,
+			ExpectedResult: true,
+		},
+		"carousel republish message should be ignored": {
+			TransactionID:  carouselRepublishTID,
+			ExpectedResult: true,
+		},
+		"carousel unconventional republish message should be ignored": {
+			TransactionID:  carouselUnconventionalRepublishTID,
+			ExpectedResult: true,
+		},
+		"carousel generated message should be ignored": {
+			TransactionID:  carouselGeneratedTID,
+			ExpectedResult: true,
+		},
+	}
 
-	if h.isIgnorableMessage(naturalTID) {
-		t.Error("Normal message marked as ignorable")
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			typeRes := new(MockTypeResolver)
+			h := kafkaMessageHandler{typeRes: typeRes}
+			kafkaMessage := consumer.Message{
+				Headers: map[string]string{
+					"X-Request-Id": test.TransactionID,
+				},
+			}
+
+			got := h.isIgnorableMessage(kafkaMessage)
+
+			if got != test.ExpectedResult {
+				t.Fatalf("expected %v, got %v", test.ExpectedResult, got)
+			}
+		})
 	}
 }
 
-func TestIsIgnorableMessage_syntheticMessage(t *testing.T) {
+func TestTestIsIgnorableMessage_SyntheticE2ETest(t *testing.T) {
 	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
+	e2eTestUUIDs := []string{"e4d2885f-1140-400b-9407-921e1c7378cd"}
 
-	if !h.isIgnorableMessage(syntheticTID) {
-		t.Error("Synthetic message marked as normal")
+	mh := NewKafkaMessageHandler(typeRes, nil, nil, nil, nil, nil, e2eTestUUIDs)
+	kmh := mh.(*kafkaMessageHandler)
+
+	kafkaMessage := consumer.Message{
+		Headers: map[string]string{
+			"X-Request-Id": syntheticTID,
+		},
 	}
-}
 
-func TestIsIgnorableMessage_carouselRepublishMessage(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
+	got := kmh.isIgnorableMessage(kafkaMessage)
+	expected := false
 
-	if !h.isIgnorableMessage(carouselRepublishTID) {
-		t.Error("Carousel republish message marked as normal")
-	}
-	if !h.isIgnorableMessage(carouselUnconventionalRepublishTID) {
-		t.Error("Carousel republish message marked as normal")
-	}
-}
-
-func TestIsIgnorableMessage_carouselGeneratedMessage(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
-	if !h.isIgnorableMessage(carouselGeneratedTID) {
-		t.Error("Carousel generated message marked as normal")
+	if got != expected {
+		t.Fatalf("expected %v, got %v", expected, got)
 	}
 }
 
@@ -292,6 +319,20 @@ func TestIsValidExternalCPH(t *testing.T) {
 	}
 }
 
+func TestUnmarshalContent_GenericContent(t *testing.T) {
+	h := kafkaMessageHandler{}
+
+	resultContent, err := h.unmarshalContent(validGenericContentMessage)
+	assert.NoError(t, err)
+
+	genericContent, ok := resultContent.(content.GenericContent)
+	assert.True(t, ok)
+
+	assert.Equal(t, "077f5ac2-0491-420e-a5d0-982e0f86204b", genericContent.UUID)
+	assert.Equal(t, validGenericContentMessage.Headers["Content-Type"], genericContent.Type)
+	assert.Equal(t, []byte(validGenericContentMessage.Body), genericContent.BinaryContent)
+}
+
 var invalidMethodeMessageWrongJSONFormat = consumer.Message{
 	Headers: map[string]string{
 		"Origin-System-Id": "http://cmdb.ft.com/systems/methode-web-pub",
@@ -390,6 +431,46 @@ var validContentPlaceholder = consumer.Message{
 		"type": "EOM::CompoundStory",
 		"attributes": "<ObjectMetadata><EditorialNotes><Sources><Source><SourceCode>ContentPlaceholder</SourceCode></Source></Sources></EditorialNotes></ObjectMetadata>"
 	}`,
+}
+
+var validGenericContentMessage = consumer.Message{
+	Headers: map[string]string{
+		"Origin-System-Id": "http://cmdb.ft.com/systems/cct",
+		"X-Request-Id":     "tid_0123wxyz",
+		"Content-Type":     "application/vnd.ft-upp-article-internal",
+	},
+	Body: `{
+		"uuid": "077f5ac2-0491-420e-a5d0-982e0f86204b",
+		"title": "A title",
+		"type": "Article",
+		"byline": "A byline",
+		"identifiers": [
+		  {
+			"authority": "an authority",
+			"identifierValue": "some identifier value"
+		  },
+		  {
+			"authority": "another authority",
+			"identifierValue": "some other identifier value"
+		  }
+		],
+		"publishedDate": "2014-12-23T20:45:54.000Z",
+		"firstPublishedDate": "2014-12-22T20:45:54.000Z",
+		"bodyXML": "<body>Lorem ipsum</body>",
+		"editorialDesk": "some string editorial desk identifier",
+		"description": "Some descriptive explanation for this content",
+		"mainImage": "0000aa3c-0056-506b-2b73-ed90e21b3e64",
+		"standout": {
+		  "editorsChoice": false,
+		  "exclusive": false,
+		  "scoop": false
+		},
+		"webUrl": "http://some.external.url.com/content",
+		"canBeSyndicated" : "verify",
+		"accessLevel" : "premium",
+		"canBeDistributed": "no",
+		"someUnknownProperty" : " is totally fine, we don't validate for unknown fields/properties"
+	  }`,
 }
 
 type MockTypeResolver struct {

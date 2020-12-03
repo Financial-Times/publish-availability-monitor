@@ -3,7 +3,7 @@ package content
 import (
 	"net/http"
 
-	"github.com/Financial-Times/uuid-utils-go"
+	uuidutils "github.com/Financial-Times/uuid-utils-go"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -34,6 +34,7 @@ func (video Video) Validate(externalValidationEndpoint string, txId string, user
 		txId,
 		video.GetUUID(),
 		video.GetType(),
+		false,
 	}
 
 	return doExternalValidation(
