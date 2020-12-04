@@ -13,6 +13,7 @@ envs:
   internal_components_url: "/__document-store-api/internalcomponents/"
   lists_url: "/__document-store-api/lists/"
   notifications_url: "/__notifications-rw/content/notifications?type=all"
+  notifications_url_param2: "monitor=true"
   # I had to split the URL into 2 parts because I couldn't find a way to put the exact string \& in the value
   # This way I moved handling that value in the template chart where it seems it doesn't have a problem with it.
   notifications_push_url:  "/content/notifications-push?monitor=true"
