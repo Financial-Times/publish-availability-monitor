@@ -23,7 +23,8 @@
         "Image",
         "ImageSet",
         "video",
-        "wordpress"
+        "wordpress",
+        "application/vnd.ft-upp-article-internal"
       ]
     },
     {
@@ -35,7 +36,8 @@
         "EOM::CompoundStory",
         "EOM::CompoundStory_DynamicContent",
         "EOM::Story",
-        "wordpress"
+        "wordpress",
+        "application/vnd.ft-upp-article-internal"
       ]
     },
     {
@@ -74,7 +76,8 @@
         "EOM::CompoundStory",
         "EOM::CompoundStory_External_CPH",
         "EOM::CompoundStory_Internal_CPH",
-        "EOM::CompoundStory_DynamicContent"
+        "EOM::CompoundStory_DynamicContent",
+        "application/vnd.ft-upp-article-internal"
       ]
     },
     {
@@ -87,7 +90,8 @@
         "EOM::CompoundStory",
         "EOM::CompoundStory_External_CPH",
         "EOM::CompoundStory_Internal_CPH",
-        "wordpress"
+        "wordpress",
+        "application/vnd.ft-upp-article-internal"
       ]
     },
     {
@@ -106,7 +110,8 @@
       "health": "/__document-store-api/__health",
       "contentTypes": [
         "InternalComponents",
-        "EOM::CompoundStory_DynamicContent"
+        "EOM::CompoundStory_DynamicContent",
+        "application/vnd.ft-upp-article-internal"
       ]
     }
   ],
