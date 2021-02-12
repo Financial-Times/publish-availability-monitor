@@ -68,6 +68,15 @@
       ]
     },
     {
+      "endpoint": "GENERIC_LISTS_URL",
+      "granularity": 40,
+      "alias": "generic-lists",
+      "health": "/__document-store-api/__health",
+      "contentTypes": [
+        "application/vnd.ft-upp-list"
+      ]
+    },
+    {
       "endpoint": "NOTIFICATIONS_URL",
       "granularity": 40,
       "alias": "notifications",
@@ -100,7 +109,8 @@
       "alias": "list-notifications",
       "health": "/__list-notifications-rw/__health",
       "contentTypes": [
-        "EOM::WebContainer"
+        "EOM::WebContainer",
+        "application/vnd.ft-upp-list"
       ]
     },
     {
@@ -132,7 +142,8 @@
     "InternalComponents": "METHODE_ARTICLE_INTERNAL_COMPONENTS_MAPPER_URL",
     "video": "VIDEO_MAPPER_URL",
     "wordpress": "WORDPRESS_MAPPER_URL",
-    "application/vnd.ft-upp-article-internal": "UPP_INTERNAL_ARTICLE_VALIDATOR_URL"
+    "application/vnd.ft-upp-article-internal": "UPP_INTERNAL_ARTICLE_VALIDATOR_URL",
+    "application/vnd.ft-upp-list": "UPP_LIST_VALIDATOR_URL"
   },
   "uuidResolverUrl": "UUID_RESOLVER_URL",
   "capabilities": [

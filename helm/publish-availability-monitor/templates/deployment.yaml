@@ -59,6 +59,8 @@ spec:
           value: "{{ .Values.envs.internal_components_url }}"
         - name: LISTS_URL
           value: "{{ .Values.envs.lists_url }}"
+        - name: GENERIC_LISTS_URL
+          value: "{{ .Values.envs.generic_lists_url }}"
         - name: NOTIFICATIONS_URL
           value: {{ .Values.envs.notifications_url }}\&{{ .Values.envs.notifications_url_param2 }}
         - name: NOTIFICATIONS_PUSH_URL
@@ -101,6 +103,8 @@ spec:
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.wordpress_mapper }}"
         - name: UPP_INTERNAL_ARTICLE_VALIDATOR_URL
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_internal_article_validator }}"
+        - name: UPP_LIST_VALIDATOR_URL
+          value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_list_validator }}"
         - name: UUID_RESOLVER_URL
           value: "{{ .Values.envs.uuid_resolver_url }}"
         ports:

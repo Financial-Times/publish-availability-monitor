@@ -6,6 +6,7 @@ sed -i "s \"CONTENT_URL\" \"$CONTENT_URL\" " /config.json
 sed -i "s \"CONTENT_NEO4J_URL\" \"$CONTENT_NEO4J_URL\" " /config.json
 sed -i "s \"COMPLEMENTARY_CONTENT_URL\" \"$COMPLEMENTARY_CONTENT_URL\" " /config.json
 sed -i "s \"LISTS_URL\" \"$LISTS_URL\" " /config.json
+sed -i "s \"GENERIC_LISTS_URL\" \"$GENERIC_LISTS_URL\" " /config.json
 sed -i "s \"LISTS_NOTIFICATIONS_URL\" \"$LISTS_NOTIFICATIONS_URL\" " /config.json
 sed -i "s \"NOTIFICATIONS_URL\" \"$NOTIFICATIONS_URL\" " /config.json
 sed -i "s \"LISTS_NOTIFICATIONS_PUSH_URL\" \"$LISTS_NOTIFICATIONS_PUSH_URL\" " /config.json
@@ -21,6 +22,7 @@ sed -i "s \"METHODE_ARTICLE_INTERNAL_COMPONENTS_MAPPER_URL\" \"$METHODE_ARTICLE_
 sed -i "s \"VIDEO_MAPPER_URL\" \"$VIDEO_MAPPER_URL\" " /config.json
 sed -i "s \"WORDPRESS_MAPPER_URL\" \"$WORDPRESS_MAPPER_URL\" " /config.json
 sed -i "s \"UPP_INTERNAL_ARTICLE_VALIDATOR_URL\" \"$UPP_INTERNAL_ARTICLE_VALIDATOR_URL\" " /config.json
+sed -i "s \"UPP_LIST_VALIDATOR_URL\" \"$UPP_LIST_VALIDATOR_URL\" " /config.json
 sed -i "s \"UUID_RESOLVER_URL\" \"$UUID_RESOLVER_URL\" " /config.json
 sed -i "s \"GRAPHITE_ADDRESS\" \"$GRAPHITE_ADDRESS\" " /config.json
 sed -i "s \"GRAPHITE_UUID\" \"$GRAPHITE_UUID\" " /config.json
