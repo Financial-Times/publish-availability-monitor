@@ -99,6 +99,7 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 		"S3":                      checks.NewS3Check(hC),
 		"enrichedContent":         checks.NewContentCheck(hC),
 		"lists":                   checks.NewContentCheck(hC),
+		"generic-lists":           checks.NewContentCheck(hC),
 		"notifications":           checks.NewNotificationsCheck(hC, h.subscribedFeeds, "notifications"),
 		"notifications-push":      checks.NewNotificationsCheck(hC, h.subscribedFeeds, "notifications-push"),
 		"list-notifications":      checks.NewNotificationsCheck(hC, h.subscribedFeeds, "list-notifications"),
@@ -171,7 +172,7 @@ func (h *kafkaMessageHandler) unmarshalContent(msg consumer.Message) (content.Co
 			return nil, err
 		}
 		return video.Initialize(binaryContent), nil
-	case "http://cmdb.ft.com/systems/cct":
+	case "http://cmdb.ft.com/systems/cct", "http://cmdb.ft.com/systems/spark-lists", "http://cmdb.ft.com/systems/spark":
 		var genericContent content.GenericContent
 		err := json.Unmarshal(binaryContent, &genericContent)
 		if err != nil {

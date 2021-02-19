@@ -23,7 +23,9 @@
         "Image",
         "ImageSet",
         "video",
-        "wordpress"
+        "wordpress",
+        "application/vnd.ft-upp-article-internal",
+        "application/vnd.ft-upp-content-placeholder-internal"
       ]
     },
     {
@@ -35,7 +37,8 @@
         "EOM::CompoundStory",
         "EOM::CompoundStory_DynamicContent",
         "EOM::Story",
-        "wordpress"
+        "wordpress",
+        "application/vnd.ft-upp-article-internal"
       ]
     },
     {
@@ -45,7 +48,8 @@
       "granularity": 40,
       "contentTypes": [
         "EOM::CompoundStory_External_CPH",
-        "EOM::CompoundStory_Internal_CPH"
+        "EOM::CompoundStory_Internal_CPH",
+        "application/vnd.ft-upp-content-placeholder-internal"
       ]
     },
     {
@@ -66,6 +70,15 @@
       ]
     },
     {
+      "endpoint": "GENERIC_LISTS_URL",
+      "granularity": 40,
+      "alias": "generic-lists",
+      "health": "/__document-store-api/__health",
+      "contentTypes": [
+        "application/vnd.ft-upp-list"
+      ]
+    },
+    {
       "endpoint": "NOTIFICATIONS_URL",
       "granularity": 40,
       "alias": "notifications",
@@ -74,7 +87,9 @@
         "EOM::CompoundStory",
         "EOM::CompoundStory_External_CPH",
         "EOM::CompoundStory_Internal_CPH",
-        "EOM::CompoundStory_DynamicContent"
+        "EOM::CompoundStory_DynamicContent",
+        "application/vnd.ft-upp-article-internal",
+        "application/vnd.ft-upp-content-placeholder-internal"
       ]
     },
     {
@@ -87,7 +102,8 @@
         "EOM::CompoundStory",
         "EOM::CompoundStory_External_CPH",
         "EOM::CompoundStory_Internal_CPH",
-        "wordpress"
+        "wordpress",
+        "application/vnd.ft-upp-article-internal"
       ]
     },
     {
@@ -96,7 +112,8 @@
       "alias": "list-notifications",
       "health": "/__list-notifications-rw/__health",
       "contentTypes": [
-        "EOM::WebContainer"
+        "EOM::WebContainer",
+        "application/vnd.ft-upp-list"
       ]
     },
     {
@@ -106,7 +123,8 @@
       "health": "/__document-store-api/__health",
       "contentTypes": [
         "InternalComponents",
-        "EOM::CompoundStory_DynamicContent"
+        "EOM::CompoundStory_DynamicContent",
+        "application/vnd.ft-upp-article-internal"
       ]
     }
   ],
@@ -127,7 +145,9 @@
     "InternalComponents": "METHODE_ARTICLE_INTERNAL_COMPONENTS_MAPPER_URL",
     "video": "VIDEO_MAPPER_URL",
     "wordpress": "WORDPRESS_MAPPER_URL",
-    "application/vnd.ft-upp-article-internal": "UPP_INTERNAL_ARTICLE_VALIDATOR_URL"
+    "application/vnd.ft-upp-article-internal": "UPP_INTERNAL_ARTICLE_VALIDATOR_URL",
+    "application/vnd.ft-upp-list": "UPP_LIST_VALIDATOR_URL",
+    "application/vnd.ft-upp-content-placeholder-internal": "UPP_INTERNAL_CPH_VALIDATOR_URL"
   },
   "uuidResolverUrl": "UUID_RESOLVER_URL",
   "capabilities": [
