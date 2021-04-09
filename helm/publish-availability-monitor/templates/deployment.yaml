@@ -107,6 +107,12 @@ spec:
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_list_validator }}"
         - name: UPP_INTERNAL_CPH_VALIDATOR_URL
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_internal_cph_validator }}"
+        - name: UPP_IMAGE_VALIDATOR_URL
+          value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_image_validator }}"
+        - name: UPP_IMAGE_SET_VALIDATOR_URL
+          value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_image_set_validator }}"
+        - name: UPP_GRAPHIC_VALIDATOR_URL
+          value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_graphic_validator }}"
         - name: UUID_RESOLVER_URL
           value: "{{ .Values.envs.uuid_resolver_url }}"
         ports:
