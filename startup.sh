@@ -4,6 +4,7 @@ sed -i "s \"KAFKA_PROXY_HOST\" \"$KAFKA_PROXY_HOST\" " /config.json
 sed -i "s \"QUEUE_ADDR\" \"$QUEUE_ADDR\" " /config.json
 sed -i "s \"CONTENT_URL\" \"$CONTENT_URL\" " /config.json
 sed -i "s \"CONTENT_NEO4J_URL\" \"$CONTENT_NEO4J_URL\" " /config.json
+sed -i "s \"CONTENT_COLLECTION_NEO4J_URL\" \"$CONTENT_COLLECTION_NEO4J_URL\" " /config.json
 sed -i "s \"COMPLEMENTARY_CONTENT_URL\" \"$COMPLEMENTARY_CONTENT_URL\" " /config.json
 sed -i "s \"LISTS_URL\" \"$LISTS_URL\" " /config.json
 sed -i "s \"GENERIC_LISTS_URL\" \"$GENERIC_LISTS_URL\" " /config.json
@@ -27,6 +28,7 @@ sed -i "s \"UPP_INTERNAL_CPH_VALIDATOR_URL\" \"$UPP_INTERNAL_CPH_VALIDATOR_URL\"
 sed -i "s \"UPP_IMAGE_VALIDATOR_URL\" \"$UPP_IMAGE_VALIDATOR_URL\" " /config.json
 sed -i "s \"UPP_IMAGE_SET_VALIDATOR_URL\" \"$UPP_IMAGE_SET_VALIDATOR_URL\" " /config.json
 sed -i "s \"UPP_GRAPHIC_VALIDATOR_URL\" \"$UPP_GRAPHIC_VALIDATOR_URL\" " /config.json
+sed -i "s \"UPP_CONTENT_COLLECTION_VALIDATOR_URL\" \"$UPP_CONTENT_COLLECTION_VALIDATOR_URL\" " /config.json
 sed -i "s \"UUID_RESOLVER_URL\" \"$UUID_RESOLVER_URL\" " /config.json
 sed -i "s \"GRAPHITE_ADDRESS\" \"$GRAPHITE_ADDRESS\" " /config.json
 sed -i "s \"GRAPHITE_UUID\" \"$GRAPHITE_UUID\" " /config.json

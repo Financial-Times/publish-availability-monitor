@@ -9,6 +9,7 @@ envs:
   kafka_topic: "PreNativeCmsPublicationEvents"
   content_url: "/__document-store-api/content/"
   content_neo4j_url: "/__content-rw-neo4j/content/"
+  content_collection_neo4j_url: "/__content-collection-rw-neo4j/content-collection/content-package/"
   complementary_content_url: "/__document-store-api/complementarycontent/"
   internal_components_url: "/__document-store-api/internalcomponents/"
   lists_url: "/__document-store-api/lists/"
@@ -35,6 +36,7 @@ envs:
     upp_image_validator: "__upp-image-validator/validate"
     upp_image_set_validator: "__upp-image-set-validator/validate"
     upp_graphic_validator: "__upp-graphic-validator/validate"
+    upp_content_collection_validator: "__upp-content-collection-validator/validate"
   uuid_resolver_url: "/__document-store-api"
 
 cluster:

@@ -45,6 +45,15 @@
       ]
     },
     {
+      "endpoint": "CONTENT_COLLECTION_NEO4J_URL",
+      "granularity": 40,
+      "alias": "content-collection-neo4j",
+      "health": "/__content-collection-rw-neo4j/__health",
+      "contentTypes": [
+        "application/vnd.ft-upp-content-collection"
+      ]
+    },
+    {
       "endpoint": "COMPLEMENTARY_CONTENT_URL",
       "alias": "complementary-content",
       "health": "/__document-store-api/__health",
@@ -153,7 +162,8 @@
     "application/vnd.ft-upp-content-placeholder-internal": "UPP_INTERNAL_CPH_VALIDATOR_URL",
     "application/vnd.ft-upp-image": "UPP_IMAGE_VALIDATOR_URL",
     "application/vnd.ft-upp-image-set": "UPP_IMAGE_SET_VALIDATOR_URL",
-    "application/vnd.ft-upp-graphic": "UPP_GRAPHIC_VALIDATOR_URL"
+    "application/vnd.ft-upp-graphic": "UPP_GRAPHIC_VALIDATOR_URL",
+    "application/vnd.ft-upp-content-collection": "UPP_CONTENT_COLLECTION_VALIDATOR_URL"
   },
   "uuidResolverUrl": "UUID_RESOLVER_URL",
   "capabilities": [

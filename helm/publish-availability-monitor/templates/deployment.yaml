@@ -53,6 +53,8 @@ spec:
           value: "{{ .Values.envs.content_url }}"
         - name: CONTENT_NEO4J_URL
           value: "{{ .Values.envs.content_neo4j_url }}"
+        - name: CONTENT_COLLECTION_NEO4J_URL
+          value: "{{ .Values.envs.content_collection_neo4j_url }}"
         - name: COMPLEMENTARY_CONTENT_URL
           value: "{{ .Values.envs.complementary_content_url }}"
         - name: INTERNAL_COMPONENTS_URL
@@ -113,6 +115,8 @@ spec:
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_image_set_validator }}"
         - name: UPP_GRAPHIC_VALIDATOR_URL
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_graphic_validator }}"
+        - name: UPP_CONTENT_COLLECTION_VALIDATOR_URL
+          value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_content_collection_validator }}"
         - name: UUID_RESOLVER_URL
           value: "{{ .Values.envs.uuid_resolver_url }}"
         ports:
