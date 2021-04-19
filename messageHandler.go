@@ -167,6 +167,10 @@ func (h *kafkaMessageHandler) unmarshalContent(msg consumer.Message) (content.Co
 		}
 		return wordPressMsg.Initialize(binaryContent), nil
 	case "http://cmdb.ft.com/systems/next-video-editor":
+		if msg.Headers["Content-Type"] == "application/vnd.ft-upp-audio" {
+			return unmarshalGenericContent(msg)
+		}
+
 		var video content.Video
 		err := json.Unmarshal(binaryContent, &video)
 		if err != nil {
@@ -174,17 +178,22 @@ func (h *kafkaMessageHandler) unmarshalContent(msg consumer.Message) (content.Co
 		}
 		return video.Initialize(binaryContent), nil
 	case "http://cmdb.ft.com/systems/cct", "http://cmdb.ft.com/systems/spark-lists", "http://cmdb.ft.com/systems/spark":
-		var genericContent content.GenericContent
-		err := json.Unmarshal(binaryContent, &genericContent)
-		if err != nil {
-			return nil, err
-		}
-
-		genericContent = genericContent.Initialize(binaryContent).(content.GenericContent)
-		genericContent.Type = msg.Headers["Content-Type"]
-
-		return genericContent, nil
+		return unmarshalGenericContent(msg)
 	default:
 		return nil, fmt.Errorf("unsupported content with system ID: [%s]", systemID)
 	}
+}
+
+func unmarshalGenericContent(msg consumer.Message) (content.GenericContent, error) {
+	binaryContent := []byte(msg.Body)
+	var genericContent content.GenericContent
+	err := json.Unmarshal(binaryContent, &genericContent)
+	if err != nil {
+		return content.GenericContent{}, err
+	}
+
+	genericContent = genericContent.Initialize(binaryContent).(content.GenericContent)
+	genericContent.Type = msg.Headers["Content-Type"]
+
+	return genericContent, nil
 }

@@ -333,6 +333,20 @@ func TestUnmarshalContent_GenericContent(t *testing.T) {
 	assert.Equal(t, []byte(validGenericContentMessage.Body), genericContent.BinaryContent)
 }
 
+func TestUnmarshalContent_GenericContent_Audio(t *testing.T) {
+	h := kafkaMessageHandler{}
+
+	resultContent, err := h.unmarshalContent(validGenericAudioMessage)
+	assert.NoError(t, err)
+
+	genericContent, ok := resultContent.(content.GenericContent)
+	assert.True(t, ok)
+
+	assert.Equal(t, "be003650-6c8f-4665-8640-9cbf292bb580", genericContent.UUID)
+	assert.Equal(t, validGenericAudioMessage.Headers["Content-Type"], genericContent.Type)
+	assert.Equal(t, []byte(validGenericAudioMessage.Body), genericContent.BinaryContent)
+}
+
 var invalidMethodeMessageWrongJSONFormat = consumer.Message{
 	Headers: map[string]string{
 		"Origin-System-Id": "http://cmdb.ft.com/systems/methode-web-pub",
@@ -470,6 +484,46 @@ var validGenericContentMessage = consumer.Message{
 		"accessLevel" : "premium",
 		"canBeDistributed": "no",
 		"someUnknownProperty" : " is totally fine, we don't validate for unknown fields/properties"
+	  }`,
+}
+
+var validGenericAudioMessage = consumer.Message{
+	Headers: map[string]string{
+		"Origin-System-Id": "http://cmdb.ft.com/systems/next-video-editor",
+		"X-Request-Id":     "tid_0123wxyz",
+		"Content-Type":     "application/vnd.ft-upp-audio",
+	},
+	Body: `{
+		"title":"Is bitcoin a fraud?",
+		"byline":"News features and analysis from Financial Times reporters around the world. FT News in Focus is produced by Fiona Symon.",
+		"canBeSyndicated":"yes",
+		"firstPublishedDate":"2017-09-19T17:58:51.000Z",
+		"publishedDate":"2017-09-19T17:58:51.000Z",
+		"uuid":"be003650-6c8f-4665-8640-9cbf292bb580",
+		"type":"Audio",
+		"body":"<body><p>The value of bitcoin fell sharply last week after Jamie Dimon, head of JPMorgan Chase, suggested the digital currency craze would suffer the same fate as the tulip mania of the 17th century. Patrick Jenkins discusses whether he is right with the FT's Laura Noonan and Izabella Kaminska. Music by Kevin MacLeod</p></body>",
+		"mainImage":"56e9f220-6c64-4b6a-afcd-b57e1ceec807",
+		"identifiers":[  
+			{  
+				"authority":"http://www.acast.com/",
+				"identifierValue":"https://rss.acast.com/ft-news"
+			},
+			{  
+				"authority":"http://www.acast.com/",
+				"identifierValue":"https://www.acast.com/ft-news/isbitcoinafraud-"
+			},
+			{  
+				"authority":"http://api.ft.com/system/NEXT-VIDEO-EDITOR",
+				"identifierValue":"be003650-6c8f-4665-8640-9cbf292bb580"
+			}
+		],
+		"dataSource":[  
+			{  
+				"binaryUrl":"https://media.acast.com/ft-news/isbitcoinafraud-/media.mp3",
+				"duration":412000,
+				"mediaType":"audio/mpeg"
+			}
+		]
 	  }`,
 }
 
