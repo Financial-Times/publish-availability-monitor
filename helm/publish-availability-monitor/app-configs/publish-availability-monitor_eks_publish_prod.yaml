@@ -20,6 +20,7 @@ envs:
   # This way I moved handling that value in the template chart where it seems it doesn't have a problem with it.
   notifications_push_url:  "/content/notifications-push?monitor=true"
   notifications_push_url_param2: "type=all"
+  notifications_push_url_param3: "type=LiveBlogPackage"
   lists_notifications_url: "/__list-notifications-rw/lists/notifications"
   lists_notifications_push_url: "/lists/notifications-push?monitor=true"
   validation_endpoints:
@@ -37,6 +38,7 @@ envs:
     upp_image_set_validator: "__upp-image-set-validator/validate"
     upp_graphic_validator: "__upp-graphic-validator/validate"
     upp_content_collection_validator: "__upp-content-collection-validator/validate"
+    upp_internal_live_blog_package_validator: "__upp-internal-live-blog-package-validator/validate"
   uuid_resolver_url: "/__document-store-api"
 
 cluster:

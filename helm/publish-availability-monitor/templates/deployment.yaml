@@ -66,7 +66,7 @@ spec:
         - name: NOTIFICATIONS_URL
           value: {{ .Values.envs.notifications_url }}\&{{ .Values.envs.notifications_url_param2 }}
         - name: NOTIFICATIONS_PUSH_URL
-          value: {{ .Values.envs.notifications_push_url }}\&{{ .Values.envs.notifications_push_url_param2 }}
+          value: {{ .Values.envs.notifications_push_url }}\&{{ .Values.envs.notifications_push_url_param2 }}\&{{ .Values.envs.notifications_push_url_param3 }}
         - name: LISTS_NOTIFICATIONS_URL
           value: "{{ .Values.envs.lists_notifications_url }}"
         - name: LISTS_NOTIFICATIONS_PUSH_URL
@@ -117,6 +117,8 @@ spec:
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_graphic_validator }}"
         - name: UPP_CONTENT_COLLECTION_VALIDATOR_URL
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_content_collection_validator }}"
+        - name: UPP_INTERNAL_LIVE_BLOG_PACKAGE_VALIDATOR_URL
+          value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_internal_live_blog_package_validator }}"
         - name: UUID_RESOLVER_URL
           value: "{{ .Values.envs.uuid_resolver_url }}"
         ports:

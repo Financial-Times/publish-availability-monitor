@@ -28,7 +28,8 @@
         "application/vnd.ft-upp-content-placeholder-internal",
         "application/vnd.ft-upp-image",
         "application/vnd.ft-upp-image-set",
-        "application/vnd.ft-upp-graphic"
+        "application/vnd.ft-upp-graphic",
+        "application/vnd.ft-upp-live-blog-package-internal"
       ]
     },
     {
@@ -41,7 +42,8 @@
         "EOM::CompoundStory_DynamicContent",
         "EOM::Story",
         "wordpress",
-        "application/vnd.ft-upp-article-internal"
+        "application/vnd.ft-upp-article-internal",
+        "application/vnd.ft-upp-live-blog-package-internal"
       ]
     },
     {
@@ -101,7 +103,8 @@
         "EOM::CompoundStory_Internal_CPH",
         "EOM::CompoundStory_DynamicContent",
         "application/vnd.ft-upp-article-internal",
-        "application/vnd.ft-upp-content-placeholder-internal"
+        "application/vnd.ft-upp-content-placeholder-internal",
+        "application/vnd.ft-upp-live-blog-package-internal"
       ]
     },
     {
@@ -115,7 +118,8 @@
         "EOM::CompoundStory_External_CPH",
         "EOM::CompoundStory_Internal_CPH",
         "wordpress",
-        "application/vnd.ft-upp-article-internal"
+        "application/vnd.ft-upp-article-internal",
+        "application/vnd.ft-upp-live-blog-package-internal"
       ]
     },
     {
@@ -136,7 +140,8 @@
       "contentTypes": [
         "InternalComponents",
         "EOM::CompoundStory_DynamicContent",
-        "application/vnd.ft-upp-article-internal"
+        "application/vnd.ft-upp-article-internal",
+        "application/vnd.ft-upp-live-blog-package-internal"
       ]
     }
   ],
@@ -163,7 +168,8 @@
     "application/vnd.ft-upp-image": "UPP_IMAGE_VALIDATOR_URL",
     "application/vnd.ft-upp-image-set": "UPP_IMAGE_SET_VALIDATOR_URL",
     "application/vnd.ft-upp-graphic": "UPP_GRAPHIC_VALIDATOR_URL",
-    "application/vnd.ft-upp-content-collection": "UPP_CONTENT_COLLECTION_VALIDATOR_URL"
+    "application/vnd.ft-upp-content-collection": "UPP_CONTENT_COLLECTION_VALIDATOR_URL",
+    "application/vnd.ft-upp-live-blog-package-internal": "UPP_INTERNAL_LIVE_BLOG_PACKAGE_VALIDATOR_URL"
   },
   "uuidResolverUrl": "UUID_RESOLVER_URL",
   "capabilities": [
