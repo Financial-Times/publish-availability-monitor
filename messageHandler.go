@@ -92,18 +92,19 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 
 	//key is the endpoint alias from the config
 	endpointSpecificChecks := map[string]checks.EndpointSpecificCheck{
-		"content":                 checks.NewContentCheck(hC),
-		"content-neo4j":           checks.NewContentNeo4jCheck(hC),
-		"complementary-content":   checks.NewContentCheck(hC),
-		"internal-components":     checks.NewContentCheck(hC),
-		"S3":                      checks.NewS3Check(hC),
-		"enrichedContent":         checks.NewContentCheck(hC),
-		"lists":                   checks.NewContentCheck(hC),
-		"generic-lists":           checks.NewContentCheck(hC),
-		"notifications":           checks.NewNotificationsCheck(hC, h.subscribedFeeds, "notifications"),
-		"notifications-push":      checks.NewNotificationsCheck(hC, h.subscribedFeeds, "notifications-push"),
-		"list-notifications":      checks.NewNotificationsCheck(hC, h.subscribedFeeds, "list-notifications"),
-		"list-notifications-push": checks.NewNotificationsCheck(hC, h.subscribedFeeds, "list-notifications-push"),
+		"content":                  checks.NewContentCheck(hC),
+		"content-neo4j":            checks.NewContentNeo4jCheck(hC),
+		"content-collection-neo4j": checks.NewContentNeo4jCheck(hC),
+		"complementary-content":    checks.NewContentCheck(hC),
+		"internal-components":      checks.NewContentCheck(hC),
+		"S3":                       checks.NewS3Check(hC),
+		"enrichedContent":          checks.NewContentCheck(hC),
+		"lists":                    checks.NewContentCheck(hC),
+		"generic-lists":            checks.NewContentCheck(hC),
+		"notifications":            checks.NewNotificationsCheck(hC, h.subscribedFeeds, "notifications"),
+		"notifications-push":       checks.NewNotificationsCheck(hC, h.subscribedFeeds, "notifications-push"),
+		"list-notifications":       checks.NewNotificationsCheck(hC, h.subscribedFeeds, "list-notifications"),
+		"list-notifications-push":  checks.NewNotificationsCheck(hC, h.subscribedFeeds, "list-notifications-push"),
 	}
 
 	for _, scheduleParam := range paramsToSchedule {
@@ -166,6 +167,10 @@ func (h *kafkaMessageHandler) unmarshalContent(msg consumer.Message) (content.Co
 		}
 		return wordPressMsg.Initialize(binaryContent), nil
 	case "http://cmdb.ft.com/systems/next-video-editor":
+		if msg.Headers["Content-Type"] == "application/vnd.ft-upp-audio" {
+			return unmarshalGenericContent(msg)
+		}
+
 		var video content.Video
 		err := json.Unmarshal(binaryContent, &video)
 		if err != nil {
@@ -173,17 +178,22 @@ func (h *kafkaMessageHandler) unmarshalContent(msg consumer.Message) (content.Co
 		}
 		return video.Initialize(binaryContent), nil
 	case "http://cmdb.ft.com/systems/cct", "http://cmdb.ft.com/systems/spark-lists", "http://cmdb.ft.com/systems/spark":
-		var genericContent content.GenericContent
-		err := json.Unmarshal(binaryContent, &genericContent)
-		if err != nil {
-			return nil, err
-		}
-
-		genericContent = genericContent.Initialize(binaryContent).(content.GenericContent)
-		genericContent.Type = msg.Headers["Content-Type"]
-
-		return genericContent, nil
+		return unmarshalGenericContent(msg)
 	default:
 		return nil, fmt.Errorf("unsupported content with system ID: [%s]", systemID)
 	}
+}
+
+func unmarshalGenericContent(msg consumer.Message) (content.GenericContent, error) {
+	binaryContent := []byte(msg.Body)
+	var genericContent content.GenericContent
+	err := json.Unmarshal(binaryContent, &genericContent)
+	if err != nil {
+		return content.GenericContent{}, err
+	}
+
+	genericContent = genericContent.Initialize(binaryContent).(content.GenericContent)
+	genericContent.Type = msg.Headers["Content-Type"]
+
+	return genericContent, nil
 }
