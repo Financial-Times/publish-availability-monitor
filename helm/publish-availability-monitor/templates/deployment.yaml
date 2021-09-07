@@ -61,8 +61,6 @@ spec:
           value: "{{ .Values.envs.internal_components_url }}"
         - name: LISTS_URL
           value: "{{ .Values.envs.lists_url }}"
-        - name: GENERIC_LISTS_URL
-          value: "{{ .Values.envs.generic_lists_url }}"
         - name: NOTIFICATIONS_URL
           value: {{ .Values.envs.notifications_url }}\&{{ .Values.envs.notifications_url_param2 }}
         - name: NOTIFICATIONS_PUSH_URL
@@ -95,8 +93,6 @@ spec:
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.methode_content_placeholder_mapper }}"
         - name: METHODE_IMAGE_MODEL_MAPPER_URL
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.methode_image_model_mapper }}"
-        - name: METHODE_LIST_VALIDATION_URL
-          value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.methode_list_mapper }}"
         - name: METHODE_ARTICLE_INTERNAL_COMPONENTS_MAPPER_URL
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.methode_article_internal_components_mapper }}"
         - name: VIDEO_MAPPER_URL

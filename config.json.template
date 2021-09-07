@@ -82,16 +82,7 @@
       "endpoint": "LISTS_URL",
       "granularity": 40,
       "alias": "lists",
-      "health": "/__document-store-api/__health",
-      "contentTypes": [
-        "EOM::WebContainer"
-      ]
-    },
-    {
-      "endpoint": "GENERIC_LISTS_URL",
-      "granularity": 40,
-      "alias": "generic-lists",
-      "health": "/__document-store-api/__health",
+      "health": "/__public-lists-api/__health",
       "contentTypes": [
         "application/vnd.ft-upp-list"
       ]
@@ -136,7 +127,6 @@
       "alias": "list-notifications",
       "health": "/__list-notifications-rw/__health",
       "contentTypes": [
-        "EOM::WebContainer",
         "application/vnd.ft-upp-list"
       ]
     },
@@ -166,7 +156,6 @@
     "EOM::CompoundStory_Internal_CPH": "METHODE_CONTENT_PLACEHOLDER_MAPPER_URL",
     "EOM::CompoundStory_DynamicContent": "METHODE_ARTICLE_INTERNAL_COMPONENTS_MAPPER_URL",
     "EOM::Story": "METHODE_ARTICLE_VALIDATION_URL",
-    "EOM::WebContainer": "METHODE_LIST_VALIDATION_URL",
     "Image": "METHODE_IMAGE_MODEL_MAPPER_URL",
     "InternalComponents": "METHODE_ARTICLE_INTERNAL_COMPONENTS_MAPPER_URL",
     "video": "VIDEO_MAPPER_URL",

@@ -24,7 +24,7 @@ With Docker:
 
 `docker build -t coco/publish-availability-monitor .`
 
-`docker run -it --env QUEUE_ADDR=<addr> --env S3_URL=<S3 bucket URL> --env CONTENT_URL=<document store api article endpoint path> --env LISTS_URL=<document store api lists endpoint path> --env NOTIFICATIONS_URL=<notifications read path> --env NOTIFICATIONS_PUSH_URL=<notifications push path> --env METHODE_ARTICLE_TRANSFORMER_URL=<methode article transformer URL>  --env METHODE_CONTENT_PLACEHOLDER_MAPPER_URL=<methode content placeholder mapper URL> coco/publish-availability-monitor`
+`docker run -it --env QUEUE_ADDR=<addr> --env S3_URL=<S3 bucket URL> --env CONTENT_URL=<document store api article endpoint path> --env LISTS_URL=<public lists api endpoint path> --env NOTIFICATIONS_URL=<notifications read path> --env NOTIFICATIONS_PUSH_URL=<notifications push path> --env METHODE_ARTICLE_TRANSFORMER_URL=<methode article transformer URL>  --env METHODE_CONTENT_PLACEHOLDER_MAPPER_URL=<methode content placeholder mapper URL> coco/publish-availability-monitor`
 
 # Build and deploy
 __Note that deployment to FTP2 is no longer supported.__
