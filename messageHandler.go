@@ -100,6 +100,7 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 		"S3":                       checks.NewS3Check(hC),
 		"enrichedContent":          checks.NewContentCheck(hC),
 		"lists":                    checks.NewContentCheck(hC),
+		"pages":                    checks.NewContentCheck(hC),
 		"notifications":            checks.NewNotificationsCheck(hC, h.subscribedFeeds, "notifications"),
 		"notifications-push":       checks.NewNotificationsCheck(hC, h.subscribedFeeds, "notifications-push"),
 		"list-notifications":       checks.NewNotificationsCheck(hC, h.subscribedFeeds, "list-notifications"),
