@@ -17,7 +17,6 @@ envs:
   notifications_push_url: ""
   lists_notifications_url: ""
   lists_notifications_push_url: ""
-  pages_notifications_url: ""
   validation_endpoints:
     methode_article_validation_endpoint: ""
     methode_content_placeholder_mapper_endpoint: ""

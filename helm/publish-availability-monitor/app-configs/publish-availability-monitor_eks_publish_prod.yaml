@@ -25,7 +25,6 @@ envs:
   notifications_push_url_param5: "type=Page"
   lists_notifications_url: "/__list-notifications-rw/lists/notifications"
   lists_notifications_push_url: "/lists/notifications-push?monitor=true"
-  pages_notifications_url: "/__notifications-rw/pages/notifications"
   validation_endpoints:
     methode_article_mapper: "__methode-article-mapper/map"
     methode_content_placeholder_mapper: "__methode-content-placeholder-mapper/map"

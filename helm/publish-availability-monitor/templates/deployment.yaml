@@ -71,8 +71,6 @@ spec:
           value: "{{ .Values.envs.lists_notifications_url }}"
         - name: LISTS_NOTIFICATIONS_PUSH_URL
           value: "{{ .Values.envs.lists_notifications_push_url }}"
-        - name: PAGES_NOTIFICATIONS_URL
-          value: "{{ .Values.envs.pages_notifications_url }}"
         - name: LISTS_NOTIFICATIONS_PUSH_API_KEY
           valueFrom:
             secretKeyRef:

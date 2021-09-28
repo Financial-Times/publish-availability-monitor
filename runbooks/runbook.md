@@ -35,7 +35,6 @@ The Publish Availability Monitor listens to new content messages via the Kafka t
 *   The Content Notifications Push /content/notifications-push endpoint.
 
 *   The Pages Public Read /__public-pages-api/pages/{uuid} endpoint.
-*   The Pages Notifications /pages/notifications endpoint.
 
 *   The Lists Public Read /__public-lists-api/lists/{uuid} endpoint.
 *   The Lists Notifications /__list-notifications-rw/lists/notifications endpoint.

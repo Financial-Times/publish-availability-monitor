@@ -9,7 +9,6 @@ sed -i "s \"COMPLEMENTARY_CONTENT_URL\" \"$COMPLEMENTARY_CONTENT_URL\" " /config
 sed -i "s \"LISTS_URL\" \"$LISTS_URL\" " /config.json
 sed -i "s \"PAGES_URL\" \"$PAGES_URL\" " /config.json
 sed -i "s \"LISTS_NOTIFICATIONS_URL\" \"$LISTS_NOTIFICATIONS_URL\" " /config.json
-sed -i "s \"PAGES_NOTIFICATIONS_URL\" \"$PAGES_NOTIFICATIONS_URL\" " /config.json
 sed -i "s \"NOTIFICATIONS_URL\" \"$NOTIFICATIONS_URL\" " /config.json
 sed -i "s \"LISTS_NOTIFICATIONS_PUSH_URL\" \"$LISTS_NOTIFICATIONS_PUSH_URL\" " /config.json
 sed -i "s \"NOTIFICATIONS_PUSH_URL\" \"$NOTIFICATIONS_PUSH_URL\" " /config.json
