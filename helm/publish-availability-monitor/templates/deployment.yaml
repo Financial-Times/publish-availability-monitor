@@ -61,10 +61,12 @@ spec:
           value: "{{ .Values.envs.internal_components_url }}"
         - name: LISTS_URL
           value: "{{ .Values.envs.lists_url }}"
+        - name: PAGES_URL
+          value: "{{ .Values.envs.pages_url }}"
         - name: NOTIFICATIONS_URL
           value: {{ .Values.envs.notifications_url }}\&{{ .Values.envs.notifications_url_param2 }}
         - name: NOTIFICATIONS_PUSH_URL
-          value: {{ .Values.envs.notifications_push_url }}\&{{ .Values.envs.notifications_push_url_param2 }}\&{{ .Values.envs.notifications_push_url_param3 }}\&{{ .Values.envs.notifications_push_url_param4 }}
+          value: {{ .Values.envs.notifications_push_url }}\&{{ .Values.envs.notifications_push_url_param2 }}\&{{ .Values.envs.notifications_push_url_param3 }}\&{{ .Values.envs.notifications_push_url_param4 }}\&{{ .Values.envs.notifications_push_url_param5 }}
         - name: LISTS_NOTIFICATIONS_URL
           value: "{{ .Values.envs.lists_notifications_url }}"
         - name: LISTS_NOTIFICATIONS_PUSH_URL
@@ -103,6 +105,8 @@ spec:
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_internal_article_validator }}"
         - name: UPP_LIST_VALIDATOR_URL
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_list_validator }}"
+        - name: UPP_PAGE_VALIDATOR_URL
+          value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_page_validator }}"
         - name: UPP_INTERNAL_CPH_VALIDATOR_URL
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_internal_cph_validator }}"
         - name: UPP_IMAGE_VALIDATOR_URL

@@ -13,6 +13,7 @@ envs:
   complementary_content_url: "/__document-store-api/complementarycontent/"
   internal_components_url: "/__document-store-api/internalcomponents/"
   lists_url: "/__public-lists-api/lists/"
+  pages_url: "/__public-pages-api/pages/"
   notifications_url: "/__notifications-rw/content/notifications?type=all"
   notifications_url_param2: "monitor=true"
   # I had to split the URL into 2 parts because I couldn't find a way to put the exact string \& in the value
@@ -21,6 +22,7 @@ envs:
   notifications_push_url_param2: "type=all"
   notifications_push_url_param3: "type=LiveBlogPackage"
   notifications_push_url_param4: "type=LiveBlogPost"
+  notifications_push_url_param5: "type=Page"
   lists_notifications_url: "/__list-notifications-rw/lists/notifications"
   lists_notifications_push_url: "/lists/notifications-push?monitor=true"
   validation_endpoints:
@@ -32,6 +34,7 @@ envs:
     wordpress_mapper: "__wordpress-article-mapper/map"
     upp_internal_article_validator: "__upp-internal-article-validator/validate"
     upp_list_validator: "__upp-list-validator/validate"
+    upp_page_validator: "__upp-page-validator/validate"
     upp_internal_cph_validator: "__upp-internal-content-placeholder-validator/validate"
     upp_image_validator: "__upp-image-validator/validate"
     upp_image_set_validator: "__upp-image-set-validator/validate"

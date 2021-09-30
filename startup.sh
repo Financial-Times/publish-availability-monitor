@@ -7,6 +7,7 @@ sed -i "s \"CONTENT_NEO4J_URL\" \"$CONTENT_NEO4J_URL\" " /config.json
 sed -i "s \"CONTENT_COLLECTION_NEO4J_URL\" \"$CONTENT_COLLECTION_NEO4J_URL\" " /config.json
 sed -i "s \"COMPLEMENTARY_CONTENT_URL\" \"$COMPLEMENTARY_CONTENT_URL\" " /config.json
 sed -i "s \"LISTS_URL\" \"$LISTS_URL\" " /config.json
+sed -i "s \"PAGES_URL\" \"$PAGES_URL\" " /config.json
 sed -i "s \"LISTS_NOTIFICATIONS_URL\" \"$LISTS_NOTIFICATIONS_URL\" " /config.json
 sed -i "s \"NOTIFICATIONS_URL\" \"$NOTIFICATIONS_URL\" " /config.json
 sed -i "s \"LISTS_NOTIFICATIONS_PUSH_URL\" \"$LISTS_NOTIFICATIONS_PUSH_URL\" " /config.json
@@ -22,6 +23,7 @@ sed -i "s \"VIDEO_MAPPER_URL\" \"$VIDEO_MAPPER_URL\" " /config.json
 sed -i "s \"WORDPRESS_MAPPER_URL\" \"$WORDPRESS_MAPPER_URL\" " /config.json
 sed -i "s \"UPP_INTERNAL_ARTICLE_VALIDATOR_URL\" \"$UPP_INTERNAL_ARTICLE_VALIDATOR_URL\" " /config.json
 sed -i "s \"UPP_LIST_VALIDATOR_URL\" \"$UPP_LIST_VALIDATOR_URL\" " /config.json
+sed -i "s \"UPP_PAGE_VALIDATOR_URL\" \"$UPP_PAGE_VALIDATOR_URL\" " /config.json
 sed -i "s \"UPP_INTERNAL_CPH_VALIDATOR_URL\" \"$UPP_INTERNAL_CPH_VALIDATOR_URL\" " /config.json
 sed -i "s \"UPP_IMAGE_VALIDATOR_URL\" \"$UPP_IMAGE_VALIDATOR_URL\" " /config.json
 sed -i "s \"UPP_IMAGE_SET_VALIDATOR_URL\" \"$UPP_IMAGE_SET_VALIDATOR_URL\" " /config.json

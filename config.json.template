@@ -88,6 +88,15 @@
       ]
     },
     {
+      "endpoint": "PAGES_URL",
+      "granularity": 40,
+      "alias": "pages",
+      "health": "/__public-pages-api/__health",
+      "contentTypes": [
+        "application/vnd.ft-upp-page"
+      ]
+    },
+    {
       "endpoint": "NOTIFICATIONS_URL",
       "granularity": 40,
       "alias": "notifications",
@@ -101,7 +110,8 @@
         "application/vnd.ft-upp-content-placeholder-internal",
         "application/vnd.ft-upp-live-blog-package-internal",
         "application/vnd.ft-upp-live-blog-post-internal",
-        "application/vnd.ft-upp-audio"
+        "application/vnd.ft-upp-audio",
+        "application/vnd.ft-upp-page"
       ]
     },
     {
@@ -118,7 +128,8 @@
         "application/vnd.ft-upp-article-internal",
         "application/vnd.ft-upp-live-blog-package-internal",
         "application/vnd.ft-upp-live-blog-post-internal",
-        "application/vnd.ft-upp-audio"
+        "application/vnd.ft-upp-audio",
+        "application/vnd.ft-upp-page"
       ]
     },
     {
@@ -162,6 +173,7 @@
     "wordpress": "WORDPRESS_MAPPER_URL",
     "application/vnd.ft-upp-article-internal": "UPP_INTERNAL_ARTICLE_VALIDATOR_URL",
     "application/vnd.ft-upp-list": "UPP_LIST_VALIDATOR_URL",
+    "application/vnd.ft-upp-page": "UPP_PAGE_VALIDATOR_URL",
     "application/vnd.ft-upp-content-placeholder-internal": "UPP_INTERNAL_CPH_VALIDATOR_URL",
     "application/vnd.ft-upp-image": "UPP_IMAGE_VALIDATOR_URL",
     "application/vnd.ft-upp-image-set": "UPP_IMAGE_SET_VALIDATOR_URL",

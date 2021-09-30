@@ -12,6 +12,7 @@ envs:
   complementary_content_url: ""
   internal_components_url: ""
   lists_url: ""
+  pages_url: ""
   notifications_url: ""
   notifications_push_url: ""
   lists_notifications_url: ""
