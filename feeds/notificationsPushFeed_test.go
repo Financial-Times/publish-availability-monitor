@@ -69,6 +69,29 @@ func TestPushNotificationsAreConsumed(t *testing.T) {
 	assert.Equal(t, publishRef, response[0].PublishReference, "publish ref")
 }
 
+func TestListPushNotificationsAreConsumed(t *testing.T) {
+	uuid := "1cb14245-5185-4ed5-9188-4d2a86085599"
+	publishRef := "tid_0123wxyz"
+	lastModified := time.Now()
+	notifications := mockNotificationFor(uuid, publishRef, lastModified)
+	notifications = strings.Replace(notifications, "\n", "", -1)
+
+	httpResponse, _ := buildPushResponse(200, []string{notifications})
+	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_push_", httpResponse)
+
+	baseURL, _ := url.Parse("http://www.example.org")
+	f := NewNotificationsFeed("list-notifications-push", *baseURL, 10, 1, "", "", "")
+	f.(*NotificationsPushFeed).SetHTTPCaller(httpCaller)
+	f.Start()
+	defer f.Stop()
+
+	time.Sleep(time.Duration(100) * time.Millisecond)
+
+	response := f.NotificationsFor(uuid)
+	assert.Len(t, response, 1, "notifications for item")
+	assert.Equal(t, publishRef, response[0].PublishReference, "publish ref")
+}
+
 func TestPushNotificationsForReturnsEmptyIfNotFound(t *testing.T) {
 	baseUrl, _ := url.Parse("http://www.example.org")
 	f := NewNotificationsFeed("notifications-push", *baseUrl, 10, 1, "", "", "")
