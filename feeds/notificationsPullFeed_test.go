@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
-	uuidgen "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -112,7 +112,7 @@ func mockNotificationsResponseFor(requestQueryString string, notifications strin
 }
 
 func TestNotificationsArePolled(t *testing.T) {
-	uuid := uuidgen.NewV4().String()
+	uuid := uuid.NewString()
 	publishRef := "tid_0123wxyz"
 	lastModified := time.Now()
 	notifications := mockNotificationsResponseFor("2016-10-28T15:00:00.000Z",
@@ -136,7 +136,7 @@ func TestNotificationsArePolled(t *testing.T) {
 }
 
 func TestMultipleNotificationsAreMapped(t *testing.T) {
-	uuids := []string{uuidgen.NewV4().String(), uuidgen.NewV4().String()}
+	uuids := []string{uuid.NewString(), uuid.NewString()}
 	publishRefs := []string{"tid_1", "tid_2"}
 	lastModified := time.Now()
 
@@ -169,12 +169,12 @@ func TestNotificationsForReturnsEmptyIfNotFound(t *testing.T) {
 	baseUrl, _ := url.Parse("http://www.example.org")
 	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "")
 
-	response := f.NotificationsFor(uuidgen.NewV4().String())
+	response := f.NotificationsFor(uuid.NewString())
 	assert.Len(t, response, 0, "notifications for item")
 }
 
 func TestNotificationsForReturnsAllMatches(t *testing.T) {
-	uuid := uuidgen.NewV4().String()
+	uuid := uuid.NewString()
 	publishRef1 := "tid_0123wxyz"
 	lastModified1 := time.Now().Add(time.Duration(-1) * time.Second)
 	notifications1 := mockNotificationsResponseFor("2016-10-28T15:00:00.000Z",
@@ -203,7 +203,7 @@ func TestNotificationsForReturnsAllMatches(t *testing.T) {
 }
 
 func TestNotificationsPollingContinuesAfterErrorResponse(t *testing.T) {
-	uuid := uuidgen.NewV4().String()
+	uuid := uuid.NewString()
 	publishRef := "tid_0123wxyz"
 	lastModified := time.Now()
 	notifications := mockNotificationsResponseFor("2016-10-28T15:00:00.000Z",
@@ -225,7 +225,7 @@ func TestNotificationsPollingContinuesAfterErrorResponse(t *testing.T) {
 }
 
 func TestNotificationsArePurged(t *testing.T) {
-	uuid := uuidgen.NewV4().String()
+	uuid := uuid.NewString()
 	publishRef := "tid_0123wxyz"
 	lastModified := time.Now().Add(time.Duration(-2) * time.Second)
 	notifications := mockNotificationsResponseFor("2016-10-28T15:00:00.000Z",
@@ -252,7 +252,7 @@ func TestNotificationsArePurged(t *testing.T) {
 }
 
 func TestNotificationsPollingFollowsOpaqueLink(t *testing.T) {
-	uuid1 := uuidgen.NewV4().String()
+	uuid1 := uuid.NewString()
 	publishRef1 := "tid_0123wxyz"
 	lastModified1 := time.Now().Add(time.Duration(-1) * time.Second)
 	bootstrapQuery := url.Values{"since": []string{"any"}}
@@ -262,7 +262,7 @@ func TestNotificationsPollingFollowsOpaqueLink(t *testing.T) {
 		mockNotificationFor(uuid1, publishRef1, lastModified1),
 		nextPageQuery.Encode())
 
-	uuid2 := uuidgen.NewV4().String()
+	uuid2 := uuid.NewString()
 	publishRef2 := "tid_0123abcd"
 	lastModified2 := time.Now()
 	notifications2 := mockNotificationsResponseFor(nextPageQuery.Encode(),
