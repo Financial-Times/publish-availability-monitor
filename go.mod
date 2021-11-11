@@ -10,6 +10,7 @@ require (
 	github.com/Sirupsen/logrus v0.11.2
 	github.com/davecgh/go-spew v1.1.0 // indirect
 	github.com/giantswarm/retry-go v0.0.0-20151203102909-d78cea247d5e
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.3.0
 	github.com/hashicorp/go-version v0.0.0-20170202080759-03c5bf6be031 // indirect
@@ -17,7 +18,6 @@ require (
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/pkg/errors v0.8.1-0.20170505043639-c605e284fe17
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/satori/go.uuid v1.1.0
 	github.com/stretchr/objx v0.0.0-20150928122152-1a9d0bb9f541 // indirect
 	github.com/stretchr/testify v1.1.4
 	github.com/willf/bitset v1.0.1-0.20161202170036-5c3c0fce4884 // indirect
