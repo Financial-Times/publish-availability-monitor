@@ -67,11 +67,11 @@ spec:
           value: {{ .Values.envs.notifications_url }}\&{{ .Values.envs.notifications_url_param2 }}
         - name: NOTIFICATIONS_PUSH_URL
           value: {{ .Values.envs.notifications_push_url }}\&{{ .Values.envs.notifications_push_url_param2 }}\&{{ .Values.envs.notifications_push_url_param3 }}\&{{ .Values.envs.notifications_push_url_param4 }}\&{{ .Values.envs.notifications_push_url_param5 }}
-        - name: LISTS_NOTIFICATIONS_URL
-          value: "{{ .Values.envs.lists_notifications_url }}"
-        - name: LISTS_NOTIFICATIONS_PUSH_URL
-          value: "{{ .Values.envs.lists_notifications_push_url }}"
-        - name: LISTS_NOTIFICATIONS_PUSH_API_KEY
+        - name: LIST_NOTIFICATIONS_URL
+          value: "{{ .Values.envs.list_notifications_url }}"
+        - name: LIST_NOTIFICATIONS_PUSH_URL
+          value: "{{ .Values.envs.list_notifications_push_url }}"
+        - name: LIST_NOTIFICATIONS_PUSH_API_KEY
           valueFrom:
             secretKeyRef:
               name: publish-availability-monitor-secrets

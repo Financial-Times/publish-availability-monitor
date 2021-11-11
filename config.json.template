@@ -133,10 +133,20 @@
       ]
     },
     {
-      "endpoint": "LISTS_NOTIFICATIONS_URL",
+      "endpoint": "LIST_NOTIFICATIONS_URL",
       "granularity": 40,
       "alias": "list-notifications",
       "health": "/__list-notifications-rw/__health",
+      "contentTypes": [
+        "application/vnd.ft-upp-list"
+      ]
+    },
+    {
+      "endpoint": "LIST_NOTIFICATIONS_PUSH_URL",
+      "granularity": 40,
+      "alias": "list-notifications-push",
+      "apiKey": "LIST_NOTIFICATIONS_PUSH_API_KEY",
+      "health": "/__list-notifications-push/__health",
       "contentTypes": [
         "application/vnd.ft-upp-list"
       ]
