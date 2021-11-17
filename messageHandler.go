@@ -105,6 +105,7 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 		"notifications-push":       checks.NewNotificationsCheck(hC, h.subscribedFeeds, "notifications-push"),
 		"list-notifications":       checks.NewNotificationsCheck(hC, h.subscribedFeeds, "list-notifications"),
 		"list-notifications-push":  checks.NewNotificationsCheck(hC, h.subscribedFeeds, "list-notifications-push"),
+		"page-notifications-push":  checks.NewNotificationsCheck(hC, h.subscribedFeeds, "page-notifications-push"),
 	}
 
 	for _, scheduleParam := range paramsToSchedule {
