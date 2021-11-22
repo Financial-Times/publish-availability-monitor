@@ -66,7 +66,7 @@ spec:
         - name: NOTIFICATIONS_URL
           value: {{ .Values.envs.notifications_url }}\&{{ .Values.envs.notifications_url_param2 }}
         - name: NOTIFICATIONS_PUSH_URL
-          value: {{ .Values.envs.notifications_push_url }}\&{{ .Values.envs.notifications_push_url_param2 }}\&{{ .Values.envs.notifications_push_url_param3 }}\&{{ .Values.envs.notifications_push_url_param4 }}\&{{ .Values.envs.notifications_push_url_param5 }}
+          value: {{ .Values.envs.notifications_push_url }}\&{{ .Values.envs.notifications_push_url_param2 }}\&{{ .Values.envs.notifications_push_url_param3 }}\&{{ .Values.envs.notifications_push_url_param4 }}
         - name: LIST_NOTIFICATIONS_URL
           value: "{{ .Values.envs.list_notifications_url }}"
         - name: LIST_NOTIFICATIONS_PUSH_URL
@@ -76,6 +76,13 @@ spec:
             secretKeyRef:
               name: publish-availability-monitor-secrets
               key: list_notifications_push.api_key
+        - name: PAGE_NOTIFICATIONS_PUSH_URL
+          value: "{{ .Values.envs.page_notifications_push_url }}"
+        - name: PAGE_NOTIFICATIONS_PUSH_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: publish-availability-monitor-secrets
+              key: page_notifications_push.api_key
         - name: NOTIFICATIONS_PUSH_API_KEY
           valueFrom:
             secretKeyRef:

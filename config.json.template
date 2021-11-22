@@ -128,8 +128,7 @@
         "application/vnd.ft-upp-article-internal",
         "application/vnd.ft-upp-live-blog-package-internal",
         "application/vnd.ft-upp-live-blog-post-internal",
-        "application/vnd.ft-upp-audio",
-        "application/vnd.ft-upp-page"
+        "application/vnd.ft-upp-audio"
       ]
     },
     {
@@ -149,6 +148,16 @@
       "health": "/__list-notifications-push/__health",
       "contentTypes": [
         "application/vnd.ft-upp-list"
+      ]
+    },
+    {
+      "endpoint": "PAGE_NOTIFICATIONS_PUSH_URL",
+      "granularity": 40,
+      "alias": "page-notifications-push",
+      "apiKey": "PAGE_NOTIFICATIONS_PUSH_API_KEY",
+      "health": "/__page-notifications-push/__health",
+      "contentTypes": [
+        "application/vnd.ft-upp-page"
       ]
     },
     {
