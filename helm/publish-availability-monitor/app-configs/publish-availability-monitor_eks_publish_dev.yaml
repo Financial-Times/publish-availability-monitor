@@ -26,10 +26,6 @@ envs:
   list_notifications_push_url: "/lists/notifications-push?monitor=true"
   page_notifications_push_url: "/pages/notifications-push?monitor=true"
   validation_endpoints:
-    methode_article_mapper: "__methode-article-mapper/map"
-    methode_content_placeholder_mapper: "__methode-content-placeholder-mapper/map"
-    methode_image_model_mapper: "__methode-image-model-mapper/map"
-    methode_article_internal_components_mapper: "__methode-article-internal-components-mapper/map"
     video_mapper: "__upp-next-video-mapper/map"
     wordpress_mapper: "__wordpress-article-mapper/map"
     upp_internal_article_validator: "__upp-internal-article-validator/validate"

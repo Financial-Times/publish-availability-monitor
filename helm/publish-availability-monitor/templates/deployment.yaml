@@ -96,14 +96,6 @@ spec:
               name: publish-availability-monitor-secrets
               key: graphite.uuid
         {{- $base_url := default .Values.cluster.delivery.url .Values.envs.validation_endpoints.base_url }}
-        - name: METHODE_ARTICLE_VALIDATION_URL
-          value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.methode_article_mapper }}"
-        - name: METHODE_CONTENT_PLACEHOLDER_MAPPER_URL
-          value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.methode_content_placeholder_mapper }}"
-        - name: METHODE_IMAGE_MODEL_MAPPER_URL
-          value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.methode_image_model_mapper }}"
-        - name: METHODE_ARTICLE_INTERNAL_COMPONENTS_MAPPER_URL
-          value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.methode_article_internal_components_mapper }}"
         - name: VIDEO_MAPPER_URL
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.video_mapper }}"
         - name: WORDPRESS_MAPPER_URL

@@ -16,7 +16,7 @@ type AppConfig struct {
 	MetricConf          []MetricConfig       `json:"metricConfig"`
 	SplunkConf          SplunkConfig         `json:"splunk-config"`
 	HealthConf          HealthConfig         `json:"healthConfig"`
-	ValidationEndpoints map[string]string    `json:"validationEndpoints"` //contentType to validation endpoint mapping, ex. { "EOM::Story": "http://methode-article-transformer/content-transform" }
+	ValidationEndpoints map[string]string    `json:"validationEndpoints"` //contentType to validation endpoint mapping
 	UUIDResolverURL     string               `json:"uuidResolverUrl"`
 	Capabilities        []Capability         `json:"capabilities"`
 	GraphiteAddress     string               `json:"graphiteAddress"`

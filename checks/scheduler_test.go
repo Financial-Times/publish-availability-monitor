@@ -38,57 +38,6 @@ func TestValidType(testing *testing.T) {
 	}
 }
 
-var validImageEomFile = content.EomFile{
-	UUID:             "e28b12f7-9796-3331-b030-05082f0b8157",
-	Type:             "Image",
-	Value:            "/9j/4QAYRXhpZgAASUkqAAgAAAAAAAAAAAAAAP/sABFEdWNr",
-	Attributes:       "attributes",
-	SystemAttributes: "system attributes",
-}
-
-var mockArticleEomFile = content.EomFile{
-	UUID:             "a24da1d4-1524-2322-c231-25032d0f8334",
-	Type:             "EOM:CompoundStory",
-	Value:            "/9j/4QAYRXhpZgAASUkqAAgAAAAAAAAAAAAAAP/sABFEdWNr",
-	Attributes:       "attributes",
-	SystemAttributes: "system attributes",
-}
-
-func TestScheduleChecksForS3AreCorrect(testing *testing.T) {
-	//redefine appConfig to have only S3
-	appConfig := &config.AppConfig{
-		MetricConf: []config.MetricConfig{
-			{
-				Endpoint:    "/whatever/",
-				Granularity: 1,
-				Alias:       "S3",
-				ContentTypes: []string{
-					"Image",
-				},
-			},
-		},
-		Threshold: 1,
-	}
-
-	var mockEnvironments = envs.NewEnvironments()
-	readURL := "http://env1.example.org"
-	s3URL := "http://s1.example.org"
-
-	mockEnvironments.SetEnvironment("env1", envs.Environment{
-		Name:     "env1",
-		ReadURL:  readURL,
-		S3Url:    s3URL,
-		Username: "user1",
-		Password: "pass1",
-	})
-
-	capturingMetrics := runScheduleChecks(testing, validImageEomFile, mockEnvironments, appConfig)
-
-	require.NotNil(testing, capturingMetrics)
-	require.Equal(testing, 1, capturingMetrics.Len())
-	require.Equal(testing, s3URL+"/whatever/", capturingMetrics.First().Endpoint.String())
-}
-
 func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 	//redefine appConfig to have only Content
 	appConfig := &config.AppConfig{
@@ -98,7 +47,7 @@ func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 				Granularity: 1,
 				Alias:       "content",
 				ContentTypes: []string{
-					"Image",
+					"application/vnd.ft-upp-image",
 				},
 			},
 		},
@@ -116,7 +65,8 @@ func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 		Password: "pass1",
 	})
 
-	capturingMetrics := runScheduleChecks(testing, validImageEomFile, mockEnvironments, appConfig)
+	var genericImage = content.GenericContent{UUID: "e28b12f7-9796-3331-b030-05082f0b8157", Type: "application/vnd.ft-upp-image"}
+	capturingMetrics := runScheduleChecks(testing, genericImage, mockEnvironments, appConfig)
 
 	require.NotNil(testing, capturingMetrics)
 	require.Equal(testing, 1, capturingMetrics.Len())
@@ -131,7 +81,7 @@ func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testi
 				Granularity: 1,
 				Alias:       "internal-components",
 				ContentTypes: []string{
-					"InternalComponents",
+					"application/vnd.ft-upp-article-internal",
 				},
 			},
 		},
@@ -150,46 +100,8 @@ func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testi
 		Password: "pass1",
 	})
 
-	mockArticleEomFile.Type = "InternalComponents"
-
-	capturingMetrics := runScheduleChecks(testing, mockArticleEomFile, mockEnvironments, appConfig)
-
-	require.NotNil(testing, capturingMetrics)
-	require.Equal(testing, 1, capturingMetrics.Len())
-	require.Equal(testing, readURL+"/internalcomponents/", capturingMetrics.First().Endpoint.String())
-}
-
-func TestScheduleChecksForDynamicContentWithInternalComponentsAreCorrect(testing *testing.T) {
-	appConfig := &config.AppConfig{
-		MetricConf: []config.MetricConfig{
-			{
-				Endpoint:    "/internalcomponents/",
-				Granularity: 1,
-				Alias:       "internal-components",
-				ContentTypes: []string{
-					"InternalComponents",
-					"EOM::CompoundStory_DynamicContent",
-				},
-			},
-		},
-		Threshold: 1,
-	}
-
-	var mockEnvironments = envs.NewEnvironments()
-	readURL := "http://env1.example.org"
-	s3URL := "http://s1.example.org"
-
-	mockEnvironments.SetEnvironment("env1", envs.Environment{
-		Name:     "env1",
-		ReadURL:  readURL,
-		S3Url:    s3URL,
-		Username: "user1",
-		Password: "pass1",
-	})
-
-	mockArticleEomFile.Type = "EOM::CompoundStory_DynamicContent"
-
-	capturingMetrics := runScheduleChecks(testing, mockArticleEomFile, mockEnvironments, appConfig)
+	var genericArticleInternal = content.GenericContent{UUID: "a24da1d4-1524-2322-c231-25032d0f8334", Type: "application/vnd.ft-upp-article-internal"}
+	capturingMetrics := runScheduleChecks(testing, genericArticleInternal, mockEnvironments, appConfig)
 
 	require.NotNil(testing, capturingMetrics)
 	require.Equal(testing, 1, capturingMetrics.Len())

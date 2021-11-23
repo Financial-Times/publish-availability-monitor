@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"fmt"
 	"strings"
 	"time"
@@ -24,9 +23,8 @@ type MessageHandler interface {
 	HandleMessage(msg consumer.Message)
 }
 
-func NewKafkaMessageHandler(typeRes content.TypeResolver, appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.History, e2eTestUUIDs []string) MessageHandler {
+func NewKafkaMessageHandler(appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.History, e2eTestUUIDs []string) MessageHandler {
 	return &kafkaMessageHandler{
-		typeRes:         typeRes,
 		appConfig:       appConfig,
 		environments:    environments,
 		subscribedFeeds: subscribedFeeds,
@@ -37,7 +35,6 @@ func NewKafkaMessageHandler(typeRes content.TypeResolver, appConfig *config.AppC
 }
 
 type kafkaMessageHandler struct {
-	typeRes         content.TypeResolver
 	appConfig       *config.AppConfig
 	environments    *envs.Environments
 	subscribedFeeds map[string][]feeds.Feed
@@ -78,13 +75,6 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 		} else {
 			//if a main check is not ok, additional checks make no sense
 			return
-		}
-	}
-
-	for _, preCheck := range checks.AdditionalPreChecks() {
-		ok, scheduleParam := preCheck(publishedContent, tid, publishDate, h.appConfig, h.metricContainer, h.environments)
-		if ok {
-			paramsToSchedule = append(paramsToSchedule, scheduleParam)
 		}
 	}
 
@@ -142,24 +132,7 @@ func (h *kafkaMessageHandler) unmarshalContent(msg consumer.Message) (content.Co
 
 	headers := msg.Headers
 	systemID := headers[systemIDKey]
-	txID := msg.Headers["X-Request-Id"]
 	switch systemID {
-	case "http://cmdb.ft.com/systems/methode-web-pub":
-		var eomFile content.EomFile
-
-		err := json.Unmarshal(binaryContent, &eomFile)
-		if err != nil {
-			return nil, err
-		}
-		xml.Unmarshal([]byte(eomFile.Attributes), &eomFile.Source)
-		eomFile = eomFile.Initialize(binaryContent).(content.EomFile)
-		theType, resolvedUUID, err := h.typeRes.ResolveTypeAndUUID(eomFile, txID)
-		if err != nil {
-			return nil, fmt.Errorf("couldn't map kafka message to methode Content while fetching its type and uuid. %v", err)
-		}
-		eomFile.Type = theType
-		eomFile.UUID = resolvedUUID
-		return eomFile, nil
 	case "http://cmdb.ft.com/systems/wordpress":
 		var wordPressMsg content.WordPressMessage
 		err := json.Unmarshal(binaryContent, &wordPressMsg)

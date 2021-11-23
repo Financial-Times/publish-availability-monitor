@@ -17,14 +17,14 @@ func TestBuildFtHealthcheckUrl(t *testing.T) {
 		expectedHealthURL string
 	}{
 		{
-			validationURL:     "http://methode-article-transformer/content-transformer/",
-			health:            "/__methode-article-transformer/__health",
-			expectedHealthURL: "http://methode-article-transformer/__methode-article-transformer/__health",
+			validationURL:     "http://example-service/validate/",
+			health:            "/__example-service/__health",
+			expectedHealthURL: "http://example-service/__example-service/__health",
 		},
 		{
-			validationURL:     "http://methode-article-transformer/content-transformer?monitor=true",
-			health:            "/__methode-article-transformer/__health",
-			expectedHealthURL: "http://methode-article-transformer/__methode-article-transformer/__health",
+			validationURL:     "http://example-service/validate?monitor=true",
+			health:            "/__example-service/__health",
+			expectedHealthURL: "http://example-service/__example-service/__health",
 		},
 	}
 	for _, tc := range testCases {

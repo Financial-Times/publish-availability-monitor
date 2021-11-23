@@ -246,11 +246,10 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 			subscribedFeeds := map[string][]feeds.Feed{}
 			subscribedFeeds["env1"] = append(subscribedFeeds["env1"], f)
 
-			typeRes := new(MockTypeResolver)
 			var metricsCh = make(chan metrics.PublishMetric)
 			var metricsHistory = metrics.NewHistory(make([]metrics.PublishMetric, 0))
 
-			mh := NewKafkaMessageHandler(typeRes, test.AppConfig, testEnvs, subscribedFeeds, metricsCh, metricsHistory, test.E2ETestUUIDs)
+			mh := NewKafkaMessageHandler(test.AppConfig, testEnvs, subscribedFeeds, metricsCh, metricsHistory, test.E2ETestUUIDs)
 			kmh := mh.(*kafkaMessageHandler)
 
 			kmh.HandleMessage(test.KafkaMessage)

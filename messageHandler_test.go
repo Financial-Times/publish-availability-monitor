@@ -7,7 +7,6 @@ import (
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	"github.com/Financial-Times/publish-availability-monitor/content"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 const wordpressType = "wordpress"
@@ -46,8 +45,7 @@ func TestIsIgnorableMessage(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			typeRes := new(MockTypeResolver)
-			h := kafkaMessageHandler{typeRes: typeRes}
+			h := kafkaMessageHandler{}
 			kafkaMessage := consumer.Message{
 				Headers: map[string]string{
 					"X-Request-Id": test.TransactionID,
@@ -64,10 +62,9 @@ func TestIsIgnorableMessage(t *testing.T) {
 }
 
 func TestTestIsIgnorableMessage_SyntheticE2ETest(t *testing.T) {
-	typeRes := new(MockTypeResolver)
 	e2eTestUUIDs := []string{"e4d2885f-1140-400b-9407-921e1c7378cd"}
 
-	mh := NewKafkaMessageHandler(typeRes, nil, nil, nil, nil, nil, e2eTestUUIDs)
+	mh := NewKafkaMessageHandler(nil, nil, nil, nil, nil, e2eTestUUIDs)
 	kmh := mh.(*kafkaMessageHandler)
 
 	kafkaMessage := consumer.Message{
@@ -83,68 +80,36 @@ func TestTestIsIgnorableMessage_SyntheticE2ETest(t *testing.T) {
 		t.Fatalf("expected %v, got %v", expected, got)
 	}
 }
-
-func TestUnmarshalContent_ValidMessageMethodeSystemHeader_NoError(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	typeRes.On("ResolveTypeAndUUID", mock.MatchedBy(func(eomFile content.EomFile) bool { return true }), "tid_0123wxyz").Return("EOM::CompoundStory", "79e7f5ed-63c7-46b2-9767-736f8ae3a3f6", nil)
-
-	h := kafkaMessageHandler{typeRes: typeRes}
-
-	if _, err := h.unmarshalContent(validMethodeMessage); err != nil {
-		t.Errorf("Message with valid system ID [%s] cannot be unmarshalled!", validWordpressMessage.Headers["Origin-System-Id"])
-	}
-}
-
 func TestUnmarshalContent_ValidMessageWordpressSystemHeader_NoError(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
+	h := kafkaMessageHandler{}
 	if _, err := h.unmarshalContent(validWordpressMessage); err != nil {
 		t.Errorf("Message with valid system ID [%s] cannot be unmarshalled!", validWordpressMessage.Headers["Origin-System-Id"])
 	}
 }
 
 func TestUnmarshalContent_InvalidMessageMissingHeader_Error(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
+	h := kafkaMessageHandler{}
 	if _, err := h.unmarshalContent(invalidMessageWrongHeader); err == nil {
 		t.Error("Expected failure, but message with missing system ID successfully unmarshalled!")
 	}
 }
 
 func TestUnmarshalContent_InvalidMessageWrongSystemId_Error(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
+	h := kafkaMessageHandler{}
 	if _, err := h.unmarshalContent(invalidMessageWrongSystemID); err == nil {
 		t.Error("Expected failure, but message with wrong system ID successfully unmarshalled!")
 	}
 }
 
-func TestUnmarshalContent_InvalidMethodeContentWrongJSONFormat_Error(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	typeRes.On("ResolveTypeAndUUID", mock.MatchedBy(func(eomFile content.EomFile) bool { return true }), "tid_0123wxyz").Return("EOM::CompoundStory", "79e7f5ed-63c7-46b2-9767-736f8ae3a3f6", nil)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
-	if _, err := h.unmarshalContent(invalidMethodeMessageWrongJSONFormat); err == nil {
-		t.Error("Expected failure, but message with wrong JSON format successfully unmarshalled!")
-	}
-}
-
 func TestUnmarshalContent_InvalidWordPressContentWrongJSONFormat_Error(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
+	h := kafkaMessageHandler{}
 	if _, err := h.unmarshalContent(invalidWordPressMessageWrongJSONFormat); err == nil {
 		t.Error("Expected failure, but message with wrong system ID successfully unmarshalled!")
 	}
 }
 
 func TestUnmarshalContent_ValidWordPressMessageWithTypeField_TypeIsCorrectlyUnmarshalled(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
+	h := kafkaMessageHandler{}
 	resultContent, err := h.unmarshalContent(validWordPressMessageWithTypeField)
 	if err != nil {
 		t.Errorf("Expected success, but error occured [%v]", err)
@@ -163,9 +128,7 @@ func TestUnmarshalContent_ValidVideoMessage(t *testing.T) {
 		{validVideoMsg2},
 	}
 
-	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
+	h := kafkaMessageHandler{}
 	for _, testCase := range testCases {
 		resultContent, err := h.unmarshalContent(testCase.videoMessage)
 		if err != nil {
@@ -178,9 +141,7 @@ func TestUnmarshalContent_ValidVideoMessage(t *testing.T) {
 }
 
 func TestUnmarshalContent_ValidDeletedVideoMessage(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
+	h := kafkaMessageHandler{}
 	resultContent, err := h.unmarshalContent(validDeleteVideoMsg)
 	if err != nil {
 		t.Errorf("Expected success, but error occured [%v]", err)
@@ -191,9 +152,7 @@ func TestUnmarshalContent_ValidDeletedVideoMessage(t *testing.T) {
 }
 
 func TestUnmarshalContent_InvalidVideoMessage(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
+	h := kafkaMessageHandler{}
 	resultContent, err := h.unmarshalContent(invalidVideoMsg)
 	if err != nil {
 		t.Errorf("Expected success, but error occured [%v]", err)
@@ -203,50 +162,8 @@ func TestUnmarshalContent_InvalidVideoMessage(t *testing.T) {
 	assert.False(t, valRes.IsValid, "Expected invalid content.")
 }
 
-func TestUnmarshalContent_ContentIsMethodeArticle_LinkedObjectsFieldIsEmpty(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	typeRes.On("ResolveTypeAndUUID", mock.MatchedBy(func(eomFile content.EomFile) bool { return true }), "tid_0123wxyz").Return("EOM::CompoundStory", "79e7f5ed-63c7-46b2-9767-736f8ae3a3f6", nil)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
-	var validMethodeListMessage = consumer.Message{
-		Headers: map[string]string{
-			"Origin-System-Id": "http://cmdb.ft.com/systems/methode-web-pub",
-			"X-Request-Id":     "tid_0123wxyz",
-		},
-		Body: string(loadBytesForFile(t, "content/testdata/methode_article.json")),
-	}
-	resultContent, err := h.unmarshalContent(validMethodeListMessage)
-	if err != nil {
-		t.Errorf("Expected success, but error occured [%v]", err)
-		return
-	}
-	methodeContent, ok := resultContent.(content.EomFile)
-	if !ok {
-		t.Error("Expected Methode article to be an EomFile")
-	}
-	if len(methodeContent.LinkedObjects) != 0 {
-		t.Error("Expected article to have zero linked objects, but found several")
-	}
-}
-
-func TestUnmarshalContent_MethodeBinaryContentSet(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	typeRes.On("ResolveTypeAndUUID", mock.MatchedBy(func(eomFile content.EomFile) bool { return true }), "tid_0123wxyz").Return("EOM::CompoundStory", "79e7f5ed-63c7-46b2-9767-736f8ae3a3f6", nil)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
-	resultContent, err := h.unmarshalContent(validMethodeMessage)
-	assert.NoError(t, err)
-
-	eomFile, ok := resultContent.(content.EomFile)
-	assert.True(t, ok)
-
-	assert.Equal(t, []byte(validMethodeMessage.Body), eomFile.BinaryContent)
-}
-
 func TestUnmarshalContent_VideoBinaryContentSet(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
+	h := kafkaMessageHandler{}
 	resultContent, err := h.unmarshalContent(validVideoMsg)
 	assert.NoError(t, err)
 
@@ -254,17 +171,6 @@ func TestUnmarshalContent_VideoBinaryContentSet(t *testing.T) {
 	assert.True(t, ok)
 
 	assert.Equal(t, []byte(validVideoMsg.Body), video.BinaryContent)
-}
-
-func TestIsValidExternalCPH(t *testing.T) {
-	typeRes := new(MockTypeResolver)
-	typeRes.On("ResolveTypeAndUUID", mock.MatchedBy(func(eomFile content.EomFile) bool { return true }), "tid_0123wxyz").Return("EOM::CompoundStory_External_CPH", "79e7f5ed-63c7-46b2-9767-736f8ae3a3f6", nil)
-	h := kafkaMessageHandler{typeRes: typeRes}
-
-	_, err := h.unmarshalContent(validContentPlaceholder)
-	if err != nil {
-		t.Error("Valid external CPH shouldn't throw error.")
-	}
 }
 
 func TestUnmarshalContent_GenericContent(t *testing.T) {
@@ -311,22 +217,6 @@ func TestUnmarshalContent_GenericContent_Audio(t *testing.T) {
 	assert.Equal(t, []byte(validGenericAudioMessage.Body), genericContent.BinaryContent)
 }
 
-var invalidMethodeMessageWrongJSONFormat = consumer.Message{
-	Headers: map[string]string{
-		"Origin-System-Id": "http://cmdb.ft.com/systems/methode-web-pub",
-		"X-Request-Id":     "tid_0123wxyz",
-	},
-	Body: `{"uuid": "79e7f5ed-63c7-46b2-9767-736f8ae3a3f6", "type": "Image", "value": " }`,
-}
-
-var validMethodeMessage = consumer.Message{
-	Headers: map[string]string{
-		"Origin-System-Id": "http://cmdb.ft.com/systems/methode-web-pub",
-		"X-Request-Id":     "tid_0123wxyz",
-	},
-	Body: `{"uuid": "79e7f5ed-63c7-46b2-9767-736f8ae3a3f6", "type": "EOM::CompoundStory", "value": "" }`,
-}
-
 var invalidWordPressMessageWrongJSONFormat = consumer.Message{
 	Headers: map[string]string{
 		"Origin-System-Id": "http://cmdb.ft.com/systems/wordpress",
@@ -349,13 +239,13 @@ var validWordpressMessage = consumer.Message{
 }
 var invalidMessageWrongHeader = consumer.Message{
 	Headers: map[string]string{
-		"Foobar-System-Id": "http://cmdb.ft.com/systems/methode-web-pub",
+		"Foobar-System-Id": "http://cmdb.ft.com/systems/cct",
 	},
 	Body: "{}",
 }
 var invalidMessageWrongSystemID = consumer.Message{
 	Headers: map[string]string{
-		"Origin-System-Id": "methode-web-foobar",
+		"Origin-System-Id": "web-foobar",
 	},
 	Body: "{}",
 }
@@ -396,18 +286,6 @@ var invalidVideoMsg = consumer.Message{
 	Body: `{
 		"uuid": "e28b12f7-9796-3331-b030-05082f0b8157",
 		"something_else": "something else"
-	}`,
-}
-
-var validContentPlaceholder = consumer.Message{
-	Headers: map[string]string{
-		"Origin-System-Id": "http://cmdb.ft.com/systems/methode-web-pub",
-		"X-Request-Id":     "tid_0123wxyz",
-	},
-	Body: `{
-		"uuid": "e28b12f7-9796-3331-b030-05082f0b8157",
-		"type": "EOM::CompoundStory",
-		"attributes": "<ObjectMetadata><EditorialNotes><Sources><Source><SourceCode>ContentPlaceholder</SourceCode></Source></Sources></EditorialNotes></ObjectMetadata>"
 	}`,
 }
 
@@ -517,15 +395,6 @@ var validGenericAudioMessage = consumer.Message{
 			}
 		]
 	  }`,
-}
-
-type MockTypeResolver struct {
-	mock.Mock
-}
-
-func (m *MockTypeResolver) ResolveTypeAndUUID(eomFile content.EomFile, txID string) (string, string, error) {
-	args := m.Called(eomFile, txID)
-	return args.String(0), args.String(1), args.Error(2)
 }
 
 func loadBytesForFile(t *testing.T, path string) []byte {

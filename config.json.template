@@ -16,12 +16,6 @@
       "health": "/__document-store-api/__health",
       "granularity": 40,
       "contentTypes": [
-        "EOM::CompoundStory",
-        "EOM::CompoundStory_External_CPH",
-        "EOM::CompoundStory_DynamicContent",
-        "EOM::Story",
-        "Image",
-        "ImageSet",
         "video",
         "wordpress",
         "application/vnd.ft-upp-article-internal",
@@ -40,9 +34,6 @@
       "health": "/__content-rw-neo4j/__health",
       "granularity": 40,
       "contentTypes": [
-        "EOM::CompoundStory",
-        "EOM::CompoundStory_DynamicContent",
-        "EOM::Story",
         "wordpress",
         "application/vnd.ft-upp-article-internal",
         "application/vnd.ft-upp-live-blog-package-internal",
@@ -65,17 +56,7 @@
       "health": "/__document-store-api/__health",
       "granularity": 40,
       "contentTypes": [
-        "EOM::CompoundStory_External_CPH",
-        "EOM::CompoundStory_Internal_CPH",
         "application/vnd.ft-upp-content-placeholder-internal"
-      ]
-    },
-    {
-      "endpoint": "/",
-      "granularity": 40,
-      "alias": "S3",
-      "contentTypes": [
-        "Image"
       ]
     },
     {
@@ -102,10 +83,6 @@
       "alias": "notifications",
       "health": "/__notifications-rw/__health",
       "contentTypes": [
-        "EOM::CompoundStory",
-        "EOM::CompoundStory_External_CPH",
-        "EOM::CompoundStory_Internal_CPH",
-        "EOM::CompoundStory_DynamicContent",
         "application/vnd.ft-upp-article-internal",
         "application/vnd.ft-upp-content-placeholder-internal",
         "application/vnd.ft-upp-live-blog-package-internal",
@@ -121,9 +98,6 @@
       "apiKey": "NOTIFICATIONS_PUSH_API_KEY",
       "health": "/__notifications-push/__health",
       "contentTypes": [
-        "EOM::CompoundStory",
-        "EOM::CompoundStory_External_CPH",
-        "EOM::CompoundStory_Internal_CPH",
         "wordpress",
         "application/vnd.ft-upp-article-internal",
         "application/vnd.ft-upp-live-blog-package-internal",
@@ -166,8 +140,6 @@
       "alias": "internal-components",
       "health": "/__document-store-api/__health",
       "contentTypes": [
-        "InternalComponents",
-        "EOM::CompoundStory_DynamicContent",
         "application/vnd.ft-upp-article-internal",
         "application/vnd.ft-upp-live-blog-package-internal",
         "application/vnd.ft-upp-live-blog-post-internal"
@@ -181,13 +153,6 @@
     "failureThreshold": 2
   },
   "validationEndpoints": {
-    "EOM::CompoundStory": "METHODE_ARTICLE_VALIDATION_URL",
-    "EOM::CompoundStory_External_CPH": "METHODE_CONTENT_PLACEHOLDER_MAPPER_URL",
-    "EOM::CompoundStory_Internal_CPH": "METHODE_CONTENT_PLACEHOLDER_MAPPER_URL",
-    "EOM::CompoundStory_DynamicContent": "METHODE_ARTICLE_INTERNAL_COMPONENTS_MAPPER_URL",
-    "EOM::Story": "METHODE_ARTICLE_VALIDATION_URL",
-    "Image": "METHODE_IMAGE_MODEL_MAPPER_URL",
-    "InternalComponents": "METHODE_ARTICLE_INTERNAL_COMPONENTS_MAPPER_URL",
     "video": "VIDEO_MAPPER_URL",
     "wordpress": "WORDPRESS_MAPPER_URL",
     "application/vnd.ft-upp-article-internal": "UPP_INTERNAL_ARTICLE_VALIDATOR_URL",
