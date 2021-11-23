@@ -17,6 +17,7 @@ envs:
   notifications_push_url: ""
   list_notifications_url: ""
   list_notifications_push_url: ""
+  page_notifications_url: ""
   page_notifications_push_url: ""
   validation_endpoints:
     video_mapper_endpoint: ""

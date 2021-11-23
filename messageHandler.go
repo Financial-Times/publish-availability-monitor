@@ -94,6 +94,7 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 		"notifications-push":       checks.NewNotificationsCheck(hC, h.subscribedFeeds, "notifications-push"),
 		"list-notifications":       checks.NewNotificationsCheck(hC, h.subscribedFeeds, "list-notifications"),
 		"list-notifications-push":  checks.NewNotificationsCheck(hC, h.subscribedFeeds, "list-notifications-push"),
+		"page-notifications":       checks.NewNotificationsCheck(hC, h.subscribedFeeds, "page-notifications"),
 		"page-notifications-push":  checks.NewNotificationsCheck(hC, h.subscribedFeeds, "page-notifications-push"),
 	}
 

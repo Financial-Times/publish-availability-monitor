@@ -30,15 +30,17 @@ AWS
 
 The Publish Availability Monitor listens to new content messages via the Kafka topic NativeCmsPublicationEvents, and polls (or in the case of Notifications Push listens) to the following endpoints until the content appears or the content SLA times out:
 
-*   The Content Public Read /content/{uuid} endpoint.
-*   The Content Notifications /content/notifications endpoint.
-*   The Content Notifications Push /content/notifications-push endpoint.
+* The Content Public Read /content/{uuid} endpoint.
+* The Content Notifications /content/notifications endpoint.
+* The Content Notifications Push /content/notifications-push endpoint.
 
-*   The Pages Public Read /__public-pages-api/pages/{uuid} endpoint.
+* The Pages Public Read /__public-pages-api/pages/{uuid} endpoint.
+* The Pages Notifications /__page-notifications-rw/pages/notifications endpoint.
+* The Pages Notification Push /pages/notifications-push endpoint.
 
-*   The Lists Public Read /__public-lists-api/lists/{uuid} endpoint.
-*   The Lists Notifications /__list-notifications-rw/lists/notifications endpoint.
-*   The Lists Notification Push /lists/notifications-push endpoint.
+* The Lists Public Read /__public-lists-api/lists/{uuid} endpoint.
+* The Lists Notifications /__list-notifications-rw/lists/notifications endpoint.
+* The Lists Notification Push /lists/notifications-push endpoint.
 
 If two of the last ten pieces of content failed any of these checks, then the PAM healthcheck will
 switch to RED and therefore cause the cluster healthchecks and good-to-go
