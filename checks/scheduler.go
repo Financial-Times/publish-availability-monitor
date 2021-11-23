@@ -30,7 +30,7 @@ func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 	isE2ETest := config.IsE2ETestTransactionID(p.tid, e2eTestUUIDs)
 
 	for _, metric := range appConfig.MetricConf {
-		if !validType(metric.ContentTypes, p.contentToCheck.GetType()) && !isE2ETest {
+		if !strSliceContains(metric.ContentTypes, p.contentToCheck.GetType()) && !isE2ETest {
 			continue
 		}
 
@@ -185,9 +185,9 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 
 }
 
-func validType(validTypes []string, typeToCheck string) bool {
-	for _, t := range validTypes {
-		if t == typeToCheck {
+func strSliceContains(slice []string, str string) bool {
+	for _, s := range slice {
+		if s == str {
 			return true
 		}
 	}

@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestValidType(testing *testing.T) {
+func TestStrSliceContains(testing *testing.T) {
 	var tests = []struct {
 		validTypes  []string
 		typeToCheck string
@@ -31,7 +31,7 @@ func TestValidType(testing *testing.T) {
 	}
 
 	for _, t := range tests {
-		actual := validType(t.validTypes, t.typeToCheck)
+		actual := strSliceContains(t.validTypes, t.typeToCheck)
 		if actual != t.expected {
 			testing.Errorf("Test Case: %v\nActual: %v", t, actual)
 		}
