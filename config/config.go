@@ -28,7 +28,7 @@ type AppConfig struct {
 type MetricConfig struct {
 	Granularity  int      `json:"granularity"` //how we split up the threshold, ex. 120/12
 	Endpoint     string   `json:"endpoint"`
-	ContentTypes []string `json:"contentTypes"` //list of valid eom types for this metric
+	ContentTypes []string `json:"contentTypes"` //list of valid types for this metric
 	Alias        string   `json:"alias"`
 	Health       string   `json:"health,omitempty"`
 	APIKey       string   `json:"apiKey,omitempty"`

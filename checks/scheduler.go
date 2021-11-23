@@ -185,9 +185,9 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 
 }
 
-func validType(validTypes []string, eomType string) bool {
+func validType(validTypes []string, typeToCheck string) bool {
 	for _, t := range validTypes {
-		if t == eomType {
+		if t == typeToCheck {
 			return true
 		}
 	}

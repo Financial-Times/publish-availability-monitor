@@ -14,24 +14,24 @@ import (
 
 func TestValidType(testing *testing.T) {
 	var tests = []struct {
-		validTypes []string
-		eomType    string
-		expected   bool
+		validTypes  []string
+		typeToCheck string
+		expected    bool
 	}{
 		{
-			[]string{"Image", "EOM:WebContainer"},
-			"EOM:CompoundStory",
-			false,
+			validTypes:  []string{"ValidType", "AnotherValidType"},
+			typeToCheck: "InvalidType",
+			expected:    false,
 		},
 		{
-			[]string{"Image", "EOM:WebContainer"},
-			"EOM:WebContainer",
-			true,
+			validTypes:  []string{"ValidType", "AnotherValidType"},
+			typeToCheck: "AnotherValidType",
+			expected:    true,
 		},
 	}
 
 	for _, t := range tests {
-		actual := validType(t.validTypes, t.eomType)
+		actual := validType(t.validTypes, t.typeToCheck)
 		if actual != t.expected {
 			testing.Errorf("Test Case: %v\nActual: %v", t, actual)
 		}
