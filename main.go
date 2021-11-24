@@ -1,10 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
@@ -137,21 +135,6 @@ func readKafkaMessages(appConfig *config.AppConfig, environments *envs.Environme
 	<-ch
 	c.Stop()
 	wg.Wait()
-}
-
-func readBrandMappings() map[string]string {
-	brandMappingsFile, err := ioutil.ReadFile("brandMappings.json")
-	if err != nil {
-		log.Errorf("Couldn't read brand mapping configuration: %v\n", err)
-		os.Exit(1)
-	}
-	var brandMappings map[string]string
-	err = json.Unmarshal(brandMappingsFile, &brandMappings)
-	if err != nil {
-		log.Errorf("Couldn't unmarshal brand mapping configuration: %v\n", err)
-		os.Exit(1)
-	}
-	return brandMappings
 }
 
 func sliceContains(s []string, e string) bool {

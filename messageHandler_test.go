@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"testing"
 
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
@@ -395,12 +394,4 @@ var validGenericAudioMessage = consumer.Message{
 			}
 		]
 	  }`,
-}
-
-func loadBytesForFile(t *testing.T, path string) []byte {
-	bytes, err := ioutil.ReadFile(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return bytes
 }

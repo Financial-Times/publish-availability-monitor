@@ -23,7 +23,6 @@ FROM alpine
 WORKDIR /	
 COPY --from=0 /publish-availability-monitor/config.json.template /config.json 
 COPY --from=0 /publish-availability-monitor/startup.sh /
-COPY --from=0 /publish-availability-monitor/brandMappings.json /
 COPY --from=0 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=0 /artifacts/* /
 
