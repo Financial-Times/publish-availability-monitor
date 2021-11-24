@@ -18,8 +18,9 @@ func TestGenericContent_Validate(t *testing.T) {
 	}{
 		"valid generic content": {
 			Content: GenericContent{
-				UUID: "077f5ac2-0491-420e-a5d0-982e0f86204b",
-				Type: "application/vnd.ft-upp-article-internal",
+				UUID:    "077f5ac2-0491-420e-a5d0-982e0f86204b",
+				Type:    "application/vnd.ft-upp-article-internal",
+				Deleted: false,
 				BinaryContent: []byte(`{
 					"uuid": "077f5ac2-0491-420e-a5d0-982e0f86204b",
 					"title": "A title",
@@ -31,11 +32,27 @@ func TestGenericContent_Validate(t *testing.T) {
 					"editorialDesk": "some string editorial desk identifier",
 					"description": "Some descriptive explanation for this content",
 					"mainImage": "0000aa3c-0056-506b-2b73-ed90e21b3e64",
-					"someUnknownProperty" : " is totally fine, we don't validate for unknown fields/properties"
+					"someUnknownProperty" : " is totally fine, we don't validate for unknown fields/properties",
+					"deleted": false
 				  }`),
 			},
 			ExternalValidationResponseCode: http.StatusOK,
 			Expected:                       ValidationResponse{IsValid: true, IsMarkedDeleted: false},
+		},
+		"valid deleted generic content": {
+			Content: GenericContent{
+				UUID:    "077f5ac2-0491-420e-a5d0-982e0f86204b",
+				Type:    "application/vnd.ft-upp-article-internal",
+				Deleted: true,
+				BinaryContent: []byte(`{
+					"uuid": "077f5ac2-0491-420e-a5d0-982e0f86204b",
+					"title": "A title",
+					"type": "Article",
+					"deleted": true
+				  }`),
+			},
+			ExternalValidationResponseCode: http.StatusOK,
+			Expected:                       ValidationResponse{IsValid: true, IsMarkedDeleted: true},
 		},
 		"generic content with missing uuid is invalid": {
 			Content: GenericContent{
@@ -79,6 +96,7 @@ func TestGenericContent_Validate(t *testing.T) {
 			}))
 
 			validationResponse := test.Content.Validate(testServer.URL+"/validate", txID, "", "")
+			assert.Equal(t, test.Content.isMarkedDeleted(), validationResponse.IsMarkedDeleted)
 			assert.Equal(t, test.Expected, validationResponse)
 		})
 	}
