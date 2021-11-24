@@ -55,11 +55,6 @@ type readEnvironmentHealthcheck struct {
 
 const pam_run_book_url = "https://runbooks.in.ft.com/publish-availability-monitor"
 
-var readCheckEndpoints = map[string]func(string) (string, error){
-	"S3": buildAwsHealthcheckUrl,
-	// only exceptions need to be listed here - everything else will default to standard FT healthcheck URLs
-}
-
 var noReadEnvironments = fthealth.Check{
 	ID:               "ReadEnvironments",
 	BusinessImpact:   "Publish metrics are not recorded. This will impact the SLA measurement.",
@@ -291,13 +286,9 @@ func (h *readEnvironmentHealthcheck) checkReadEnvironmentReachable() (string, er
 		if checks.AbsoluteURLRegex.MatchString(metric.Endpoint) {
 			endpointURL, err = url.Parse(metric.Endpoint)
 		} else {
-			if metric.Alias == "S3" {
-				endpointURL, err = url.Parse(h.env.S3Url + metric.Endpoint)
-			} else {
-				endpointURL, err = url.Parse(h.env.ReadURL + metric.Endpoint)
-				username = h.env.Username
-				password = h.env.Password
-			}
+			endpointURL, err = url.Parse(h.env.ReadURL + metric.Endpoint)
+			username = h.env.Username
+			password = h.env.Password
 		}
 
 		if err != nil {
@@ -305,13 +296,7 @@ func (h *readEnvironmentHealthcheck) checkReadEnvironmentReachable() (string, er
 			continue
 		}
 
-		var healthcheckURL string
-		if fn, ok := readCheckEndpoints[metric.Alias]; ok {
-			healthcheckURL, err = fn(endpointURL.String())
-		} else {
-			healthcheckURL, err = buildFtHealthcheckUrl(*endpointURL, metric.Health)
-		}
-
+		healthcheckURL, err := buildFtHealthcheckUrl(*endpointURL, metric.Health)
 		if err != nil {
 			log.Errorf("Service URL: [%s]. Err: [%v]", endpointURL.String(), err.Error())
 			continue

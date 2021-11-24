@@ -24,7 +24,7 @@ With Docker:
 
 `docker build -t coco/publish-availability-monitor .`
 
-`docker run -it --env QUEUE_ADDR=<addr> --env S3_URL=<S3 bucket URL> --env CONTENT_URL=<document store api article endpoint path> --env LISTS_URL=<public lists api endpoint path> --env PAGES_URL=<public pages api endpoint path> --env NOTIFICATIONS_URL=<notifications read path> --env NOTIFICATIONS_PUSH_URL=<notifications push path> coco/publish-availability-monitor`
+`docker run -it --env QUEUE_ADDR=<addr> --env CONTENT_URL=<document store api article endpoint path> --env LISTS_URL=<public lists api endpoint path> --env PAGES_URL=<public pages api endpoint path> --env NOTIFICATIONS_URL=<notifications read path> --env NOTIFICATIONS_PUSH_URL=<notifications push path> coco/publish-availability-monitor`
 
 # Build and deploy
 __Note that deployment to FTP2 is no longer supported.__
@@ -73,11 +73,12 @@ __Note that deployment to FTP2 is no longer supported.__
 {
 	"endpoint": "endpointURL",
 	"granularity": 40,
-	"alias": "S3",
+	"alias": "pages",
+    "health": "/__public-pages-api/__health",
 	//optional field to indicate that this endpoint should only be checked
 	//for content of a certain type
 	//if not present, all content will be checked against this endpoint
-	"contentTypes": ["Image"]
+	"contentTypes": [""application/vnd.ft-upp-page""]
 }
 ],
 ```
@@ -101,13 +102,11 @@ The monitor can check publication across several different environments, provide
      [
        {
          "name":"pre-prod-uk",
-         "read-url": "https://pre-prod-uk.ft.com",
-         "s3-url": "http://com.ft.imagepublish.amazonaws.com"
+         "read-url": "https://pre-prod-uk.ft.com"
        },
        {
          "name":"pre-prod-us",
-         "read-url": "https://pre-prod-us.ft.com",
-         "s3-url": "http://com.ft.imagepublish.amazonaws.com"
+         "read-url": "https://pre-prod-us.ft.com"
        }       
      ]
  </pre>

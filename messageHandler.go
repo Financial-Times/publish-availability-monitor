@@ -87,7 +87,6 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 		"content-collection-neo4j": checks.NewContentNeo4jCheck(hC),
 		"complementary-content":    checks.NewContentCheck(hC),
 		"internal-components":      checks.NewContentCheck(hC),
-		"S3":                       checks.NewS3Check(hC),
 		"enrichedContent":          checks.NewContentCheck(hC),
 		"lists":                    checks.NewContentCheck(hC),
 		"pages":                    checks.NewContentCheck(hC),

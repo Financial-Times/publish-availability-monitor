@@ -51,11 +51,7 @@ func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 				if AbsoluteURLRegex.MatchString(metric.Endpoint) {
 					endpointURL, err = url.Parse(metric.Endpoint)
 				} else {
-					if metric.Alias == "S3" {
-						endpointURL, err = url.Parse(env.S3Url + metric.Endpoint)
-					} else {
-						endpointURL, err = url.Parse(env.ReadURL + metric.Endpoint)
-					}
+					endpointURL, err = url.Parse(env.ReadURL + metric.Endpoint)
 				}
 
 				if err != nil {

@@ -258,11 +258,6 @@ func filterInvalidEnvs(envsFromFile []Environment) []Environment {
 			continue
 		}
 
-		//envs without s3 are still valid, but still a heads up is given.
-		if env.S3Url == "" {
-			log.Errorf("Env with name %s does not have s3 url.", env.S3Url)
-		}
-
 		validEnvs = append(validEnvs, env)
 	}
 

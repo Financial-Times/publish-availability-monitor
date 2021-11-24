@@ -14,50 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIsCurrentOperationFinished_S3Check_Finished(t *testing.T) {
-	s3Check := &S3Check{
-		mockHTTPCaller(t, "", buildResponse(200, "imagebytes")),
-	}
-	finished, _ := s3Check.isCurrentOperationFinished(NewPublishCheck(metrics.PublishMetric{}, "", "", 0, 0, nil, nil))
-	assert.True(t, finished, "operation should have finished successfully")
-}
-
-func TestIsCurrentOperationFinished_S3Check_DoesNotSendAuthentication(t *testing.T) {
-	currentTid := "tid_1234"
-	s3Check := &S3Check{
-		mockHTTPCaller(t, "", buildResponse(200, "imagebytes")),
-	}
-
-	pm := newPublishMetricBuilder().withTID(currentTid).build()
-	pc := NewPublishCheck(pm, "jdoe", "frodo", 0, 0, nil, nil)
-	finished, _ := s3Check.isCurrentOperationFinished(pc)
-	assert.True(t, finished, "operation should have finished successfully")
-}
-
-func TestIsCurrentOperationFinished_S3Check_Empty(t *testing.T) {
-	s3Check := &S3Check{
-		mockHTTPCaller(t, "", buildResponse(200, "")),
-	}
-	finished, _ := s3Check.isCurrentOperationFinished(NewPublishCheck(metrics.PublishMetric{}, "", "", 0, 0, nil, nil))
-	assert.False(t, finished, "operation should not have finished")
-}
-
-func TestIsCurrentOperationFinished_S3Check_NotFinished(t *testing.T) {
-	s3Check := &S3Check{
-		mockHTTPCaller(t, "", buildResponse(404, "")),
-	}
-	finished, _ := s3Check.isCurrentOperationFinished(NewPublishCheck(metrics.PublishMetric{}, "", "", 0, 0, nil, nil))
-	assert.False(t, finished, "operation should not have finished")
-}
-
-func TestIsCurrentOperationFinished_S3Check_NotFinished_On_403(t *testing.T) {
-	s3Check := &S3Check{
-		mockHTTPCaller(t, "", buildResponse(403, "")),
-	}
-	finished, _ := s3Check.isCurrentOperationFinished(NewPublishCheck(metrics.PublishMetric{}, "", "", 0, 0, nil, nil))
-	assert.False(t, finished, "operation should not have finished")
-}
-
 func TestIsCurrentOperationFinished_ContentCheck_InvalidContent(t *testing.T) {
 	currentTid := "tid_1234"
 	testResponse := `{ "uuid" : "1234-1234"`

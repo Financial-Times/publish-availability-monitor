@@ -19,8 +19,7 @@ const (
 		[
 			{
 				"name":"test-env",
-				"read-url": "https://test-env.ft.com",
-				"s3-url": "http://test.s3.amazonaws.com"
+				"read-url": "https://test-env.ft.com"
 			}
 		]`
 	validEnvCredentialsConfig = `
@@ -109,7 +108,6 @@ func TestFilterInvalidEnvsWithEmptyName(t *testing.T) {
 		{
 			Name:     "",
 			ReadURL:  "test",
-			S3Url:    "test",
 			Username: "dummy",
 			Password: "dummy",
 		},
@@ -125,7 +123,6 @@ func TestFilterInvalidEnvsWithEmptyReadUrl(t *testing.T) {
 		{
 			Name:     "test",
 			ReadURL:  "",
-			S3Url:    "test",
 			Username: "dummy",
 			Password: "dummy",
 		},
@@ -136,28 +133,11 @@ func TestFilterInvalidEnvsWithEmptyReadUrl(t *testing.T) {
 	assert.Equal(t, 0, len(filteredEnvs))
 }
 
-func TestFilterInvalidEnvsWithEmptyS3Url(t *testing.T) {
-	envsToBeFiltered := []Environment{
-		{
-			Name:     "test",
-			ReadURL:  "test",
-			S3Url:    "",
-			Username: "dummy",
-			Password: "dummy",
-		},
-	}
-
-	filteredEnvs := filterInvalidEnvs(envsToBeFiltered)
-
-	assert.Equal(t, 1, len(filteredEnvs))
-}
-
 func TestFilterInvalidEnvsWithEmptyUsernameUrl(t *testing.T) {
 	envsToBeFiltered := []Environment{
 		{
 			Name:     "test",
 			ReadURL:  "test",
-			S3Url:    "test",
 			Username: "",
 			Password: "dummy",
 		},
@@ -173,7 +153,6 @@ func TestFilterInvalidEnvsWithEmptyPwd(t *testing.T) {
 		{
 			Name:     "test",
 			ReadURL:  "test",
-			S3Url:    "test",
 			Username: "test",
 			Password: "",
 		},
@@ -443,12 +422,11 @@ func TestUpdateEnvsIfChangedNoChanges(t *testing.T) {
 		Name:     "test-env",
 		Password: "test-pwd",
 		ReadURL:  "https://test-env.ft.com",
-		S3Url:    "http://test.s3.amazonaws.com",
 		Username: "test-user",
 	})
 
 	configFilesHashValues := map[string]string{
-		envsFile:  "792c5a9eebad1a967faab8defd9e646b",
+		envsFile:  "aeb7d7ba7e2169de3552165c4c2d5571",
 		credsFile: "dfd8aecc21b7017c5e4f171e3279fc68",
 	}
 
@@ -609,12 +587,10 @@ func getValidEnvs() []Environment {
 		{
 			Name:    "test",
 			ReadURL: "test-url",
-			S3Url:   "test-s3-url",
 		},
 		{
 			Name:    "test2",
 			ReadURL: "test-url2",
-			S3Url:   "test-s3-url2",
 		},
 	}
 }

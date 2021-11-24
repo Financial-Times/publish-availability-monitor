@@ -56,11 +56,9 @@ func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 
 	var mockEnvironments = envs.NewEnvironments()
 	readURL := "http://env1.example.org"
-	s3URL := "http://s1.example.org"
 	mockEnvironments.SetEnvironment("env1", envs.Environment{
 		Name:     "env1",
 		ReadURL:  readURL,
-		S3Url:    s3URL,
 		Username: "user1",
 		Password: "pass1",
 	})
@@ -90,12 +88,10 @@ func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testi
 
 	var mockEnvironments = envs.NewEnvironments()
 	readURL := "http://env1.example.org"
-	s3URL := "http://s1.example.org"
 
 	mockEnvironments.SetEnvironment("env1", envs.Environment{
 		Name:     "env1",
 		ReadURL:  readURL,
-		S3Url:    s3URL,
 		Username: "user1",
 		Password: "pass1",
 	})

@@ -183,50 +183,6 @@ func (c ContentNeo4jCheck) isCurrentOperationFinished(pc *PublishCheck) (operati
 	return pm.UUID == jsonResp["uuid"].(string), false
 }
 
-// S3Check implements the EndpointSpecificCheck interface to check operation
-// status for the S3 endpoint.
-type S3Check struct {
-	httpCaller httpcaller.Caller
-}
-
-func NewS3Check(httpCaller httpcaller.Caller) S3Check {
-	return S3Check{httpCaller: httpCaller}
-}
-
-// ignoreCheck is always false
-func (s S3Check) isCurrentOperationFinished(pc *PublishCheck) (operationFinished, ignoreCheck bool) {
-	pm := pc.Metric
-	url := pm.Endpoint.String() + pm.UUID
-	resp, err := s.httpCaller.DoCall(httpcaller.Config{URL: url}) //nolint:bodyclose
-	if err != nil {
-		log.Warnf("Checking %s. Error calling URL: [%v] : [%v]", LoggingContextForCheck(pm.Config.Alias, pm.UUID, pm.Platform, pm.TID), url, err.Error())
-		return false, false
-	}
-	defer cleanupResp(resp)
-
-	if resp.StatusCode != 200 {
-		/*	for S3 files, we're getting a 403 if the files are not yet in, so we're not warning on that */
-		if resp.StatusCode != 403 {
-			log.Warnf("Checking %s. Error calling URL: [%v] : Response status: [%v]", LoggingContextForCheck(pm.Config.Alias, pm.UUID, pm.Platform, pm.TID), url, resp.Status)
-		}
-		return false, false
-	}
-
-	// we have to check if the body is null because of an issue where the image is
-	// uploaded to S3, but body is empty - in this case, we get 200 back but empty body
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Warnf("Checking %s. Cannot read response: [%s]", LoggingContextForCheck(pm.Config.Alias, pm.UUID, pm.Platform, pm.TID), err.Error())
-		return false, false
-	}
-
-	if len(data) == 0 {
-		log.Warnf("Checking %s. Image body is empty!", LoggingContextForCheck(pm.Config.Alias, pm.UUID, pm.Platform, pm.TID))
-		return false, false
-	}
-	return true, false
-}
-
 // NotificationsCheck implements the EndpointSpecificCheck interface to build the endpoint URL and
 // to check the operation is present in the notification feed
 type NotificationsCheck struct {
