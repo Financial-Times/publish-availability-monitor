@@ -11,6 +11,7 @@ type GenericContent struct {
 	UUID          string `json:"uuid"`
 	Type          string `json:"-"` //This field is for internal application usage
 	BinaryContent []byte `json:"-"` //This field is for internal application usage
+	Deleted       bool   `json:"deleted,omitempty"`
 }
 
 func (gc GenericContent) Initialize(binaryContent []byte) Content {
@@ -55,5 +56,5 @@ func (gc GenericContent) isValid(status int) bool {
 }
 
 func (gc GenericContent) isMarkedDeleted(status ...int) bool {
-	return false
+	return gc.Deleted
 }

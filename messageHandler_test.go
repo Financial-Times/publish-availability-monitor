@@ -279,6 +279,22 @@ func TestUnmarshalContent_GenericContent(t *testing.T) {
 	assert.Equal(t, "077f5ac2-0491-420e-a5d0-982e0f86204b", genericContent.UUID)
 	assert.Equal(t, validGenericContentMessage.Headers["Content-Type"], genericContent.Type)
 	assert.Equal(t, []byte(validGenericContentMessage.Body), genericContent.BinaryContent)
+	assert.False(t, genericContent.Deleted)
+}
+
+func TestUnmarshalContent_DeletedGenericContent(t *testing.T) {
+	h := kafkaMessageHandler{}
+
+	resultContent, err := h.unmarshalContent(validDeletedGenericContentMessage)
+	assert.NoError(t, err)
+
+	genericContent, ok := resultContent.(content.GenericContent)
+	assert.True(t, ok)
+
+	assert.Equal(t, "077f5ac2-0491-420e-a5d0-982e0f86204b", genericContent.GetUUID())
+	assert.Equal(t, validDeletedGenericContentMessage.Headers["Content-Type"], genericContent.GetType())
+	assert.Equal(t, []byte(validDeletedGenericContentMessage.Body), genericContent.BinaryContent)
+	assert.True(t, genericContent.Deleted)
 }
 
 func TestUnmarshalContent_GenericContent_Audio(t *testing.T) {
@@ -432,6 +448,34 @@ var validGenericContentMessage = consumer.Message{
 		"accessLevel" : "premium",
 		"canBeDistributed": "no",
 		"someUnknownProperty" : " is totally fine, we don't validate for unknown fields/properties"
+	  }`,
+}
+
+var validDeletedGenericContentMessage = consumer.Message{
+	Headers: map[string]string{
+		"Origin-System-Id": "http://cmdb.ft.com/systems/cct",
+		"X-Request-Id":     "tid_0123wxyz",
+		"Content-Type":     "application/vnd.ft-upp-article-internal",
+	},
+	Body: `{
+		"uuid": "077f5ac2-0491-420e-a5d0-982e0f86204b",
+		"title": "A title",
+		"type": "Article",
+		"byline": "A byline",
+		"identifiers": [
+		  {
+			"authority": "an authority",
+			"identifierValue": "some identifier value"
+		  },
+		  {
+			"authority": "another authority",
+			"identifierValue": "some other identifier value"
+		  }
+		],
+		"publishedDate": "2014-12-23T20:45:54.000Z",
+		"firstPublishedDate": "2014-12-22T20:45:54.000Z",
+		"bodyXML": "<body>Lorem ipsum</body>",
+		"deleted": true
 	  }`,
 }
 
