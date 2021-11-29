@@ -35,25 +35,6 @@ func TestBuildFtHealthcheckUrl(t *testing.T) {
 	}
 }
 
-func TestBuildAwsHealthcheckUrl(t *testing.T) {
-	var testCases = []struct {
-		validationURL     string
-		expectedHealthURL string
-	}{
-		{
-			validationURL:     "http://some-bucket.amazonaws.com/",
-			expectedHealthURL: "http://some-bucket.amazonaws.com/healthCheckDummyFile",
-		},
-	}
-	for _, tc := range testCases {
-		if actual, _ := buildAwsHealthcheckUrl(tc.validationURL); actual != tc.expectedHealthURL {
-			t.Errorf("For [%s]:\n\tExpected: [%s]\n\tActual: [%s]", tc.validationURL, tc.expectedHealthURL, actual)
-		}
-
-	}
-
-}
-
 func TestPublishNoFailuresForSameUUIDs(t *testing.T) {
 	metricConfig := config.MetricConfig{}
 	interval := metrics.Interval{LowerBound: 5, UpperBound: 5}

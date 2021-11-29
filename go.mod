@@ -16,9 +16,7 @@ require (
 	github.com/hashicorp/go-version v0.0.0-20170202080759-03c5bf6be031 // indirect
 	github.com/juju/errgo v0.0.0-20140925100237-08cceb5d0b53 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
-	github.com/pkg/errors v0.8.1-0.20170505043639-c605e284fe17
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/objx v0.0.0-20150928122152-1a9d0bb9f541 // indirect
 	github.com/stretchr/testify v1.1.4
 	github.com/willf/bitset v1.0.1-0.20161202170036-5c3c0fce4884 // indirect
 	golang.org/x/sys v0.0.0-20170329061634-9a7256cb28ed // indirect

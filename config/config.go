@@ -17,7 +17,6 @@ type AppConfig struct {
 	SplunkConf          SplunkConfig         `json:"splunk-config"`
 	HealthConf          HealthConfig         `json:"healthConfig"`
 	ValidationEndpoints map[string]string    `json:"validationEndpoints"` //contentType to validation endpoint mapping
-	UUIDResolverURL     string               `json:"uuidResolverUrl"`
 	Capabilities        []Capability         `json:"capabilities"`
 	GraphiteAddress     string               `json:"graphiteAddress"`
 	GraphiteUUID        string               `json:"graphiteUUID"`

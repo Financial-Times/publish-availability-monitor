@@ -39,7 +39,6 @@ envs:
     upp_internal_live_blog_package_validator: "__upp-internal-live-blog-package-validator/validate"
     upp_internal_live_blog_post_validator: "__upp-internal-live-blog-post-validator/validate"
     upp_audio_validator: "__upp-audio-validator/validate"
-  uuid_resolver_url: "/__document-store-api"
 
 cluster:
   delivery:

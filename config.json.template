@@ -167,7 +167,6 @@
     "application/vnd.ft-upp-live-blog-post-internal": "UPP_INTERNAL_LIVE_BLOG_POST_VALIDATOR_URL",
     "application/vnd.ft-upp-audio": "UPP_AUDIO_VALIDATOR_URL"
   },
-  "uuidResolverUrl": "UUID_RESOLVER_URL",
   "capabilities": [
     {
       "name": "push-notifications",

@@ -122,8 +122,6 @@ spec:
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_internal_live_blog_post_validator }}"
         - name: UPP_AUDIO_VALIDATOR_URL
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_audio_validator }}"
-        - name: UUID_RESOLVER_URL
-          value: "{{ .Values.envs.uuid_resolver_url }}"
         ports:
         - containerPort: 8080
         livenessProbe:

@@ -22,7 +22,6 @@ envs:
     video_mapper_endpoint: ""
     wordpress_mapper_endpoint: ""
     base_url: ""
-  uuid_resolver_url: ""
   graphite_address: "graphitev2.ft.com:2003"
 volumes:
   read_envs_config_mount_path: "/etc/pam/envs"

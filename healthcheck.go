@@ -339,10 +339,6 @@ func buildFtHealthcheckUrl(endpoint url.URL, health string) (string, error) {
 	return endpoint.String(), nil
 }
 
-func buildAwsHealthcheckUrl(serviceUrl string) (string, error) {
-	return serviceUrl + "healthCheckDummyFile", nil
-}
-
 func cleanupResp(resp *http.Response) {
 	_, err := io.Copy(ioutil.Discard, resp.Body)
 	if err != nil {
