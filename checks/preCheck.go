@@ -18,7 +18,7 @@ func МainPreChecks() []func(publishedContent content.Content, tid string, publi
 
 func mainPreCheck(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.History, environments *envs.Environments) (bool, *SchedulerParam) {
 	uuid := publishedContent.GetUUID()
-	validationEndpointKey := getValidationEndpointKey(publishedContent, tid, uuid)
+	validationEndpointKey := publishedContent.GetType()
 	var validationEndpoint string
 	var found bool
 	var username string
@@ -42,10 +42,6 @@ func mainPreCheck(publishedContent content.Content, tid string, publishDate time
 	}
 
 	return true, &SchedulerParam{publishedContent, publishDate, tid, valRes.IsMarkedDeleted, metricContainer, environments}
-}
-
-func getValidationEndpointKey(publishedContent content.Content, tid string, uuid string) string {
-	return publishedContent.GetType()
 }
 
 func isMessagePastPublishSLA(date time.Time, threshold int) bool {
