@@ -30,7 +30,7 @@ func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 	isE2ETest := config.IsE2ETestTransactionID(p.tid, e2eTestUUIDs)
 
 	for _, metric := range appConfig.MetricConf {
-		if !validType(metric.ContentTypes, p.contentToCheck.GetType()) && !isE2ETest {
+		if !strSliceContains(metric.ContentTypes, p.contentToCheck.GetType()) && !isE2ETest {
 			continue
 		}
 
@@ -51,11 +51,7 @@ func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 				if AbsoluteURLRegex.MatchString(metric.Endpoint) {
 					endpointURL, err = url.Parse(metric.Endpoint)
 				} else {
-					if metric.Alias == "S3" {
-						endpointURL, err = url.Parse(env.S3Url + metric.Endpoint)
-					} else {
-						endpointURL, err = url.Parse(env.ReadURL + metric.Endpoint)
-					}
+					endpointURL, err = url.Parse(env.ReadURL + metric.Endpoint)
 				}
 
 				if err != nil {
@@ -185,9 +181,9 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 
 }
 
-func validType(validTypes []string, eomType string) bool {
-	for _, t := range validTypes {
-		if t == eomType {
+func strSliceContains(slice []string, str string) bool {
+	for _, s := range slice {
+		if s == str {
 			return true
 		}
 	}

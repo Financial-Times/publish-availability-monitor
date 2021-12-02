@@ -1,10 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,10 +13,8 @@ import (
 
 	"github.com/Financial-Times/message-queue-gonsumer/consumer"
 	"github.com/Financial-Times/publish-availability-monitor/config"
-	"github.com/Financial-Times/publish-availability-monitor/content"
 	"github.com/Financial-Times/publish-availability-monitor/envs"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
-	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/Financial-Times/publish-availability-monitor/logformat"
 	"github.com/Financial-Times/publish-availability-monitor/metrics"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
@@ -123,17 +119,7 @@ func readKafkaMessages(appConfig *config.AppConfig, environments *envs.Environme
 		time.Sleep(3 * time.Second)
 	}
 
-	var typeRes content.TypeResolver
-	for _, envName := range environments.Names() {
-		env := environments.Environment(envName)
-		docStoreCaller := httpcaller.NewCaller(10)
-		docStoreClient := content.NewHTTPDocStoreClient(env.ReadURL+appConfig.UUIDResolverURL, docStoreCaller, env.Username, env.Password)
-		uuidResolver := content.NewHTTPUUIDResolver(docStoreClient, readBrandMappings())
-		typeRes = content.NewMethodeTypeResolver(uuidResolver)
-		break
-	}
-
-	h := NewKafkaMessageHandler(typeRes, appConfig, environments, subscribedFeeds, metricSink, metricContainer, e2eTestUUIDs)
+	h := NewKafkaMessageHandler(appConfig, environments, subscribedFeeds, metricSink, metricContainer, e2eTestUUIDs)
 	c := consumer.NewConsumer(appConfig.QueueConf, h.HandleMessage, &http.Client{})
 
 	var wg sync.WaitGroup
@@ -149,21 +135,6 @@ func readKafkaMessages(appConfig *config.AppConfig, environments *envs.Environme
 	<-ch
 	c.Stop()
 	wg.Wait()
-}
-
-func readBrandMappings() map[string]string {
-	brandMappingsFile, err := ioutil.ReadFile("brandMappings.json")
-	if err != nil {
-		log.Errorf("Couldn't read brand mapping configuration: %v\n", err)
-		os.Exit(1)
-	}
-	var brandMappings map[string]string
-	err = json.Unmarshal(brandMappingsFile, &brandMappings)
-	if err != nil {
-		log.Errorf("Couldn't unmarshal brand mapping configuration: %v\n", err)
-		os.Exit(1)
-	}
-	return brandMappings
 }
 
 func sliceContains(s []string, e string) bool {

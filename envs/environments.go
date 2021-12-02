@@ -8,7 +8,6 @@ import (
 type Environment struct {
 	Name     string `json:"name"`
 	ReadURL  string `json:"read-url"`
-	S3Url    string `json:"s3-url"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 }

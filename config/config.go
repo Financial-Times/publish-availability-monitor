@@ -16,8 +16,7 @@ type AppConfig struct {
 	MetricConf          []MetricConfig       `json:"metricConfig"`
 	SplunkConf          SplunkConfig         `json:"splunk-config"`
 	HealthConf          HealthConfig         `json:"healthConfig"`
-	ValidationEndpoints map[string]string    `json:"validationEndpoints"` //contentType to validation endpoint mapping, ex. { "EOM::Story": "http://methode-article-transformer/content-transform" }
-	UUIDResolverURL     string               `json:"uuidResolverUrl"`
+	ValidationEndpoints map[string]string    `json:"validationEndpoints"` //contentType to validation endpoint mapping
 	Capabilities        []Capability         `json:"capabilities"`
 	GraphiteAddress     string               `json:"graphiteAddress"`
 	GraphiteUUID        string               `json:"graphiteUUID"`
@@ -28,7 +27,7 @@ type AppConfig struct {
 type MetricConfig struct {
 	Granularity  int      `json:"granularity"` //how we split up the threshold, ex. 120/12
 	Endpoint     string   `json:"endpoint"`
-	ContentTypes []string `json:"contentTypes"` //list of valid eom types for this metric
+	ContentTypes []string `json:"contentTypes"` //list of valid types for this metric
 	Alias        string   `json:"alias"`
 	Health       string   `json:"health,omitempty"`
 	APIKey       string   `json:"apiKey,omitempty"`

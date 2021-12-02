@@ -19,14 +19,9 @@ envs:
   list_notifications_push_url: ""
   page_notifications_push_url: ""
   validation_endpoints:
-    methode_article_validation_endpoint: ""
-    methode_content_placeholder_mapper_endpoint: ""
-    methode_image_model_mapper_endpoint: ""
-    methode_article_internal_components_mapper_endpoint: ""
     video_mapper_endpoint: ""
     wordpress_mapper_endpoint: ""
     base_url: ""
-  uuid_resolver_url: ""
   graphite_address: "graphitev2.ft.com:2003"
 volumes:
   read_envs_config_mount_path: "/etc/pam/envs"

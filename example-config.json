@@ -1,26 +1,43 @@
 {
     "threshold": 30,
     "queueConfig": {
-        "address": ["http://kafka-proxy:8080"],
+        "address": [
+            "http://kafka-proxy:8080"
+        ],
         "group": "ExamplePubMonitorGroupName",
         "topic": "NativeCmsPublicationEvents",
         "queue": "kafka",
         "concurrentProcessing": true
     },
-    "metricConfig": [{
-        "endpoint": "http://contentannotator-api/content/",
-        "alias": "content",
-        "granularity": 10,
-        "contentTypes": ["EOM::CompoundStory"]
-    },
-    {
-        "endpoint": "http://com.ft.imagepublish.s3.amazonaws.com/",
-        "granularity": 10,
-        "alias": "S3",
-        "contentTypes": ["Image"]
-    }
+    "metricConfig": [
+        {
+            "endpoint": "/__document-store-api/content/",
+            "alias": "content",
+            "granularity": 10,
+            "contentTypes": [
+                "application/vnd.ft-upp-article-internal"
+            ]
+        }
     ],
     "splunk-config": {
-        "logFilePath": "pam.log"
-    }
+        "logPrefix": "[splunkMetrics] "
+    },
+    "healthConfig": {
+        "failureThreshold": 2
+    },
+    "validationEndpoints": {
+        "application/vnd.ft-upp-article-internal": "__upp-internal-article-validator/validate"
+    },
+    "capabilities": [
+        {
+            "name": "push-notifications",
+            "metricAlias": "notifications-push",
+            "testIDs": [
+                "eec61f52-2739-46b8-a0fa-af3612b9c224"
+            ]
+        }
+    ],
+    "graphiteAddress": "graphitev2.ft.com:2003",
+    "graphiteUUID": "81ef2da6-59ba-47c9-89ea-efd5ba5d2e14",
+    "environment": "dev"
 }
