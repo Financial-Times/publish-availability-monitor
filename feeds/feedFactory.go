@@ -21,7 +21,8 @@ func NewNotificationsFeed(name string, baseUrl url.URL, expiry int, interval int
 
 func isNotificationsPullFeed(feedName string) bool {
 	return feedName == "notifications" ||
-		feedName == "list-notifications"
+		feedName == "list-notifications" ||
+		feedName == "page-notifications"
 }
 
 func isNotificationsPushFeed(feedName string) bool {

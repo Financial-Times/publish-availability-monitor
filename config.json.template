@@ -87,8 +87,7 @@
         "application/vnd.ft-upp-content-placeholder-internal",
         "application/vnd.ft-upp-live-blog-package-internal",
         "application/vnd.ft-upp-live-blog-post-internal",
-        "application/vnd.ft-upp-audio",
-        "application/vnd.ft-upp-page"
+        "application/vnd.ft-upp-audio"
       ]
     },
     {
@@ -123,6 +122,15 @@
       "contentTypes": [
         "application/vnd.ft-upp-list"
       ]
+    },
+    {
+       "endpoint": "PAGE_NOTIFICATIONS_URL",
+       "granularity": 40,
+       "alias": "page-notifications",
+       "health": "/__page-notifications-rw/__health",
+       "contentTypes": [
+         "application/vnd.ft-upp-page"
+       ]
     },
     {
       "endpoint": "PAGE_NOTIFICATIONS_PUSH_URL",

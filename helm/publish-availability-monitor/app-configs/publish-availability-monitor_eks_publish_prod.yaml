@@ -24,6 +24,7 @@ envs:
   notifications_push_url_param4: "type=LiveBlogPost"
   list_notifications_url: "/__list-notifications-rw/lists/notifications"
   list_notifications_push_url: "/lists/notifications-push?monitor=true"
+  page_notifications_url: "/__page-notifications-rw/pages/notifications"
   page_notifications_push_url: "/pages/notifications-push?monitor=true"
   validation_endpoints:
     video_mapper: "__upp-next-video-mapper/map"
