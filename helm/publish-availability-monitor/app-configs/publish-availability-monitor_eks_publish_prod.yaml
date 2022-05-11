@@ -28,7 +28,6 @@ envs:
   page_notifications_push_url: "/pages/notifications-push?monitor=true"
   validation_endpoints:
     video_mapper: "__upp-next-video-mapper/map"
-    wordpress_mapper: "__wordpress-article-mapper/map"
     upp_internal_article_validator: "__upp-internal-article-validator/validate"
     upp_list_validator: "__upp-list-validator/validate"
     upp_page_validator: "__upp-page-validator/validate"
