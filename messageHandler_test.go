@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const wordpressType = "wordpress"
 const syntheticTID = "SYNTHETIC-REQ-MONe4d2885f-1140-400b-9407-921e1c7378cd"
 const carouselRepublishTID = "tid_ofcysuifp0_carousel_1488384556"
 const carouselUnconventionalRepublishTID = "republish_-10bd337c-66d4-48d9-ab8a-e8441fa2ec98_carousel_1493606135"
@@ -79,12 +78,6 @@ func TestTestIsIgnorableMessage_SyntheticE2ETest(t *testing.T) {
 		t.Fatalf("expected %v, got %v", expected, got)
 	}
 }
-func TestUnmarshalContent_ValidMessageWordpressSystemHeader_NoError(t *testing.T) {
-	h := kafkaMessageHandler{}
-	if _, err := h.unmarshalContent(validWordpressMessage); err != nil {
-		t.Errorf("Message with valid system ID [%s] cannot be unmarshalled!", validWordpressMessage.Headers["Origin-System-Id"])
-	}
-}
 
 func TestUnmarshalContent_InvalidMessageMissingHeader_Error(t *testing.T) {
 	h := kafkaMessageHandler{}
@@ -97,25 +90,6 @@ func TestUnmarshalContent_InvalidMessageWrongSystemId_Error(t *testing.T) {
 	h := kafkaMessageHandler{}
 	if _, err := h.unmarshalContent(invalidMessageWrongSystemID); err == nil {
 		t.Error("Expected failure, but message with wrong system ID successfully unmarshalled!")
-	}
-}
-
-func TestUnmarshalContent_InvalidWordPressContentWrongJSONFormat_Error(t *testing.T) {
-	h := kafkaMessageHandler{}
-	if _, err := h.unmarshalContent(invalidWordPressMessageWrongJSONFormat); err == nil {
-		t.Error("Expected failure, but message with wrong system ID successfully unmarshalled!")
-	}
-}
-
-func TestUnmarshalContent_ValidWordPressMessageWithTypeField_TypeIsCorrectlyUnmarshalled(t *testing.T) {
-	h := kafkaMessageHandler{}
-	resultContent, err := h.unmarshalContent(validWordPressMessageWithTypeField)
-	if err != nil {
-		t.Errorf("Expected success, but error occured [%v]", err)
-		return
-	}
-	if resultContent.GetType() != wordpressType {
-		t.Errorf("Expected [%s] content type, but found [%s].", wordpressType, resultContent.GetType())
 	}
 }
 
@@ -216,26 +190,6 @@ func TestUnmarshalContent_GenericContent_Audio(t *testing.T) {
 	assert.Equal(t, []byte(validGenericAudioMessage.Body), genericContent.BinaryContent)
 }
 
-var invalidWordPressMessageWrongJSONFormat = consumer.Message{
-	Headers: map[string]string{
-		"Origin-System-Id": "http://cmdb.ft.com/systems/wordpress",
-	},
-	Body: `{"status": "ok", "post": {"id : "002251", "type": "post"}}`,
-}
-
-var validWordPressMessageWithTypeField = consumer.Message{
-	Headers: map[string]string{
-		"Origin-System-Id": "http://cmdb.ft.com/systems/wordpress",
-	},
-	Body: `{"status": "ok", "post": {"id" : "002251", "type": "post"}}`,
-}
-
-var validWordpressMessage = consumer.Message{
-	Headers: map[string]string{
-		"Origin-System-Id": "http://cmdb.ft.com/systems/wordpress",
-	},
-	Body: "{}",
-}
 var invalidMessageWrongHeader = consumer.Message{
 	Headers: map[string]string{
 		"Foobar-System-Id": "http://cmdb.ft.com/systems/cct",

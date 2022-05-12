@@ -133,13 +133,6 @@ func (h *kafkaMessageHandler) unmarshalContent(msg consumer.Message) (content.Co
 	headers := msg.Headers
 	systemID := headers[systemIDKey]
 	switch systemID {
-	case "http://cmdb.ft.com/systems/wordpress":
-		var wordPressMsg content.WordPressMessage
-		err := json.Unmarshal(binaryContent, &wordPressMsg)
-		if err != nil {
-			return nil, err
-		}
-		return wordPressMsg.Initialize(binaryContent), nil
 	case "http://cmdb.ft.com/systems/next-video-editor":
 		if msg.Headers["Content-Type"] == "application/vnd.ft-upp-audio" {
 			return unmarshalGenericContent(msg)

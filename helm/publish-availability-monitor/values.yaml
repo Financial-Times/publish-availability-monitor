@@ -21,7 +21,6 @@ envs:
   page_notifications_push_url: ""
   validation_endpoints:
     video_mapper_endpoint: ""
-    wordpress_mapper_endpoint: ""
     base_url: ""
   graphite_address: "graphitev2.ft.com:2003"
 volumes:

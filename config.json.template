@@ -17,7 +17,6 @@
       "granularity": 40,
       "contentTypes": [
         "video",
-        "wordpress",
         "application/vnd.ft-upp-article-internal",
         "application/vnd.ft-upp-content-placeholder-internal",
         "application/vnd.ft-upp-image",
@@ -34,7 +33,6 @@
       "health": "/__content-rw-neo4j/__health",
       "granularity": 40,
       "contentTypes": [
-        "wordpress",
         "application/vnd.ft-upp-article-internal",
         "application/vnd.ft-upp-live-blog-package-internal",
         "application/vnd.ft-upp-live-blog-post-internal",
@@ -97,7 +95,6 @@
       "apiKey": "NOTIFICATIONS_PUSH_API_KEY",
       "health": "/__notifications-push/__health",
       "contentTypes": [
-        "wordpress",
         "application/vnd.ft-upp-article-internal",
         "application/vnd.ft-upp-live-blog-package-internal",
         "application/vnd.ft-upp-live-blog-post-internal",
@@ -162,7 +159,6 @@
   },
   "validationEndpoints": {
     "video": "VIDEO_MAPPER_URL",
-    "wordpress": "WORDPRESS_MAPPER_URL",
     "application/vnd.ft-upp-article-internal": "UPP_INTERNAL_ARTICLE_VALIDATOR_URL",
     "application/vnd.ft-upp-list": "UPP_LIST_VALIDATOR_URL",
     "application/vnd.ft-upp-page": "UPP_PAGE_VALIDATOR_URL",
