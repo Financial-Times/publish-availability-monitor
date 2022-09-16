@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Financial-Times/publish-availability-monitor/config"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 // GraphiteSender implements Destination interface to send PublishMetrics for capability E2E tests to Graphite.

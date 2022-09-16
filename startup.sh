@@ -1,7 +1,8 @@
 #!/bin/sh
 sed -i "s \"KAFKA_TOPIC\" \"$KAFKA_TOPIC\" " /config.json
-sed -i "s \"KAFKA_PROXY_HOST\" \"$KAFKA_PROXY_HOST\" " /config.json
-sed -i "s \"QUEUE_ADDR\" \"$QUEUE_ADDR\" " /config.json
+sed -i "s \"KAFKA_CONSUMER_GROUP\" \"$KAFKA_CONSUMER_GROUP\" " /config.json
+sed -i "s \"KAFKA_LAG_TOLERANCE\" \"$KAFKA_LAG_TOLERANCE\" " /config.json
+sed -i "s \"KAFKA_ADDR\" \"$KAFKA_ADDR\" " /config.json
 sed -i "s \"CONTENT_URL\" \"$CONTENT_URL\" " /config.json
 sed -i "s \"CONTENT_NEO4J_URL\" \"$CONTENT_NEO4J_URL\" " /config.json
 sed -i "s \"CONTENT_COLLECTION_NEO4J_URL\" \"$CONTENT_COLLECTION_NEO4J_URL\" " /config.json
@@ -33,5 +34,6 @@ sed -i "s \"UPP_AUDIO_VALIDATOR_URL\" \"$UPP_AUDIO_VALIDATOR_URL\" " /config.jso
 sed -i "s \"GRAPHITE_ADDRESS\" \"$GRAPHITE_ADDRESS\" " /config.json
 sed -i "s \"GRAPHITE_UUID\" \"$GRAPHITE_UUID\" " /config.json
 sed -i "s \"ENVIRONMENT\" \"$ENVIRONMENT\" " /config.json
+sed -i "s \"LOG_LEVEL\" \"$LOG_LEVEL\" " /config.json
 
 exec ./publish-availability-monitor -config /config.json

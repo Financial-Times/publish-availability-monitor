@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	uuidutils "github.com/Financial-Times/uuid-utils-go"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 type GenericContent struct {

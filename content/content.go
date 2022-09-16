@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 // Content is the interface for different type of contents from different CMSs.

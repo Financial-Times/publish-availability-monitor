@@ -2,12 +2,12 @@
     "threshold": 30,
     "queueConfig": {
         "address": [
-            "http://kafka-proxy:8080"
+            "msk.kafka.broker.url"
         ],
-        "group": "ExamplePubMonitorGroupName",
+        "consumerGroup": "ExamplePubMonitorGroupName",
+        "lagTolerance": "120",
         "topic": "NativeCmsPublicationEvents",
-        "queue": "kafka",
-        "concurrentProcessing": true
+        "connectionString": "kafka"
     },
     "metricConfig": [
         {

@@ -10,7 +10,7 @@ import (
 	"github.com/Financial-Times/publish-availability-monitor/envs"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/Financial-Times/publish-availability-monitor/metrics"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 var (

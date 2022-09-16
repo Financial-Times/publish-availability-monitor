@@ -7,18 +7,18 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
 
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	"github.com/Financial-Times/go-logger/v2"
+	"github.com/Financial-Times/kafka-client-go/v3"
 	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/envs"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
-	"github.com/Financial-Times/publish-availability-monitor/logformat"
 	"github.com/Financial-Times/publish-availability-monitor/metrics"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
-	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 )
 
@@ -30,15 +30,13 @@ var configRefreshPeriod = flag.Int("config-refresh-period", 1, "Refresh period f
 
 var carouselTransactionIDRegExp = regexp.MustCompile(`^.+_carousel_[\d]{10}.*$`)
 
-func init() {
-	log.SetFormatter(&logformat.SLF4JFormatter{})
-}
-
 func main() {
 	flag.Parse()
 
+	log := logger.NewUPPLogger("publish-availability-monitor", "INFO")
+
 	var err error
-	appConfig, err := config.NewAppConfig(*configFileName)
+	appConfig, err := config.NewAppConfig(*configFileName, log)
 	if err != nil {
 		log.WithError(err).Error("Cannot load configuration")
 		return
@@ -60,8 +58,6 @@ func main() {
 
 	metricContainer := metrics.NewHistory(make([]metrics.PublishMetric, 0))
 
-	go startHTTPServer(appConfig, environments, subscribedFeeds, metricContainer)
-
 	var e2eTestUUIDs []string
 	for _, c := range appConfig.Capabilities {
 		for _, id := range c.TestIDs {
@@ -70,6 +66,19 @@ func main() {
 			}
 		}
 	}
+
+	h := NewKafkaMessageHandler(appConfig, environments, subscribedFeeds, metricSink, metricContainer, e2eTestUUIDs, log)
+	lagTolerance, _ := strconv.Atoi(appConfig.QueueConf.KafkaLagTolerance)
+	c := kafka.NewConsumer(kafka.ConsumerConfig{
+		BrokersConnectionString: appConfig.QueueConf.BrokersConnectionString,
+		ConsumerGroup:           appConfig.QueueConf.ConsumerGroup,
+		Options:                 kafka.DefaultConsumerOptions(),
+	}, []*kafka.Topic{kafka.NewTopic(
+		appConfig.QueueConf.Topic,
+		kafka.WithLagTolerance(int64(lagTolerance)))},
+		log)
+
+	go startHTTPServer(appConfig, environments, subscribedFeeds, metricContainer, c, log)
 
 	publishMetricDestinations := []metrics.Destination{
 		metrics.NewSplunkFeeder(appConfig.SplunkConf.LogPrefix),
@@ -82,13 +91,13 @@ func main() {
 	aggregator := metrics.NewAggregator(metricSink, publishMetricDestinations, capabilityMetricDestinations)
 	go aggregator.Run()
 
-	readKafkaMessages(appConfig, environments, subscribedFeeds, metricSink, metricContainer, e2eTestUUIDs)
+	readKafkaMessages(c, h, environments, log)
 }
 
-func startHTTPServer(appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricContainer *metrics.History) {
+func startHTTPServer(appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricContainer *metrics.History, c *kafka.Consumer, log *logger.UPPLogger) {
 	router := mux.NewRouter()
 
-	hc := newHealthcheck(appConfig, metricContainer, environments, subscribedFeeds)
+	hc := newHealthcheck(appConfig, metricContainer, environments, subscribedFeeds, c, log)
 	router.HandleFunc("/__health", hc.checkHealth())
 	router.HandleFunc(status.GTGPath, status.NewGoodToGoHandler(hc.GTG))
 
@@ -113,27 +122,24 @@ func loadHistory(metricContainer *metrics.History) func(w http.ResponseWriter, r
 	}
 }
 
-func readKafkaMessages(appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.History, e2eTestUUIDs []string) {
+func readKafkaMessages(c *kafka.Consumer, h MessageHandler, environments *envs.Environments, log *logger.UPPLogger) {
 	for !environments.AreReady() {
 		log.Info("Environments not set, retry in 3s...")
 		time.Sleep(3 * time.Second)
 	}
 
-	h := NewKafkaMessageHandler(appConfig, environments, subscribedFeeds, metricSink, metricContainer, e2eTestUUIDs)
-	c := consumer.NewConsumer(appConfig.QueueConf, h.HandleMessage, &http.Client{})
-
 	var wg sync.WaitGroup
 	wg.Add(1)
 
 	go func() {
-		c.Start()
+		c.Start(h.HandleMessage)
 		wg.Done()
 	}()
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	<-ch
-	c.Stop()
+	c.Close()
 	wg.Wait()
 }
 

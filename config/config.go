@@ -5,22 +5,30 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
-	log "github.com/Sirupsen/logrus"
+	"github.com/Financial-Times/go-logger/v2"
 )
 
 // AppConfig holds the application's configuration
 type AppConfig struct {
-	Threshold           int                  `json:"threshold"` //pub SLA in seconds, ex. 120
-	QueueConf           consumer.QueueConfig `json:"queueConfig"`
-	MetricConf          []MetricConfig       `json:"metricConfig"`
-	SplunkConf          SplunkConfig         `json:"splunk-config"`
-	HealthConf          HealthConfig         `json:"healthConfig"`
-	ValidationEndpoints map[string]string    `json:"validationEndpoints"` //contentType to validation endpoint mapping
-	Capabilities        []Capability         `json:"capabilities"`
-	GraphiteAddress     string               `json:"graphiteAddress"`
-	GraphiteUUID        string               `json:"graphiteUUID"`
-	Environment         string               `json:"environment"`
+	Threshold           int               `json:"threshold"` //pub SLA in seconds, ex. 120
+	QueueConf           QueueConfig       `json:"queueConfig"`
+	MetricConf          []MetricConfig    `json:"metricConfig"`
+	SplunkConf          SplunkConfig      `json:"splunk-config"`
+	HealthConf          HealthConfig      `json:"healthConfig"`
+	ValidationEndpoints map[string]string `json:"validationEndpoints"` //contentType to validation endpoint mapping
+	Capabilities        []Capability      `json:"capabilities"`
+	GraphiteAddress     string            `json:"graphiteAddress"`
+	GraphiteUUID        string            `json:"graphiteUUID"`
+	Environment         string            `json:"environment"`
+}
+
+// QueueConfig is the configuration for kafka consumer queue
+type QueueConfig struct {
+	Address                 []string `json:"address"`
+	ConsumerGroup           string   `json:"consumerGroup"`
+	KafkaLagTolerance       string   `json:"lagTolerance"`
+	Topic                   string   `json:"topic"`
+	BrokersConnectionString string   `json:"connectionString"`
 }
 
 // MetricConfig is the configuration of a PublishMetric
@@ -51,17 +59,17 @@ type Capability struct {
 }
 
 // NewAppConfig opens the file at configFileName and unmarshals it into an AppConfig.
-func NewAppConfig(configFileName string) (*AppConfig, error) {
+func NewAppConfig(configFileName string, log *logger.UPPLogger) (*AppConfig, error) {
 	file, err := ioutil.ReadFile(configFileName)
 	if err != nil {
-		log.Errorf("Error reading configuration file [%v]: [%v]", configFileName, err.Error())
+		log.WithError(err).Errorf("Error reading configuration file [%v]", configFileName)
 		return nil, err
 	}
 
 	var conf AppConfig
 	err = json.Unmarshal(file, &conf)
 	if err != nil {
-		log.Errorf("Error unmarshalling configuration file [%v]: [%v]", configFileName, err.Error())
+		log.WithError(err).Errorf("Error unmarshalling configuration file [%v]", configFileName)
 		return nil, err
 	}
 

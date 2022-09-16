@@ -8,6 +8,9 @@ image:
   pullPolicy: Always
 envs:
   kafka_topic: ""
+  kafka_consumer_group: ""
+  kafka_lag_tolerance: ""
+  log_level: ""
   content_url: ""
   complementary_content_url: ""
   internal_components_url: ""

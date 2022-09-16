@@ -7,7 +7,7 @@ import (
 	"github.com/Financial-Times/publish-availability-monitor/content"
 	"github.com/Financial-Times/publish-availability-monitor/envs"
 	"github.com/Financial-Times/publish-availability-monitor/metrics"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func МainPreChecks() []func(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.History, environments *envs.Environments) (bool, *SchedulerParam) {

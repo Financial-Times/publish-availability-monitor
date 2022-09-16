@@ -2,12 +2,12 @@
   "threshold": 120,
   "queueConfig": {
     "address": [
-      "QUEUE_ADDR"
+      "KAFKA_ADDR"
     ],
-    "group": "PubMonitor",
+    "consumerGroup": "PubMonitor",
+    "lagTolerance": "KAFKA_LAG_TOLERANCE",
     "topic": "KAFKA_TOPIC",
-    "queue": "KAFKA_PROXY_HOST",
-    "concurrentProcessing": true
+    "connectionString": "KAFKA_ADDR"
   },
   "metricConfig": [
     {
@@ -185,5 +185,6 @@
   ],
   "graphiteAddress": "GRAPHITE_ADDRESS",
   "graphiteUUID": "GRAPHITE_UUID",
-  "environment": "ENVIRONMENT"
+  "environment": "ENVIRONMENT",
+  "logLevel": "LOG_LEVEL"
 }

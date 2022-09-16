@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 const NotificationsPush = "Notifications-Push"

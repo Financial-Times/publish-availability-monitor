@@ -24,7 +24,7 @@ With Docker:
 
 `docker build -t coco/publish-availability-monitor .`
 
-`docker run -it --env QUEUE_ADDR=<addr> --env CONTENT_URL=<document store api article endpoint path> --env LISTS_URL=<public lists api endpoint path> --env PAGES_URL=<public pages api endpoint path> --env NOTIFICATIONS_URL=<notifications read path> --env NOTIFICATIONS_PUSH_URL=<notifications push path> coco/publish-availability-monitor`
+`docker run -it --env KAFKA_ADDR=<addr> --env CONTENT_URL=<document store api article endpoint path> --env LISTS_URL=<public lists api endpoint path> --env PAGES_URL=<public pages api endpoint path> --env NOTIFICATIONS_URL=<notifications read path> --env NOTIFICATIONS_PUSH_URL=<notifications push path> coco/publish-availability-monitor`
 
 # Build and deploy
 __Note that deployment to FTP2 is no longer supported.__
@@ -45,11 +45,11 @@ __Note that deployment to FTP2 is no longer supported.__
 	//URL(s) of the messaging system
 	"address": [queue address1, queue address 2],
 	//The group name by which this app will be knows to the messaging system
-	"group": "YourGroupName",
+	"ConsumerGroup": "YourGroupName",
 	//The topic we want to get messages from
 	"topic": "YourTopic",
 	//the name of the queue we want to use
-	"queue": "yourQueue"
+	"BrokersConnectionString": "yourQueue"
 },
 ```
 

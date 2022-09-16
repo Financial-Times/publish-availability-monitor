@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 // Destination is the interface which defines a method to send
