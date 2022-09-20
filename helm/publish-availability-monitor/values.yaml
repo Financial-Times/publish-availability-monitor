@@ -9,7 +9,7 @@ image:
 envs:
   kafka_topic: ""
   kafka_consumer_group: ""
-  kafka_lag_tolerance: ""
+  kafka_lag_tolerance: 120
   log_level: ""
   content_url: ""
   complementary_content_url: ""

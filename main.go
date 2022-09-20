@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
-	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -68,14 +67,13 @@ func main() {
 	}
 
 	h := NewKafkaMessageHandler(appConfig, environments, subscribedFeeds, metricSink, metricContainer, e2eTestUUIDs, log)
-	lagTolerance, _ := strconv.Atoi(appConfig.QueueConf.KafkaLagTolerance)
 	c := kafka.NewConsumer(kafka.ConsumerConfig{
 		BrokersConnectionString: appConfig.QueueConf.BrokersConnectionString,
 		ConsumerGroup:           appConfig.QueueConf.ConsumerGroup,
 		Options:                 kafka.DefaultConsumerOptions(),
 	}, []*kafka.Topic{kafka.NewTopic(
 		appConfig.QueueConf.Topic,
-		kafka.WithLagTolerance(int64(lagTolerance)))},
+		kafka.WithLagTolerance(int64(appConfig.QueueConf.KafkaLagTolerance)))},
 		log)
 
 	go startHTTPServer(appConfig, environments, subscribedFeeds, metricContainer, c, log)
