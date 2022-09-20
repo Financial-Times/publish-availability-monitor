@@ -128,19 +128,14 @@ func readKafkaMessages(c *kafka.Consumer, h MessageHandler, environments *envs.E
 		time.Sleep(3 * time.Second)
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-
 	go func() {
 		c.Start(h.HandleMessage)
-		wg.Done()
 	}()
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	<-ch
 	c.Close()
-	wg.Wait()
 }
 
 func sliceContains(s []string, e string) bool {
