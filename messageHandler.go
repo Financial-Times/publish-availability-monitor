@@ -47,7 +47,7 @@ type kafkaMessageHandler struct {
 
 func (h *kafkaMessageHandler) HandleMessage(msg kafka.FTMessage) {
 	tid := msg.Headers["X-Request-Id"]
-	h.log.WithTransactionID(tid).Infof("Received message with TID [%v]", tid)
+	h.log.WithTransactionID(tid).Infof("Received message")
 
 	if h.isIgnorableMessage(msg) {
 		h.log.WithTransactionID(tid).Info("Message is ignorable. Skipping...")
@@ -63,8 +63,8 @@ func (h *kafkaMessageHandler) HandleMessage(msg kafka.FTMessage) {
 	publishDateString := msg.Headers["Message-Timestamp"]
 	publishDate, err := time.Parse(checks.DateLayout, publishDateString)
 	if err != nil {
-		h.log.WithError(err).WithTransactionID(tid).Errorf("Cannot parse publish date [%v] from message [%v]",
-			publishDateString, tid)
+		h.log.WithError(err).WithTransactionID(tid).Errorf("Cannot parse publish date [%v]",
+			publishDateString)
 		return
 	}
 
@@ -113,7 +113,7 @@ func (h *kafkaMessageHandler) isIgnorableMessage(msg kafka.FTMessage) bool {
 	isCarousel := h.isContentCarouselTransactionID(tid)
 
 	if isSyntetic && isE2ETest {
-		h.log.WithTransactionID(tid).Infof("Message [%v] is E2E Test.", tid)
+		h.log.WithTransactionID(tid).Infof("Message is E2E Test.")
 		return false
 	}
 

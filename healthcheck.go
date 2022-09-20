@@ -74,12 +74,9 @@ var noReadEnvironments = fthealth.Check{
 }
 
 func (h *Healthcheck) checkHealth() func(w http.ResponseWriter, r *http.Request) {
-	c := make([]fthealth.Check, 5)
-	c[0] = h.consumerQueueReachable()
-	c[1] = h.reflectPublishFailures()
-	c[2] = h.validationServicesReachable()
-	c[3] = isConsumingFromPushFeeds(h.subscribedFeeds, h.log)
-	c[4] = h.consumerMonitorCheck()
+	c := []fthealth.Check{h.consumerQueueReachable(), h.reflectPublishFailures(),
+		h.validationServicesReachable(), isConsumingFromPushFeeds(h.subscribedFeeds, h.log),
+		h.consumerMonitorCheck()}
 
 	readEnvironmentChecks := h.readEnvironmentsReachable()
 	if len(readEnvironmentChecks) == 0 {
@@ -170,7 +167,7 @@ func (h *Healthcheck) consumerQueueReachable() fthealth.Check {
 func (h *Healthcheck) consumerMonitorCheck() fthealth.Check {
 	return fthealth.Check{
 		ID:               "ConsumerQueueLagging",
-		BusinessImpact:   "Publish metrics are not recorded. This will impact the SLA measurement.",
+		BusinessImpact:   "Publish metrics are slowed down. This will impact the SLA measurement.",
 		Name:             "ConsumerQueueLagging",
 		PanicGuide:       pam_run_book_url,
 		Severity:         2,
@@ -325,13 +322,13 @@ func (h *readEnvironmentHealthcheck) checkReadEnvironmentReachable() (string, er
 		}
 
 		if err != nil {
-			h.log.Errorf("Cannot parse url [%v], Err: [%v]", metric.Endpoint, err.Error())
+			h.log.WithError(err).Errorf("Cannot parse url [%v]", metric.Endpoint)
 			continue
 		}
 
 		healthcheckURL, err := buildFtHealthcheckUrl(*endpointURL, metric.Health)
 		if err != nil {
-			h.log.Errorf("Service URL: [%s]. Err: [%v]", endpointURL.String(), err.Error())
+			h.log.WithError(err).Errorf("Service URL: [%s]", endpointURL.String())
 			continue
 		}
 
