@@ -43,13 +43,12 @@ __Note that deployment to FTP2 is no longer supported.__
 //Configuration for the queue we will read from
 "queueConfig": {
 	//URL(s) of the messaging system
-	"address": [queue address1, queue address 2],
+	"connectionString": "kafkaAddress",
 	//The group name by which this app will be knows to the messaging system
-	"ConsumerGroup": "YourGroupName",
+	"consumerGroup": "YourGroupName",
 	//The topic we want to get messages from
 	"topic": "YourTopic",
-	//the name of the queue we want to use
-	"BrokersConnectionString": "yourQueue"
+	"lagTolerance": "kafkaLagTolerance"
 },
 ```
 

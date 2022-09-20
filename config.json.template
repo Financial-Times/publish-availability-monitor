@@ -1,13 +1,10 @@
 {
   "threshold": 120,
   "queueConfig": {
-    "address": [
-      "KAFKA_ADDR"
-    ],
+    "connectionString": "KAFKA_ADDR",
     "consumerGroup": "PubMonitor",
     "lagTolerance": "KAFKA_LAG_TOLERANCE",
-    "topic": "KAFKA_TOPIC",
-    "connectionString": "KAFKA_ADDR"
+    "topic": "KAFKA_TOPIC"
   },
   "metricConfig": [
     {
