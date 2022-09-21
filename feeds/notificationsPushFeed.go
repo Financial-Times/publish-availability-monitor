@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
-	log "github.com/sirupsen/logrus"
 )
 
 const NotificationsPush = "Notifications-Push"
@@ -19,10 +19,11 @@ type NotificationsPushFeed struct {
 	stopFeedLock *sync.RWMutex
 	connected    bool
 	apiKey       string
+	log          *logger.UPPLogger
 }
 
 func (f *NotificationsPushFeed) Start() {
-	log.Infof("starting notifications-push feed from %v", f.baseUrl)
+	f.log.Infof("starting notifications-push feed from %v", f.baseUrl)
 	f.stopFeedLock.Lock()
 	defer f.stopFeedLock.Unlock()
 
@@ -34,13 +35,13 @@ func (f *NotificationsPushFeed) Start() {
 
 		for f.consumeFeed() {
 			time.Sleep(500 * time.Millisecond)
-			log.Info("Disconnected from Push feed! Attempting to reconnect.")
+			f.log.Info("Disconnected from Push feed! Attempting to reconnect.")
 		}
 	}()
 }
 
 func (f *NotificationsPushFeed) Stop() {
-	log.Infof("shutting down notifications push feed for %s", f.baseUrl)
+	f.log.Infof("shutting down notifications push feed for %s", f.baseUrl)
 	f.stopFeedLock.Lock()
 	defer f.stopFeedLock.Unlock()
 
@@ -64,34 +65,41 @@ func (f *NotificationsPushFeed) isConsuming() bool {
 
 func (f *NotificationsPushFeed) consumeFeed() bool {
 	txId := f.buildNotificationsTxId()
-	resp, err := f.httpCaller.DoCall(httpcaller.Config{URL: f.baseUrl, Username: f.username, Password: f.password, APIKey: f.apiKey, TxID: txId})
+	log := f.log.WithTransactionID(txId)
 
+	resp, err := f.httpCaller.DoCall(httpcaller.Config{
+		URL:      f.baseUrl,
+		Username: f.username,
+		Password: f.password,
+		APIKey:   f.apiKey,
+		TxID:     txId,
+	})
 	if err != nil {
-		log.WithField("transaction_id", txId).Errorf("Sending request: [%v]", err)
+		log.WithError(err).Error("Sending request failed")
 		return f.isConsuming()
 	}
 
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		log.WithField("transaction_id", txId).Errorf("Received invalid statusCode: [%v]", resp.StatusCode)
+		log.Errorf("Received invalid statusCode: [%v]", resp.StatusCode)
 		return f.isConsuming()
 	}
 
-	log.WithField("transaction_id", txId).Info("Reconnected to push feed!")
+	log.Info("Reconnected to push feed!")
 	f.connected = true
 	defer func() { f.connected = false }()
 
 	br := bufio.NewReader(resp.Body)
 	for {
 		if !f.isConsuming() {
-			log.WithField("transaction_id", txId).Info("stop consuming feed")
+			log.Info("stop consuming feed")
 			break
 		}
 		f.purgeObsoleteNotifications()
 
 		event, err := br.ReadString('\n')
 		if err != nil {
-			log.WithField("transaction_id", txId).Infof("Disconnected from push feed: [%v]", err)
+			log.WithError(err).Info("Disconnected from push feed")
 			return f.isConsuming()
 		}
 
@@ -102,9 +110,9 @@ func (f *NotificationsPushFeed) consumeFeed() bool {
 
 		data := strings.TrimPrefix(trimmed, "data: ")
 		var notifications []Notification
-		err = json.Unmarshal([]byte(data), &notifications)
-		if err != nil {
-			log.WithField("transaction_id", txId).Errorf("Error: [%v].", err)
+
+		if err = json.Unmarshal([]byte(data), &notifications); err != nil {
+			log.WithError(err).Error("Error unmarshalling notifications")
 			continue
 		}
 

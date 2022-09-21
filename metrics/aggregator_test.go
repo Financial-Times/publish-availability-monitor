@@ -4,6 +4,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/config"
 )
 
@@ -31,6 +32,7 @@ func TestAggregatorRun(t *testing.T) {
 		},
 	}
 
+	log := logger.NewUPPLogger("test", "PANIC")
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			var wg sync.WaitGroup
@@ -42,7 +44,8 @@ func TestAggregatorRun(t *testing.T) {
 
 			aggregator := NewAggregator(metricsCh,
 				[]Destination{publishMetricDestination},
-				[]Destination{capabilityMetricDestination})
+				[]Destination{capabilityMetricDestination},
+				log)
 
 			go aggregator.Run()
 			metricsCh <- test.Metric

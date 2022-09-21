@@ -2,7 +2,7 @@ package config
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/Financial-Times/go-logger/v2"
@@ -59,7 +59,7 @@ type Capability struct {
 
 // NewAppConfig opens the file at configFileName and unmarshals it into an AppConfig.
 func NewAppConfig(configFileName string, log *logger.UPPLogger) (*AppConfig, error) {
-	file, err := ioutil.ReadFile(configFileName)
+	file, err := os.ReadFile(configFileName)
 	if err != nil {
 		log.WithError(err).Errorf("Error reading configuration file [%v]", configFileName)
 		return nil, err

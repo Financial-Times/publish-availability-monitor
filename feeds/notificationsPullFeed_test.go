@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -122,7 +123,9 @@ func TestNotificationsArePolled(t *testing.T) {
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_pull_", buildResponse(200, notifications, nil))
 
 	baseUrl, _ := url.Parse("http://www.example.org?type=all")
-	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "", log)
 
 	f.(*NotificationsPullFeed).SetHTTPCaller(httpCaller)
 	f.Start()
@@ -149,7 +152,9 @@ func TestMultipleNotificationsAreMapped(t *testing.T) {
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_pull_", buildResponse(200, response, nil))
 
 	baseUrl, _ := url.Parse("http://www.example.org?type=all")
-	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "", log)
 
 	f.(*NotificationsPullFeed).SetHTTPCaller(httpCaller)
 	f.Start()
@@ -167,7 +172,9 @@ func TestMultipleNotificationsAreMapped(t *testing.T) {
 
 func TestNotificationsForReturnsEmptyIfNotFound(t *testing.T) {
 	baseUrl, _ := url.Parse("http://www.example.org")
-	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "", log)
 
 	response := f.NotificationsFor(uuid.NewString())
 	assert.Len(t, response, 0, "notifications for item")
@@ -190,7 +197,9 @@ func TestNotificationsForReturnsAllMatches(t *testing.T) {
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_pull_", buildResponse(200, notifications1, nil), buildResponse(200, notifications2, nil))
 
 	baseUrl, _ := url.Parse("http://www.example.org")
-	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "", log)
 	f.(*NotificationsPullFeed).SetHTTPCaller(httpCaller)
 	f.Start()
 	defer f.Stop()
@@ -213,7 +222,9 @@ func TestNotificationsPollingContinuesAfterErrorResponse(t *testing.T) {
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_pull_", buildResponse(500, "", nil), buildResponse(200, notifications, nil))
 
 	baseUrl, _ := url.Parse("http://www.example.org")
-	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "", log)
 	f.(*NotificationsPullFeed).SetHTTPCaller(httpCaller)
 	f.Start()
 	defer f.Stop()
@@ -235,7 +246,9 @@ func TestNotificationsArePurged(t *testing.T) {
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_pull_", buildResponse(200, notifications, nil))
 
 	baseUrl, _ := url.Parse("http://www.example.org")
-	f := NewNotificationsFeed("notifications", *baseUrl, 1, 1, "", "", "")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	f := NewNotificationsFeed("notifications", *baseUrl, 1, 1, "", "", "", log)
 	f.(*NotificationsPullFeed).SetHTTPCaller(httpCaller)
 	f.Start()
 	defer f.Stop()
@@ -272,7 +285,9 @@ func TestNotificationsPollingFollowsOpaqueLink(t *testing.T) {
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_pull_", buildResponse(200, notifications1, nil), buildResponse(200, notifications2, &nextPageQuery))
 
 	baseUrl, _ := url.Parse("http://www.example.org")
-	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "", log)
 	f.(*NotificationsPullFeed).SetHTTPCaller(httpCaller)
 	f.Start()
 	defer f.Stop()

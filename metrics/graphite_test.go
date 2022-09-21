@@ -1,12 +1,13 @@
 package metrics
 
 import (
-	"io/ioutil"
+	"io"
 	"net"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/config"
 )
 
@@ -72,6 +73,8 @@ func TestGraphiteSend(t *testing.T) {
 		},
 	}
 
+	log := logger.NewUPPLogger("test", "PANIC")
+
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			srv, err := net.Listen("tcp", "127.0.0.1:0")
@@ -82,7 +85,7 @@ func TestGraphiteSend(t *testing.T) {
 
 			test.AppConfig.GraphiteAddress = srv.Addr().String()
 
-			sender := NewGraphiteSender(test.AppConfig)
+			sender := NewGraphiteSender(test.AppConfig, log)
 			metricConfig := test.AppConfig.MetricConf[0]
 			metric := PublishMetric{
 				PublishOK:       test.PublishOk,
@@ -103,7 +106,7 @@ func TestGraphiteSend(t *testing.T) {
 				}
 				defer conn.Close()
 
-				buf, err := ioutil.ReadAll(conn)
+				buf, err := io.ReadAll(conn)
 				if err != nil {
 					errCh <- err
 					return

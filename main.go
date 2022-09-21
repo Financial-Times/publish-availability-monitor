@@ -51,7 +51,18 @@ func main() {
 
 	log.Info("Sourcing dynamic configs from file")
 
-	go envs.WatchConfigFiles(wg, *envsFileName, *envCredentialsFileName, *validatorCredentialsFileName, *configRefreshPeriod, configFilesHashValues, environments, subscribedFeeds, appConfig)
+	go envs.WatchConfigFiles(
+		wg,
+		*envsFileName,
+		*envCredentialsFileName,
+		*validatorCredentialsFileName,
+		*configRefreshPeriod,
+		configFilesHashValues,
+		environments,
+		subscribedFeeds,
+		appConfig,
+		log,
+	)
 
 	wg.Wait()
 
@@ -83,19 +94,26 @@ func main() {
 	}
 
 	capabilityMetricDestinations := []metrics.Destination{
-		metrics.NewGraphiteSender(appConfig),
+		metrics.NewGraphiteSender(appConfig, log),
 	}
 
-	aggregator := metrics.NewAggregator(metricSink, publishMetricDestinations, capabilityMetricDestinations)
+	aggregator := metrics.NewAggregator(metricSink, publishMetricDestinations, capabilityMetricDestinations, log)
 	go aggregator.Run()
 
 	readKafkaMessages(c, h, environments, log)
 }
 
-func startHTTPServer(appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricContainer *metrics.History, c *kafka.Consumer, log *logger.UPPLogger) {
+func startHTTPServer(
+	appConfig *config.AppConfig,
+	environments *envs.Environments,
+	subscribedFeeds map[string][]feeds.Feed,
+	metricContainer *metrics.History,
+	consumer *kafka.Consumer,
+	log *logger.UPPLogger,
+) {
 	router := mux.NewRouter()
 
-	hc := newHealthcheck(appConfig, metricContainer, environments, subscribedFeeds, c, log)
+	hc := newHealthcheck(appConfig, metricContainer, environments, subscribedFeeds, consumer, log)
 	router.HandleFunc("/__health", hc.checkHealth())
 	router.HandleFunc(status.GTGPath, status.NewGoodToGoHandler(hc.GTG))
 

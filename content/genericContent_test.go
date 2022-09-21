@@ -1,11 +1,12 @@
 package content
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/stretchr/testify/assert"
 )
@@ -78,6 +79,8 @@ func TestGenericContent_Validate(t *testing.T) {
 		},
 	}
 
+	log := logger.NewUPPLogger("test", "PANIC")
+
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			txID := "tid_1234"
@@ -87,7 +90,7 @@ func TestGenericContent_Validate(t *testing.T) {
 				assert.Equal(t, "POST", req.Method)
 				assert.Equal(t, test.Content.Type+"+json", req.Header.Get("Content-Type"))
 
-				reqBody, err := ioutil.ReadAll(req.Body)
+				reqBody, err := io.ReadAll(req.Body)
 				assert.NoError(t, err)
 				defer req.Body.Close()
 
@@ -95,7 +98,7 @@ func TestGenericContent_Validate(t *testing.T) {
 				w.WriteHeader(test.ExternalValidationResponseCode)
 			}))
 
-			validationResponse := test.Content.Validate(testServer.URL+"/validate", txID, "", "")
+			validationResponse := test.Content.Validate(testServer.URL+"/validate", txID, "", "", log)
 			assert.Equal(t, test.Content.isMarkedDeleted(), validationResponse.IsMarkedDeleted)
 			assert.Equal(t, test.Expected, validationResponse)
 		})

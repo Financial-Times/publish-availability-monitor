@@ -73,12 +73,7 @@ func TestTestIsIgnorableMessage_SyntheticE2ETest(t *testing.T) {
 		},
 	}
 
-	got := kmh.isIgnorableMessage(kafkaMessage)
-	expected := false
-
-	if got != expected {
-		t.Fatalf("expected %v, got %v", expected, got)
-	}
+	assert.Equal(t, false, kmh.isIgnorableMessage(kafkaMessage))
 }
 
 func TestUnmarshalContent_InvalidMessageMissingHeader_Error(t *testing.T) {
@@ -104,13 +99,15 @@ func TestUnmarshalContent_ValidVideoMessage(t *testing.T) {
 	}
 
 	h := kafkaMessageHandler{}
+	log := logger.NewUPPLogger("test", "PANIC")
+
 	for _, testCase := range testCases {
 		resultContent, err := h.unmarshalContent(testCase.videoMessage)
 		if err != nil {
 			t.Errorf("Expected success, but error occured [%v]", err)
 			return
 		}
-		valRes := resultContent.Validate("", "", "", "")
+		valRes := resultContent.Validate("", "", "", "", log)
 		assert.False(t, valRes.IsMarkedDeleted, "Expected published content.")
 	}
 }
@@ -122,7 +119,9 @@ func TestUnmarshalContent_ValidDeletedVideoMessage(t *testing.T) {
 		t.Errorf("Expected success, but error occured [%v]", err)
 		return
 	}
-	valRes := resultContent.Validate("", "", "", "")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	valRes := resultContent.Validate("", "", "", "", log)
 	assert.True(t, valRes.IsMarkedDeleted, "Expected deleted content.")
 }
 
@@ -133,7 +132,9 @@ func TestUnmarshalContent_InvalidVideoMessage(t *testing.T) {
 		t.Errorf("Expected success, but error occured [%v]", err)
 		return
 	}
-	valRes := resultContent.Validate("", "", "", "")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	valRes := resultContent.Validate("", "", "", "", log)
 	assert.False(t, valRes.IsValid, "Expected invalid content.")
 }
 

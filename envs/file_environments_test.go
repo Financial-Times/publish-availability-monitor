@@ -4,11 +4,11 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/stretchr/testify/assert"
@@ -42,8 +42,9 @@ func TestParseEnvsIntoMap(t *testing.T) {
 	envsToBeParsed := getValidEnvs()
 	credentials := getValidCredentials()
 	environments := NewEnvironments()
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments)
+	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments, log)
 
 	assert.Equal(t, 0, len(removedEnvs))
 	assert.Equal(t, len(envsToBeParsed), environments.Len())
@@ -57,7 +58,9 @@ func TestParseEnvsIntoMapWithRemovedEnv(t *testing.T) {
 	credentials := getValidCredentials()
 	environments := NewEnvironments()
 	environments.SetEnvironment("removed-env", Environment{})
-	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments)
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments, log)
 
 	assert.Equal(t, 1, len(removedEnvs))
 	assert.Equal(t, len(envsToBeParsed), environments.Len())
@@ -72,8 +75,9 @@ func TestParseEnvsIntoMapWithExistingEnv(t *testing.T) {
 	environments := NewEnvironments()
 	existingEnv := envsToBeParsed[0]
 	environments.SetEnvironment(existingEnv.Name, existingEnv)
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments)
+	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments, log)
 
 	assert.Equal(t, 0, len(removedEnvs))
 	assert.Equal(t, len(envsToBeParsed), environments.Len())
@@ -86,8 +90,9 @@ func TestParseEnvsIntoMapWithNoCredentials(t *testing.T) {
 	envsToBeParsed := getValidEnvs()
 	credentials := []Credentials{}
 	environments := NewEnvironments()
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments)
+	removedEnvs := parseEnvsIntoMap(envsToBeParsed, credentials, environments, log)
 
 	assert.Equal(t, 0, len(removedEnvs))
 	assert.Equal(t, len(envsToBeParsed), environments.Len())
@@ -97,8 +102,9 @@ func TestParseEnvsIntoMapWithNoCredentials(t *testing.T) {
 
 func TestFilterInvalidEnvs(t *testing.T) {
 	envsToBeFiltered := getValidEnvs()
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	filteredEnvs := filterInvalidEnvs(envsToBeFiltered)
+	filteredEnvs := filterInvalidEnvs(envsToBeFiltered, log)
 
 	assert.Equal(t, len(envsToBeFiltered), len(filteredEnvs))
 }
@@ -112,8 +118,9 @@ func TestFilterInvalidEnvsWithEmptyName(t *testing.T) {
 			Password: "dummy",
 		},
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	filteredEnvs := filterInvalidEnvs(envsToBeFiltered)
+	filteredEnvs := filterInvalidEnvs(envsToBeFiltered, log)
 
 	assert.Equal(t, 0, len(filteredEnvs))
 }
@@ -127,8 +134,9 @@ func TestFilterInvalidEnvsWithEmptyReadUrl(t *testing.T) {
 			Password: "dummy",
 		},
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	filteredEnvs := filterInvalidEnvs(envsToBeFiltered)
+	filteredEnvs := filterInvalidEnvs(envsToBeFiltered, log)
 
 	assert.Equal(t, 0, len(filteredEnvs))
 }
@@ -142,8 +150,9 @@ func TestFilterInvalidEnvsWithEmptyUsernameUrl(t *testing.T) {
 			Password: "dummy",
 		},
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	filteredEnvs := filterInvalidEnvs(envsToBeFiltered)
+	filteredEnvs := filterInvalidEnvs(envsToBeFiltered, log)
 
 	assert.Equal(t, 1, len(filteredEnvs))
 }
@@ -157,16 +166,19 @@ func TestFilterInvalidEnvsWithEmptyPwd(t *testing.T) {
 			Password: "",
 		},
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	filteredEnvs := filterInvalidEnvs(envsToBeFiltered)
+	filteredEnvs := filterInvalidEnvs(envsToBeFiltered, log)
 
 	assert.Equal(t, 1, len(filteredEnvs))
 }
 
 func TestUpdateValidationCredentialsHappyFlow(t *testing.T) {
+	log := logger.NewUPPLogger("test", "PANIC")
+
 	fileName := prepareFile(validValidationCredentialsConfig)
-	fileContents, _ := ioutil.ReadFile(fileName)
-	err := updateValidationCredentials(fileContents)
+	fileContents, _ := os.ReadFile(fileName)
+	err := updateValidationCredentials(fileContents, log)
 
 	assert.Nil(t, err)
 	assert.Equal(t, "test-user:test-pwd", validatorCredentials)
@@ -178,7 +190,9 @@ func TestUpdateValidationCredentialNilFile(t *testing.T) {
 		Username: "test-username",
 		Password: "test-password",
 	}
-	err := updateValidationCredentials(nil)
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	err := updateValidationCredentials(nil, log)
 
 	assert.NotNil(t, err)
 	//make sure validationCredentials didn't change after failing call to updateValidationCredentials().
@@ -192,8 +206,10 @@ func TestUpdateValidationCredentialsInvalidConfig(t *testing.T) {
 		Username: "test-username",
 		Password: "test-password",
 	}
-	fileContents, _ := ioutil.ReadFile(fileName)
-	err := updateValidationCredentials(fileContents)
+	fileContents, _ := os.ReadFile(fileName)
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	err := updateValidationCredentials(fileContents, log)
 	assert.NotNil(t, err)
 	//make sure validationCredentials didn't change after failing call to updateValidationCredentials().
 	assert.Equal(t, "test-username", validatorCredentials.Username)
@@ -207,8 +223,9 @@ func TestConfigureFeedsWithEmptyListOfMetrics(t *testing.T) {
 		MockFeed{},
 	}
 	appConfig := &config.AppConfig{}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	configureFileFeeds(make([]Environment, 0), []string{"test-feed"}, subscribedFeeds, appConfig)
+	configureFileFeeds(make([]Environment, 0), []string{"test-feed"}, subscribedFeeds, appConfig, log)
 
 	assert.Equal(t, 0, len(subscribedFeeds))
 }
@@ -220,12 +237,13 @@ func TestUpdateEnvsHappyFlow(t *testing.T) {
 	}
 	appConfig := &config.AppConfig{}
 	envsFileName := prepareFile(validEnvConfig)
-	envsFileContents, _ := ioutil.ReadFile(envsFileName)
+	envsFileContents, _ := os.ReadFile(envsFileName)
 
 	envCredsFileName := prepareFile(validEnvCredentialsConfig)
-	credsFileContents, _ := ioutil.ReadFile(envCredsFileName)
+	credsFileContents, _ := os.ReadFile(envCredsFileName)
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateEnvs(envsFileContents, credsFileContents, NewEnvironments(), subscribedFeeds, appConfig)
+	err := updateEnvs(envsFileContents, credsFileContents, NewEnvironments(), subscribedFeeds, appConfig, log)
 
 	assert.Nil(t, err)
 	os.Remove(envsFileName)
@@ -234,11 +252,12 @@ func TestUpdateEnvsHappyFlow(t *testing.T) {
 
 func TestUpdateEnvsHappyNilEnvsFile(t *testing.T) {
 	envCredsFileName := prepareFile(validEnvCredentialsConfig)
-	credsFileContents, _ := ioutil.ReadFile(envCredsFileName)
+	credsFileContents, _ := os.ReadFile(envCredsFileName)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateEnvs(nil, credsFileContents, NewEnvironments(), subscribedFeeds, appConfig)
+	err := updateEnvs(nil, credsFileContents, NewEnvironments(), subscribedFeeds, appConfig, log)
 
 	assert.NotNil(t, err)
 	os.Remove(envCredsFileName)
@@ -246,11 +265,12 @@ func TestUpdateEnvsHappyNilEnvsFile(t *testing.T) {
 
 func TestUpdateEnvsNilEnvCredentialsFile(t *testing.T) {
 	envsFileName := prepareFile(validEnvConfig)
-	envsFileContents, _ := ioutil.ReadFile(envsFileName)
+	envsFileContents, _ := os.ReadFile(envsFileName)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateEnvs(envsFileContents, nil, NewEnvironments(), subscribedFeeds, appConfig)
+	err := updateEnvs(envsFileContents, nil, NewEnvironments(), subscribedFeeds, appConfig, log)
 
 	assert.NotNil(t, err)
 	os.Remove(envsFileName)
@@ -354,8 +374,9 @@ func TestUpdateEnvsIfChangedEnvFileDoesntExist(t *testing.T) {
 	configFilesHashValues := make(map[string]string)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateEnvsIfChanged("thisFileDoesntexist", credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig)
+	err := updateEnvsIfChanged("thisFileDoesntexist", credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig, log)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying file which doesn't exist")
 	assert.Equal(t, 0, environments.Len(), "No new environments should've been added")
@@ -370,8 +391,9 @@ func TestUpdateEnvsIfChangedCredsFileDoesntExist(t *testing.T) {
 	configFilesHashValues := make(map[string]string)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateEnvsIfChanged(envsFile, "thisFileDoesntexist", configFilesHashValues, environments, subscribedFeeds, appConfig)
+	err := updateEnvsIfChanged(envsFile, "thisFileDoesntexist", configFilesHashValues, environments, subscribedFeeds, appConfig, log)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying file which doesn't exist")
 	assert.Equal(t, 0, environments.Len(), "No new environments should've been added")
@@ -383,8 +405,9 @@ func TestUpdateEnvsIfChangedFilesDontExist(t *testing.T) {
 	configFilesHashValues := make(map[string]string)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateEnvsIfChanged("thisFileDoesntExist", "thisDoesntExistEither", configFilesHashValues, environments, subscribedFeeds, appConfig)
+	err := updateEnvsIfChanged("thisFileDoesntExist", "thisDoesntExistEither", configFilesHashValues, environments, subscribedFeeds, appConfig, log)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying files which don't exist")
 	assert.Equal(t, 0, environments.Len(), "No new environments should've been added")
@@ -403,7 +426,9 @@ func TestUpdateEnvsIfChangedValidFiles(t *testing.T) {
 
 	//appConfig has to be non-nil for the actual update to work
 	appConfig := &config.AppConfig{}
-	err := updateEnvsIfChanged(envsFile, credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig)
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	err := updateEnvsIfChanged(envsFile, credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig, log)
 
 	assert.Nil(t, err, "Got an error after supplying valid files")
 	assert.Equal(t, 1, environments.Len(), "New environment should've been added")
@@ -432,7 +457,9 @@ func TestUpdateEnvsIfChangedNoChanges(t *testing.T) {
 
 	//if the update works (which it shouldn't) we will have a failure
 	var appConfig *config.AppConfig
-	err := updateEnvsIfChanged(envsFile, credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig)
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	err := updateEnvsIfChanged(envsFile, credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig, log)
 
 	assert.Nil(t, err, "Got an error after supplying valid files")
 	assert.Equal(t, 1, environments.Len(), "Environments shouldn't have changed")
@@ -449,8 +476,9 @@ func TestUpdateEnvsIfChangedInvalidEnvsFile(t *testing.T) {
 	configFilesHashValues := make(map[string]string)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateEnvsIfChanged(envsFile, credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig)
+	err := updateEnvsIfChanged(envsFile, credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig, log)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying invalid file")
 	assert.Equal(t, 0, environments.Len(), "No new environment should've been added")
@@ -467,8 +495,9 @@ func TestUpdateEnvsIfChangedInvalidCredsFile(t *testing.T) {
 	configFilesHashValues := make(map[string]string)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateEnvsIfChanged(envsFile, credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig)
+	err := updateEnvsIfChanged(envsFile, credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig, log)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying invalid file")
 	assert.Equal(t, 0, environments.Len(), "No new environment should've been added")
@@ -485,8 +514,9 @@ func TestUpdateEnvsIfChangedInvalidFiles(t *testing.T) {
 	configFilesHashValues := make(map[string]string)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateEnvsIfChanged(envsFile, credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig)
+	err := updateEnvsIfChanged(envsFile, credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig, log)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying invalid file")
 	assert.Equal(t, 0, environments.Len(), "No new environment should've been added")
@@ -496,8 +526,9 @@ func TestUpdateEnvsIfChangedInvalidFiles(t *testing.T) {
 func TestUpdateValidationCredentialsIfChangedFileDoesntExist(t *testing.T) {
 	validatorCredentials = ""
 	configFilesHashValues := make(map[string]string)
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateValidationCredentialsIfChanged("thisFileDoesntExist", configFilesHashValues)
+	err := updateValidationCredentialsIfChanged("thisFileDoesntExist", configFilesHashValues, log)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying file which doesn't exist")
 	assert.Equal(t, 0, len(validatorCredentials), "No validator credentials should've been added")
@@ -510,8 +541,9 @@ func TestUpdateValidationCredentialsIfChangedInvalidFile(t *testing.T) {
 
 	validatorCredentials = ""
 	configFilesHashValues := make(map[string]string)
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateValidationCredentialsIfChanged(validationCredsFile, configFilesHashValues)
+	err := updateValidationCredentialsIfChanged(validationCredsFile, configFilesHashValues, log)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying file which doesn't exist")
 	assert.Equal(t, 0, len(validatorCredentials), "No validator credentials should've been added")
@@ -524,8 +556,9 @@ func TestUpdateValidationCredentialsIfChangedNewFile(t *testing.T) {
 
 	validatorCredentials = ""
 	configFilesHashValues := make(map[string]string)
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateValidationCredentialsIfChanged(validationCredsFile, configFilesHashValues)
+	err := updateValidationCredentialsIfChanged(validationCredsFile, configFilesHashValues, log)
 
 	assert.Nil(t, err, "Shouldn't get an error for valid file")
 	assert.Equal(t, "test-user:test-pwd", validatorCredentials, "New validator credentials should've been added")
@@ -540,8 +573,9 @@ func TestUpdateValidationCredentialsIfChangedFileUnchanged(t *testing.T) {
 	configFilesHashValues := map[string]string{
 		validationCredsFile: "cc4d51dfe137ec8cbba8fd3ff24474be",
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateValidationCredentialsIfChanged(validationCredsFile, configFilesHashValues)
+	err := updateValidationCredentialsIfChanged(validationCredsFile, configFilesHashValues, log)
 	assert.Nil(t, err, "Shouldn't get an error for valid file")
 	assert.Equal(t, "test-user:test-pwd", validatorCredentials, "Validator credentials shouldn't have changed")
 	assert.Equal(t, "cc4d51dfe137ec8cbba8fd3ff24474be", configFilesHashValues[validationCredsFile], "Hashes shouldn't have changed")
@@ -570,7 +604,7 @@ func TestTickerWithInitialDelay(t *testing.T) {
 }
 
 func prepareFile(fileContent string) string {
-	file, err := ioutil.TempFile(os.TempDir(), "")
+	file, err := os.CreateTemp(os.TempDir(), "")
 	if err != nil {
 		panic("Cannot create temp file.")
 	}

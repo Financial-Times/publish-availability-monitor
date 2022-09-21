@@ -6,14 +6,14 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/Financial-Times/go-logger/v2"
 )
 
-func NewNotificationsFeed(name string, baseUrl url.URL, expiry int, interval int, username string, password string, apiKey string) Feed {
+func NewNotificationsFeed(name string, baseUrl url.URL, expiry, interval int, username, password, apiKey string, log *logger.UPPLogger) Feed {
 	if isNotificationsPullFeed(name) {
-		return newNotificationsPullFeed(name, baseUrl, expiry, interval, username, password)
+		return newNotificationsPullFeed(name, baseUrl, expiry, interval, username, password, log)
 	} else if isNotificationsPushFeed(name) {
-		return newNotificationsPushFeed(name, baseUrl, expiry, interval, username, password, apiKey)
+		return newNotificationsPushFeed(name, baseUrl, expiry, interval, username, password, apiKey, log)
 	}
 
 	return nil
@@ -29,7 +29,7 @@ func isNotificationsPushFeed(feedName string) bool {
 	return strings.HasSuffix(feedName, "notifications-push")
 }
 
-func newNotificationsPullFeed(name string, baseUrl url.URL, expiry int, interval int, username string, password string) *NotificationsPullFeed {
+func newNotificationsPullFeed(name string, baseUrl url.URL, expiry, interval int, username, password string, log *logger.UPPLogger) *NotificationsPullFeed {
 	feedUrl := baseUrl.String()
 
 	bootstrapValues := baseUrl.Query()
@@ -38,41 +38,38 @@ func newNotificationsPullFeed(name string, baseUrl url.URL, expiry int, interval
 
 	log.Infof("constructing NotificationsPullFeed for [%s], baseUrl = [%s], bootstrapValues = [%s]", feedUrl, baseUrl.String(), bootstrapValues.Encode())
 	return &NotificationsPullFeed{
-		baseNotificationsFeed{
-			name,
-			nil,
-			feedUrl,
-			username,
-			password,
-			expiry + 2*interval,
-			make(map[string][]*Notification),
-			&sync.RWMutex{},
+		baseNotificationsFeed: baseNotificationsFeed{
+			feedName:          name,
+			baseUrl:           feedUrl,
+			username:          username,
+			password:          password,
+			expiry:            expiry + 2*interval,
+			notifications:     make(map[string][]*Notification),
+			notificationsLock: &sync.RWMutex{},
 		},
-		baseUrl.String(),
-		bootstrapValues.Encode(),
-		&sync.Mutex{},
-		interval,
-		nil,
-		nil,
+		notificationsUrl:         baseUrl.String(),
+		notificationsQueryString: bootstrapValues.Encode(),
+		notificationsUrlLock:     &sync.Mutex{},
+		interval:                 interval,
+		log:                      log,
 	}
 }
 
-func newNotificationsPushFeed(name string, baseUrl url.URL, expiry int, interval int, username string, password string, apiKey string) *NotificationsPushFeed {
+func newNotificationsPushFeed(name string, baseUrl url.URL, expiry int, interval int, username string, password string, apiKey string, log *logger.UPPLogger) *NotificationsPushFeed {
 	log.Infof("constructing NotificationsPushFeed, bootstrapUrl = [%s]", baseUrl.String())
 	return &NotificationsPushFeed{
-		baseNotificationsFeed{
-			name,
-			nil,
-			baseUrl.String(),
-			username,
-			password,
-			expiry + 2*interval,
-			make(map[string][]*Notification),
-			&sync.RWMutex{},
+		baseNotificationsFeed: baseNotificationsFeed{
+			feedName:          name,
+			baseUrl:           baseUrl.String(),
+			username:          username,
+			password:          password,
+			expiry:            expiry + 2*interval,
+			notifications:     make(map[string][]*Notification),
+			notificationsLock: &sync.RWMutex{},
 		},
-		true,
-		&sync.RWMutex{},
-		false,
-		apiKey,
+		stopFeed:     true,
+		stopFeedLock: &sync.RWMutex{},
+		apiKey:       apiKey,
+		log:          log,
 	}
 }

@@ -2,14 +2,12 @@ package feeds
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
-	log "github.com/sirupsen/logrus"
 )
 
 type baseNotificationsFeed struct {
@@ -24,14 +22,8 @@ type baseNotificationsFeed struct {
 }
 
 func cleanupResp(resp *http.Response) {
-	_, err := io.Copy(ioutil.Discard, resp.Body)
-	if err != nil {
-		log.Infof("[%v]", err)
-	}
-	err = resp.Body.Close()
-	if err != nil {
-		log.Infof("[%v]", err)
-	}
+	_, _ = io.Copy(io.Discard, resp.Body)
+	_ = resp.Body.Close()
 }
 
 func parseUuidFromUrl(url string) string {

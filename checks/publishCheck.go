@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/Financial-Times/publish-availability-monitor/metrics"
-	log "github.com/sirupsen/logrus"
 )
 
 const DateLayout = time.RFC3339Nano
@@ -28,22 +27,38 @@ type PublishCheck struct {
 	CheckInterval          int
 	ResultSink             chan metrics.PublishMetric
 	endpointSpecificChecks map[string]EndpointSpecificCheck
+	log                    *logger.UPPLogger
 }
 
-// NewPublishCheck returns a PublishCheck ready to perform a check for pm.UUID, at the
-// pm.Endpoint.
-func NewPublishCheck(pm metrics.PublishMetric, username string, password string, t int, ci int, rs chan metrics.PublishMetric, endpointSpecificChecks map[string]EndpointSpecificCheck) *PublishCheck {
-	return &PublishCheck{pm, username, password, t, ci, rs, endpointSpecificChecks}
+// NewPublishCheck returns a PublishCheck ready to perform a check for pm.UUID, at the pm.Endpoint.
+func NewPublishCheck(
+	metric metrics.PublishMetric,
+	username, password string,
+	threshold, checkInterval int,
+	resultSink chan metrics.PublishMetric,
+	endpointSpecificChecks map[string]EndpointSpecificCheck,
+	log *logger.UPPLogger,
+) *PublishCheck {
+	return &PublishCheck{
+		Metric:                 metric,
+		username:               username,
+		password:               password,
+		Threshold:              threshold,
+		CheckInterval:          checkInterval,
+		ResultSink:             resultSink,
+		endpointSpecificChecks: endpointSpecificChecks,
+		log:                    log,
+	}
 }
 
 // DoCheck performs an availability check on a piece of content at a certain
 // endpoint, applying endpoint-specific processing.
 // Returns true if the content is available at the endpoint, false otherwise.
 func (pc PublishCheck) DoCheck() (checkSuccessful, ignoreCheck bool) {
-	log.Infof("Running check for %s\n", pc)
+	pc.log.Infof("Running check for %s\n", pc)
 	check := pc.endpointSpecificChecks[pc.Metric.Config.Alias]
 	if check == nil {
-		log.Warnf("No check for %s", pc)
+		pc.log.Warnf("No check for %s", pc)
 		return false, false
 	}
 
@@ -73,9 +88,14 @@ func NewContentCheck(httpCaller httpcaller.Caller) ContentCheck {
 func (c ContentCheck) isCurrentOperationFinished(pc *PublishCheck) (operationFinished, ignoreCheck bool) {
 	pm := pc.Metric
 	url := pm.Endpoint.String() + pm.UUID
-	resp, err := c.httpCaller.DoCall(httpcaller.Config{URL: url, Username: pc.username, Password: pc.password, TxID: httpcaller.ConstructPamTxId(pm.TID)}) //nolint:bodyclose
+	resp, err := c.httpCaller.DoCall(httpcaller.Config{
+		URL:      url,
+		Username: pc.username,
+		Password: pc.password,
+		TxID:     httpcaller.ConstructPamTxId(pm.TID),
+	}) //nolint:bodyclose
 	if err != nil {
-		log.Warnf("Error calling URL: [%v] for %s : [%v]", url, pc, err.Error())
+		pc.log.WithError(err).Warnf("Error calling URL: [%v] for %s", url, pc)
 		return false, false
 	}
 	defer cleanupResp(resp)
@@ -83,33 +103,32 @@ func (c ContentCheck) isCurrentOperationFinished(pc *PublishCheck) (operationFin
 	// if the article was marked as deleted, operation is finished when the
 	// article cannot be found anymore
 	if pm.IsMarkedDeleted {
-		log.Infof("Content Marked deleted. Checking %s, status code [%v]", pc, resp.StatusCode)
+		pc.log.Infof("Content Marked deleted. Checking %s, status code [%v]", pc, resp.StatusCode)
 		return resp.StatusCode == 404, false
 	}
 
 	// if not marked deleted, operation isn't finished until status is 200
 	if resp.StatusCode != 200 {
 		if resp.StatusCode != 404 {
-			log.Infof("Checking %s, status code [%v]", pc, resp.StatusCode)
+			pc.log.Infof("Checking %s, status code [%v]", pc, resp.StatusCode)
 		}
 		return false, false
 	}
 
 	// if status is 200, we check the publishReference
 	// this way we can handle updates
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Warnf("Checking %s. Cannot read response: [%s]",
-			LoggingContextForCheck(pm.Config.Alias, pm.UUID, pm.Platform, pm.TID), err.Error())
+		pc.log.WithError(err).Warnf("Checking %s. Cannot read response",
+			LoggingContextForCheck(pm.Config.Alias, pm.UUID, pm.Platform, pm.TID))
 		return false, false
 	}
 
 	var jsonResp map[string]interface{}
 
-	err = json.Unmarshal(data, &jsonResp)
-	if err != nil {
-		log.Warnf("Checking %s. Cannot unmarshal JSON response: [%s]",
-			LoggingContextForCheck(pm.Config.Alias, pm.UUID, pm.Platform, pm.TID), err.Error())
+	if err = json.Unmarshal(data, &jsonResp); err != nil {
+		pc.log.WithError(err).Warnf("Checking %s. Cannot unmarshal JSON response",
+			LoggingContextForCheck(pm.Config.Alias, pm.UUID, pm.Platform, pm.TID))
 		return false, false
 	}
 
@@ -137,7 +156,7 @@ func (c ContentNeo4jCheck) isCurrentOperationFinished(pc *PublishCheck) (operati
 		TxID:     httpcaller.ConstructPamTxId(pm.TID)})
 
 	if err != nil {
-		log.Warnf("Error calling URL: [%v] for %s : [%v]", url, pc, err.Error())
+		pc.log.Warnf("Error calling URL: [%v] for %s", url, pc)
 		return false, false
 	}
 
@@ -146,28 +165,24 @@ func (c ContentNeo4jCheck) isCurrentOperationFinished(pc *PublishCheck) (operati
 	// if the article was marked as deleted, operation is finished when the
 	// article cannot be found anymore
 	if pm.IsMarkedDeleted {
-		log.Infof("Content Marked deleted. Checking %s, status code [%v]", pc, resp.StatusCode)
+		pc.log.Infof("Content Marked deleted. Checking %s, status code [%v]", pc, resp.StatusCode)
 		return resp.StatusCode == 404, false
 	}
 
 	// if not marked deleted, operation isn't finished until status is 200
 	if resp.StatusCode != 200 {
 		if resp.StatusCode != 404 {
-			log.Infof("Checking %s, status code [%v]", pc, resp.StatusCode)
+			pc.log.Infof("Checking %s, status code [%v]", pc, resp.StatusCode)
 		}
 		return false, false
 	}
 
 	// if status is 200, we check the publishReference
 	// this way we can handle updates
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Warnf("Checking %s. Cannot read response: [%s]",
-			LoggingContextForCheck(pm.Config.Alias,
-				pm.UUID,
-				pm.Platform,
-				pm.TID),
-			err.Error())
+		pc.log.WithError(err).Warnf("Checking %s. Cannot read response",
+			LoggingContextForCheck(pm.Config.Alias, pm.UUID, pm.Platform, pm.TID))
 		return false, false
 	}
 
@@ -175,8 +190,8 @@ func (c ContentNeo4jCheck) isCurrentOperationFinished(pc *PublishCheck) (operati
 
 	err = json.Unmarshal(data, &jsonResp)
 	if err != nil {
-		log.Warnf("Checking %s. Cannot unmarshal JSON response: [%s]",
-			LoggingContextForCheck(pm.Config.Alias, pm.UUID, pm.Platform, pm.TID), err.Error())
+		pc.log.WithError(err).Warnf("Checking %s. Cannot unmarshal JSON response",
+			LoggingContextForCheck(pm.Config.Alias, pm.UUID, pm.Platform, pm.TID))
 		return false, false
 	}
 
@@ -220,7 +235,8 @@ func (n NotificationsCheck) shouldSkipCheck(pc *PublishCheck) bool {
 	url := pm.Endpoint.String() + "/" + pm.UUID
 	resp, err := n.httpCaller.DoCall(httpcaller.Config{URL: url, Username: pc.username, Password: pc.password, TxID: httpcaller.ConstructPamTxId(pm.TID)}) //nolint:bodyclose
 	if err != nil {
-		log.Warnf("Checking %s. Error calling URL: [%v] : [%v]", LoggingContextForCheck(pm.Config.Alias, pm.UUID, pm.Platform, pm.TID), url, err.Error())
+		pc.log.WithError(err).Warnf("Checking %s. Error calling URL: [%v]",
+			LoggingContextForCheck(pm.Config.Alias, pm.UUID, pm.Platform, pm.TID), url)
 		return false
 	}
 	defer cleanupResp(resp)
@@ -257,20 +273,14 @@ func (n NotificationsCheck) checkFeed(uuid string, envName string) []*feeds.Noti
 }
 
 func cleanupResp(resp *http.Response) {
-	_, err := io.Copy(ioutil.Discard, resp.Body)
-	if err != nil {
-		log.Warnf("[%v]", err)
-	}
-	err = resp.Body.Close()
-	if err != nil {
-		log.Warnf("[%v]", err)
-	}
+	_, _ = io.Copy(io.Discard, resp.Body)
+	_ = resp.Body.Close()
 }
 
 func isSamePublishEvent(jsonContent map[string]interface{}, pc *PublishCheck) (operationFinished, ignoreCheck bool) {
 	pm := pc.Metric
 	if jsonContent["publishReference"] == pm.TID {
-		log.Infof("Checking %s. Matched publish reference.", pc)
+		pc.log.Infof("Checking %s. Matched publish reference.", pc)
 		return true, false
 	}
 
@@ -278,16 +288,16 @@ func isSamePublishEvent(jsonContent map[string]interface{}, pc *PublishCheck) (o
 	lastModifiedDate, ok := parseLastModifiedDate(jsonContent)
 	if ok {
 		if lastModifiedDate.After(pm.PublishDate) {
-			log.Infof("Checking %s. Last modified date [%v] is after publish date [%v]", pc, lastModifiedDate, pm.PublishDate)
+			pc.log.Infof("Checking %s. Last modified date [%v] is after publish date [%v]", pc, lastModifiedDate, pm.PublishDate)
 			return false, true
 		}
 		if lastModifiedDate.Equal(pm.PublishDate) {
-			log.Infof("Checking %s. Last modified date [%v] is equal to publish date [%v]", pc, lastModifiedDate, pm.PublishDate)
+			pc.log.Infof("Checking %s. Last modified date [%v] is equal to publish date [%v]", pc, lastModifiedDate, pm.PublishDate)
 			return true, false
 		}
-		log.Infof("Checking %s. Last modified date [%v] is before publish date [%v]", pc, lastModifiedDate, pm.PublishDate)
+		pc.log.Infof("Checking %s. Last modified date [%v] is before publish date [%v]", pc, lastModifiedDate, pm.PublishDate)
 	} else {
-		log.Warnf("The field 'lastModified' is not valid: [%v]. Skip checking rapid-fire publishes for %s.", jsonContent["lastModified"], pc)
+		pc.log.Warnf("The field 'lastModified' is not valid: [%v]. Skip checking rapid-fire publishes for %s.", jsonContent["lastModified"], pc)
 	}
 
 	return false, false

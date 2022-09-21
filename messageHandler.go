@@ -47,31 +47,33 @@ type kafkaMessageHandler struct {
 
 func (h *kafkaMessageHandler) HandleMessage(msg kafka.FTMessage) {
 	tid := msg.Headers["X-Request-Id"]
-	h.log.WithTransactionID(tid).Infof("Received message")
+	log := h.log.WithTransactionID(tid)
+
+	log.Info("Received message")
 
 	if h.isIgnorableMessage(msg) {
-		h.log.WithTransactionID(tid).Info("Message is ignorable. Skipping...")
+		log.Info("Message is ignorable. Skipping...")
 		return
 	}
 
 	publishedContent, err := h.unmarshalContent(msg)
 	if err != nil {
-		h.log.WithError(err).WithTransactionID(tid).Warn("Cannot unmarshal message")
+		h.log.WithError(err).Warn("Cannot unmarshal message")
 		return
 	}
 
 	publishDateString := msg.Headers["Message-Timestamp"]
 	publishDate, err := time.Parse(checks.DateLayout, publishDateString)
 	if err != nil {
-		h.log.WithError(err).WithTransactionID(tid).Errorf("Cannot parse publish date [%v]",
+		h.log.WithError(err).Errorf("Cannot parse publish date [%v]",
 			publishDateString)
 		return
 	}
 
 	var paramsToSchedule []*checks.SchedulerParam
 
-	for _, preCheck := range checks.МainPreChecks() {
-		ok, scheduleParam := preCheck(publishedContent, tid, publishDate, h.appConfig, h.metricContainer, h.environments)
+	for _, preCheck := range checks.MainPreChecks() {
+		ok, scheduleParam := preCheck(publishedContent, tid, publishDate, h.appConfig, h.metricContainer, h.environments, h.log)
 		if ok {
 			paramsToSchedule = append(paramsToSchedule, scheduleParam)
 		} else {
@@ -101,23 +103,23 @@ func (h *kafkaMessageHandler) HandleMessage(msg kafka.FTMessage) {
 	}
 
 	for _, scheduleParam := range paramsToSchedule {
-		checks.ScheduleChecks(scheduleParam, h.subscribedFeeds, endpointSpecificChecks, h.appConfig, h.metricSink, h.e2eTestUUIDs)
+		checks.ScheduleChecks(scheduleParam, endpointSpecificChecks, h.appConfig, h.metricSink, h.e2eTestUUIDs, h.log)
 	}
 }
 
 func (h *kafkaMessageHandler) isIgnorableMessage(msg kafka.FTMessage) bool {
 	tid := msg.Headers["X-Request-Id"]
 
-	isSyntetic := h.isSyntheticTransactionID(tid)
+	isSynthetic := h.isSyntheticTransactionID(tid)
 	isE2ETest := config.IsE2ETestTransactionID(tid, h.e2eTestUUIDs)
 	isCarousel := h.isContentCarouselTransactionID(tid)
 
-	if isSyntetic && isE2ETest {
+	if isSynthetic && isE2ETest {
 		h.log.WithTransactionID(tid).Infof("Message is E2E Test.")
 		return false
 	}
 
-	return isSyntetic || isCarousel
+	return isSynthetic || isCarousel
 }
 
 func (h *kafkaMessageHandler) isSyntheticTransactionID(tid string) bool {

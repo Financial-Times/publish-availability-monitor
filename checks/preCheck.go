@@ -3,20 +3,36 @@ package checks
 import (
 	"time"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/content"
 	"github.com/Financial-Times/publish-availability-monitor/envs"
 	"github.com/Financial-Times/publish-availability-monitor/metrics"
-	log "github.com/sirupsen/logrus"
 )
 
-func МainPreChecks() []func(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.History, environments *envs.Environments) (bool, *SchedulerParam) {
-	return []func(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.History, environments *envs.Environments) (bool, *SchedulerParam){
-		mainPreCheck,
-	}
+type PreCheck func(
+	publishedContent content.Content,
+	tid string,
+	publishDate time.Time,
+	appConfig *config.AppConfig,
+	metricContainer *metrics.History,
+	environments *envs.Environments,
+	log *logger.UPPLogger,
+) (bool, *SchedulerParam)
+
+func MainPreChecks() []PreCheck {
+	return []PreCheck{mainPreCheck}
 }
 
-func mainPreCheck(publishedContent content.Content, tid string, publishDate time.Time, appConfig *config.AppConfig, metricContainer *metrics.History, environments *envs.Environments) (bool, *SchedulerParam) {
+func mainPreCheck(
+	publishedContent content.Content,
+	tid string,
+	publishDate time.Time,
+	appConfig *config.AppConfig,
+	metricContainer *metrics.History,
+	environments *envs.Environments,
+	log *logger.UPPLogger,
+) (bool, *SchedulerParam) {
 	uuid := publishedContent.GetUUID()
 	validationEndpointKey := publishedContent.GetType()
 	var validationEndpoint string
@@ -28,20 +44,29 @@ func mainPreCheck(publishedContent content.Content, tid string, publishDate time
 		username, password = envs.GetValidationCredentials()
 	}
 
-	valRes := publishedContent.Validate(validationEndpoint, tid, username, password)
+	logEntry := log.WithUUID(uuid).WithTransactionID(tid)
+
+	valRes := publishedContent.Validate(validationEndpoint, tid, username, password, log)
 	if !valRes.IsValid {
-		log.Infof("Message [%v] with UUID [%v] is INVALID, skipping...", tid, uuid)
+		logEntry.Info("Message is INVALID, skipping...")
 		return false, nil
 	}
 
-	log.Infof("Message [%v] with UUID [%v] is VALID.", tid, uuid)
+	logEntry.Info("Message is VALID.")
 
 	if isMessagePastPublishSLA(publishDate, appConfig.Threshold) {
-		log.Infof("Message [%v] with UUID [%v] is past publish SLA, skipping.", tid, uuid)
+		logEntry.Info("Message is past publish SLA, skipping.")
 		return false, nil
 	}
 
-	return true, &SchedulerParam{publishedContent, publishDate, tid, valRes.IsMarkedDeleted, metricContainer, environments}
+	return true, &SchedulerParam{
+		contentToCheck:  publishedContent,
+		publishDate:     publishDate,
+		tid:             tid,
+		isMarkedDeleted: valRes.IsMarkedDeleted,
+		metricContainer: metricContainer,
+		environments:    environments,
+	}
 }
 
 func isMessagePastPublishSLA(date time.Time, threshold int) bool {

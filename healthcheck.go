@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -370,7 +369,7 @@ func buildFtHealthcheckUrl(endpoint url.URL, health string) (string, error) {
 }
 
 func cleanupResp(resp *http.Response, log *logger.UPPLogger) {
-	_, err := io.Copy(ioutil.Discard, resp.Body)
+	_, err := io.Copy(io.Discard, resp.Body)
 	if err != nil {
 		log.Warnf("[%v]", err)
 	}

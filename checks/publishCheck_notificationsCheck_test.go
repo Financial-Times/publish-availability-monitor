@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -57,8 +58,18 @@ func TestFeedContainsMatchingNotification(t *testing.T) {
 		subscribedFeeds,
 		feedName,
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID).build(), "", "", 0, 0, nil, nil)
+	pc := NewPublishCheck(
+		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID).build(),
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	)
 	finished, _ := notificationsCheck.isCurrentOperationFinished(pc)
 	assert.True(t, finished, "Operation should be considered finished")
 }
@@ -76,8 +87,18 @@ func TestFeedMissingNotification(t *testing.T) {
 		subscribedFeeds,
 		feedName,
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID).build(), "", "", 0, 0, nil, nil)
+	pc := NewPublishCheck(
+		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID).build(),
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	)
 	finished, _ := notificationsCheck.isCurrentOperationFinished(pc)
 	assert.False(t, finished, "Operation should not be considered finished")
 }
@@ -100,8 +121,18 @@ func TestFeedContainsEarlierNotification(t *testing.T) {
 		subscribedFeeds,
 		feedName,
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID2).withPublishDate(testLastModified2).build(), "", "", 0, 0, nil, nil)
+	pc := NewPublishCheck(
+		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID2).withPublishDate(testLastModified2).build(),
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	)
 	finished, ignore := notificationsCheck.isCurrentOperationFinished(pc)
 	assert.False(t, finished, "Operation should not be considered finished")
 	assert.False(t, ignore, "Operation should not be skipped")
@@ -125,8 +156,18 @@ func TestFeedContainsLaterNotification(t *testing.T) {
 		subscribedFeeds,
 		feedName,
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID2).withPublishDate(testLastModified2).build(), "", "", 0, 0, nil, nil)
+	pc := NewPublishCheck(
+		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID2).withPublishDate(testLastModified2).build(),
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	)
 	_, ignore := notificationsCheck.isCurrentOperationFinished(pc)
 	assert.True(t, ignore, "Operation should be skipped")
 }
@@ -149,8 +190,18 @@ func TestFeedContainsUnparseableNotification(t *testing.T) {
 		subscribedFeeds,
 		feedName,
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID2).withPublishDate(testLastModified2).build(), "", "", 0, 0, nil, nil)
+	pc := NewPublishCheck(
+		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID2).withPublishDate(testLastModified2).build(),
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	)
 	finished, ignore := notificationsCheck.isCurrentOperationFinished(pc)
 	assert.False(t, finished, "Operation should not be considered finished")
 	assert.False(t, ignore, "Operation should not be skipped")
@@ -172,8 +223,18 @@ func TestMissingFeed(t *testing.T) {
 		subscribedFeeds,
 		feedName,
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID).build(), "", "", 0, 0, nil, nil)
+	pc := NewPublishCheck(
+		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID).build(),
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	)
 	finished, ignore := notificationsCheck.isCurrentOperationFinished(pc)
 	assert.False(t, finished, "Operation should not be considered finished")
 	assert.False(t, ignore, "Operation should not be ignored")
@@ -195,8 +256,18 @@ func TestMissingEnvironment(t *testing.T) {
 		subscribedFeeds,
 		feedName,
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID).build(), "", "", 0, 0, nil, nil)
+	pc := NewPublishCheck(
+		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID).build(),
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	)
 	finished, ignore := notificationsCheck.isCurrentOperationFinished(pc)
 	assert.False(t, finished, "Operation should not be considered finished")
 	assert.False(t, ignore, "Operation should not be ignored")
@@ -205,7 +276,9 @@ func TestMissingEnvironment(t *testing.T) {
 func TestShouldSkipCheck_ContentIsNotMarkedAsDeleted_CheckNotSkipped(t *testing.T) {
 	pm := newPublishMetricBuilder().withMarkedDeleted(false).build()
 	notificationsCheck := NotificationsCheck{}
-	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil)
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil, log)
 
 	if notificationsCheck.shouldSkipCheck(pc) {
 		t.Errorf("Expected failure")
@@ -214,7 +287,8 @@ func TestShouldSkipCheck_ContentIsNotMarkedAsDeleted_CheckNotSkipped(t *testing.
 
 func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsExist_CheckNotSkipped(t *testing.T) {
 	pm := newPublishMetricBuilder().withMarkedDeleted(true).withEndpoint("http://notifications-endpoint:8080/content/notifications").build()
-	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil)
+	log := logger.NewUPPLogger("test", "PANIC")
+	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil, log)
 	notificationsCheck := NotificationsCheck{
 		mockHTTPCaller(t, "", buildResponse(200, `[{"id": "foobar", "lastModified" : "foobaz", "publishReference" : "unitTestRef" }]`)), nil, feedName,
 	}
@@ -225,7 +299,8 @@ func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsExist_Chec
 
 func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsDoesNotExist_CheckSkipped(t *testing.T) {
 	pm := newPublishMetricBuilder().withMarkedDeleted(true).withEndpoint("http://notifications-endpoint:8080/content/notifications").build()
-	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil)
+	log := logger.NewUPPLogger("test", "PANIC")
+	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil, log)
 	notificationsCheck := NotificationsCheck{
 		mockHTTPCaller(t, "", buildResponse(200, `[]`)), nil, feedName,
 	}
