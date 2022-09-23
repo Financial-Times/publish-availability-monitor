@@ -38,16 +38,16 @@ func (resp *mockPushNotificationsStream) Close() error {
 	return nil
 }
 
-func buildPushResponse(statusCode int, notifications []string, log *logger.UPPLogger) (*mockResponse, *mockPushNotificationsStream) {
+func buildOKPushResponse(notifications []string, log *logger.UPPLogger) *mockResponse {
 	stream := &mockPushNotificationsStream{
 		notifications: notifications,
 		log:           log,
 	}
 	return &mockResponse{
 		&http.Response{
-			StatusCode: statusCode,
+			StatusCode: 200,
 			Body:       stream,
-		}, nil}, stream
+		}, nil}
 }
 
 func TestPushNotificationsAreConsumed(t *testing.T) {
@@ -58,11 +58,11 @@ func TestPushNotificationsAreConsumed(t *testing.T) {
 	notifications = strings.Replace(notifications, "\n", "", -1)
 	log := logger.NewUPPLogger("test", "INFO")
 
-	httpResponse, _ := buildPushResponse(200, []string{notifications}, log)
+	httpResponse := buildOKPushResponse([]string{notifications}, log)
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_push_", httpResponse)
 
-	baseUrl, _ := url.Parse("http://www.example.org")
-	f := NewNotificationsFeed("notifications-push", *baseUrl, 10, 1, "", "", "", log)
+	baseURL, _ := url.Parse("http://www.example.org")
+	f := NewNotificationsFeed("notifications-push", *baseURL, 10, 1, "", "", "", log)
 	f.(*NotificationsPushFeed).SetHTTPCaller(httpCaller)
 	f.Start()
 	defer f.Stop()
@@ -82,7 +82,7 @@ func TestListPushNotificationsAreConsumed(t *testing.T) {
 	notifications = strings.Replace(notifications, "\n", "", -1)
 	log := logger.NewUPPLogger("test", "INFO")
 
-	httpResponse, _ := buildPushResponse(200, []string{notifications}, log)
+	httpResponse := buildOKPushResponse([]string{notifications}, log)
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_push_", httpResponse)
 
 	baseURL, _ := url.Parse("http://www.example.org")
@@ -99,9 +99,9 @@ func TestListPushNotificationsAreConsumed(t *testing.T) {
 }
 
 func TestPushNotificationsForReturnsEmptyIfNotFound(t *testing.T) {
-	baseUrl, _ := url.Parse("http://www.example.org")
+	baseURL, _ := url.Parse("http://www.example.org")
 	log := logger.NewUPPLogger("test", "INFO")
-	f := NewNotificationsFeed("notifications-push", *baseUrl, 10, 1, "", "", "", log)
+	f := NewNotificationsFeed("notifications-push", *baseURL, 10, 1, "", "", "", log)
 
 	response := f.NotificationsFor("1cb14245-5185-4ed5-9188-4d2a86085599")
 	assert.Len(t, response, 0, "notifications for item")
@@ -118,14 +118,14 @@ func TestPushNotificationsForReturnsAllMatches(t *testing.T) {
 	notification2 := mockNotificationFor(uuid, publishRef2, lastModified2)
 	log := logger.NewUPPLogger("test", "INFO")
 
-	httpResponses, _ := buildPushResponse(200, []string{
+	httpResponses := buildOKPushResponse([]string{
 		strings.Replace(notification1, "\n", "", -1),
 		strings.Replace(notification2, "\n", "", -1),
 	}, log)
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_push_", httpResponses)
 
-	baseUrl, _ := url.Parse("http://www.example.org")
-	f := NewNotificationsFeed("notifications-push", *baseUrl, 10, 1, "", "", "", log)
+	baseURL, _ := url.Parse("http://www.example.org")
+	f := NewNotificationsFeed("notifications-push", *baseURL, 10, 1, "", "", "", log)
 	f.(*NotificationsPushFeed).SetHTTPCaller(httpCaller)
 	f.Start()
 	defer f.Stop()
@@ -144,11 +144,11 @@ func TestPushNotificationsPollingContinuesAfterErrorResponse(t *testing.T) {
 	notification := mockNotificationFor(uuid, publishRef, lastModified)
 	log := logger.NewUPPLogger("test", "INFO")
 
-	httpResponse, _ := buildPushResponse(200, []string{strings.Replace(notification, "\n", "", -1)}, log)
+	httpResponse := buildOKPushResponse([]string{strings.Replace(notification, "\n", "", -1)}, log)
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_push_", buildResponse(500, "", nil), httpResponse)
 
-	baseUrl, _ := url.Parse("http://www.example.org")
-	f := NewNotificationsFeed("notifications-push", *baseUrl, 10, 1, "", "", "", log)
+	baseURL, _ := url.Parse("http://www.example.org")
+	f := NewNotificationsFeed("notifications-push", *baseURL, 10, 1, "", "", "", log)
 	f.(*NotificationsPushFeed).SetHTTPCaller(httpCaller)
 	f.Start()
 	defer f.Stop()
@@ -167,11 +167,11 @@ func TestPushNotificationsArePurged(t *testing.T) {
 	notifications = strings.Replace(notifications, "\n", "", -1)
 	log := logger.NewUPPLogger("test", "INFO")
 
-	httpResponse, _ := buildPushResponse(200, []string{notifications}, log)
+	httpResponse := buildOKPushResponse([]string{notifications}, log)
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_push_", httpResponse)
 
-	baseUrl, _ := url.Parse("http://www.example.org")
-	f := NewNotificationsFeed("notifications-push", *baseUrl, 1, 1, "", "", "", log)
+	baseURL, _ := url.Parse("http://www.example.org")
+	f := NewNotificationsFeed("notifications-push", *baseURL, 1, 1, "", "", "", log)
 	f.(*NotificationsPushFeed).SetHTTPCaller(httpCaller)
 	f.Start()
 	defer f.Stop()
@@ -195,10 +195,10 @@ func TestPushNotificationsSendsAuthentication(t *testing.T) {
 	notifications = strings.Replace(notifications, "\n", "", -1)
 	log := logger.NewUPPLogger("test", "INFO")
 
-	httpResponse, _ := buildPushResponse(200, []string{notifications}, log)
+	httpResponse := buildOKPushResponse([]string{notifications}, log)
 
-	baseUrl, _ := url.Parse("http://www.example.org")
-	f := NewNotificationsFeed("notifications-push", *baseUrl, 10, 1, "someUser", "somePwd", "someApiKey", log)
+	baseURL, _ := url.Parse("http://www.example.org")
+	f := NewNotificationsFeed("notifications-push", *baseURL, 10, 1, "someUser", "somePwd", "someApiKey", log)
 	httpCaller := mockAuthenticatedHTTPCaller(t, "tid_pam_notifications_push_", "someUser", "somePwd", "someApiKey", httpResponse)
 	f.(*NotificationsPushFeed).SetHTTPCaller(httpCaller)
 

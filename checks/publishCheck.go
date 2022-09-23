@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"time"
 
 	"github.com/Financial-Times/go-logger/v2"
@@ -92,13 +91,15 @@ func (c ContentCheck) isCurrentOperationFinished(pc *PublishCheck) (operationFin
 		URL:      url,
 		Username: pc.username,
 		Password: pc.password,
-		TxID:     httpcaller.ConstructPamTxId(pm.TID),
-	}) //nolint:bodyclose
+		TID:      httpcaller.ConstructPamTID(pm.TID),
+	})
 	if err != nil {
 		pc.log.WithError(err).Warnf("Error calling URL: [%v] for %s", url, pc)
 		return false, false
 	}
-	defer cleanupResp(resp)
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	// if the article was marked as deleted, operation is finished when the
 	// article cannot be found anymore
@@ -145,22 +146,25 @@ func NewContentNeo4jCheck(httpCaller httpcaller.Caller) ContentNeo4jCheck {
 	return ContentNeo4jCheck{httpCaller: httpCaller}
 }
 
+//nolint:unparam
 func (c ContentNeo4jCheck) isCurrentOperationFinished(pc *PublishCheck) (operationFinished, ignoreCheck bool) {
 	pm := pc.Metric
 	url := pm.Endpoint.String() + pm.UUID
 
-	resp, err := c.httpCaller.DoCall(httpcaller.Config{ //nolint:bodyclose
+	resp, err := c.httpCaller.DoCall(httpcaller.Config{
 		URL:      url,
 		Username: pc.username,
 		Password: pc.password,
-		TxID:     httpcaller.ConstructPamTxId(pm.TID)})
+		TID:      httpcaller.ConstructPamTID(pm.TID)})
 
 	if err != nil {
 		pc.log.Warnf("Error calling URL: [%v] for %s", url, pc)
 		return false, false
 	}
 
-	defer cleanupResp(resp)
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	// if the article was marked as deleted, operation is finished when the
 	// article cannot be found anymore
@@ -233,13 +237,15 @@ func (n NotificationsCheck) shouldSkipCheck(pc *PublishCheck) bool {
 		return false
 	}
 	url := pm.Endpoint.String() + "/" + pm.UUID
-	resp, err := n.httpCaller.DoCall(httpcaller.Config{URL: url, Username: pc.username, Password: pc.password, TxID: httpcaller.ConstructPamTxId(pm.TID)}) //nolint:bodyclose
+	resp, err := n.httpCaller.DoCall(httpcaller.Config{URL: url, Username: pc.username, Password: pc.password, TID: httpcaller.ConstructPamTID(pm.TID)})
 	if err != nil {
 		pc.log.WithError(err).Warnf("Checking %s. Error calling URL: [%v]",
 			LoggingContextForCheck(pm.Config.Alias, pm.UUID, pm.Platform, pm.TID), url)
 		return false
 	}
-	defer cleanupResp(resp)
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	if resp.StatusCode != 200 {
 		return false
@@ -270,11 +276,6 @@ func (n NotificationsCheck) checkFeed(uuid string, envName string) []*feeds.Noti
 	}
 
 	return []*feeds.Notification{}
-}
-
-func cleanupResp(resp *http.Response) {
-	_, _ = io.Copy(io.Discard, resp.Body)
-	_ = resp.Body.Close()
 }
 
 func isSamePublishEvent(jsonContent map[string]interface{}, pc *PublishCheck) (operationFinished, ignoreCheck bool) {

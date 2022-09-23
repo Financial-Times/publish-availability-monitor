@@ -9,10 +9,10 @@ import (
 )
 
 func TestNewPullFeed(t *testing.T) {
-	baseUrl, _ := url.Parse("http://www.example.org/")
+	baseURL, _ := url.Parse("http://www.example.org/")
 	log := logger.NewUPPLogger("test", "PANIC")
 
-	actual := NewNotificationsFeed("notifications", *baseUrl, 10, 10, "expectedUser", "expectedPwd", "", log)
+	actual := NewNotificationsFeed("notifications", *baseURL, 10, 10, "expectedUser", "expectedPwd", "", log)
 	assert.IsType(t, (*NotificationsPullFeed)(nil), actual, "expected a NotificationsPullFeed")
 
 	npf := actual.(*NotificationsPullFeed)
@@ -21,10 +21,10 @@ func TestNewPullFeed(t *testing.T) {
 }
 
 func TestNewPushFeed(t *testing.T) {
-	baseUrl, _ := url.Parse("http://www.example.org/")
+	baseURL, _ := url.Parse("http://www.example.org/")
 	log := logger.NewUPPLogger("test", "PANIC")
 
-	actual := NewNotificationsFeed("notifications-push", *baseUrl, 10, 10, "expectedUser", "expectedPwd", "expectedApiKey", log)
+	actual := NewNotificationsFeed("notifications-push", *baseURL, 10, 10, "expectedUser", "expectedPwd", "expectedApiKey", log)
 	assert.IsType(t, (*NotificationsPushFeed)(nil), actual, "expected a NotificationsPushFeed")
 
 	npf := actual.(*NotificationsPushFeed)

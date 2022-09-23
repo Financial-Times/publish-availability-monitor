@@ -1,13 +1,10 @@
 {
     "threshold": 30,
     "queueConfig": {
-        "address": [
-            "msk.kafka.broker.url"
-        ],
-        "consumerGroup": "ExamplePubMonitorGroupName",
-        "lagTolerance": "120",
+        "connectionString": "kafka:9092",
         "topic": "NativeCmsPublicationEvents",
-        "connectionString": "kafka"
+        "consumerGroup": "ExamplePubMonitorGroupName",
+        "lagTolerance": 120
     },
     "metricConfig": [
         {

@@ -1,8 +1,6 @@
 package feeds
 
 import (
-	"io"
-	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -13,7 +11,7 @@ import (
 type baseNotificationsFeed struct {
 	feedName          string
 	httpCaller        httpcaller.Caller
-	baseUrl           string
+	baseURL           string
 	username          string
 	password          string
 	expiry            int
@@ -21,12 +19,7 @@ type baseNotificationsFeed struct {
 	notificationsLock *sync.RWMutex
 }
 
-func cleanupResp(resp *http.Response) {
-	_, _ = io.Copy(io.Discard, resp.Body)
-	_ = resp.Body.Close()
-}
-
-func parseUuidFromUrl(url string) string {
+func parseUUIDFromURL(url string) string {
 	i := strings.LastIndex(url, "/")
 	return url[i+1:]
 }
@@ -87,5 +80,5 @@ func (f *baseNotificationsFeed) NotificationsFor(uuid string) []*Notification {
 }
 
 func (f *baseNotificationsFeed) FeedURL() string {
-	return f.baseUrl
+	return f.baseURL
 }

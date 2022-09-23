@@ -23,7 +23,7 @@ type NotificationsPushFeed struct {
 }
 
 func (f *NotificationsPushFeed) Start() {
-	f.log.Infof("starting notifications-push feed from %v", f.baseUrl)
+	f.log.Infof("starting notifications-push feed from %v", f.baseURL)
 	f.stopFeedLock.Lock()
 	defer f.stopFeedLock.Unlock()
 
@@ -41,7 +41,7 @@ func (f *NotificationsPushFeed) Start() {
 }
 
 func (f *NotificationsPushFeed) Stop() {
-	f.log.Infof("shutting down notifications push feed for %s", f.baseUrl)
+	f.log.Infof("shutting down notifications push feed for %s", f.baseURL)
 	f.stopFeedLock.Lock()
 	defer f.stopFeedLock.Unlock()
 
@@ -64,15 +64,15 @@ func (f *NotificationsPushFeed) isConsuming() bool {
 }
 
 func (f *NotificationsPushFeed) consumeFeed() bool {
-	txId := f.buildNotificationsTxId()
-	log := f.log.WithTransactionID(txId)
+	tid := f.buildNotificationsTID()
+	log := f.log.WithTransactionID(tid)
 
 	resp, err := f.httpCaller.DoCall(httpcaller.Config{
-		URL:      f.baseUrl,
+		URL:      f.baseURL,
 		Username: f.username,
 		Password: f.password,
 		APIKey:   f.apiKey,
-		TxID:     txId,
+		TID:      tid,
 	})
 	if err != nil {
 		log.WithError(err).Error("Sending request failed")
@@ -131,7 +131,7 @@ func (f *NotificationsPushFeed) storeNotifications(notifications []Notification)
 	defer f.notificationsLock.Unlock()
 
 	for _, n := range notifications {
-		uuid := parseUuidFromUrl(n.ID)
+		uuid := parseUUIDFromURL(n.ID)
 		var history []*Notification
 		var found bool
 		if history, found = f.notifications[uuid]; !found {
@@ -143,11 +143,12 @@ func (f *NotificationsPushFeed) storeNotifications(notifications []Notification)
 		// will push notifications slice containing only a single item which migh lead to bugs in the future.
 		// If the "notifications" slice contains more than one item
 		// for every iteration the code will capture only the first one.
+		// nolint:gosec
 		history = append(history, &n)
 		f.notifications[uuid] = history
 	}
 }
 
-func (f *NotificationsPushFeed) buildNotificationsTxId() string {
+func (f *NotificationsPushFeed) buildNotificationsTID() string {
 	return "tid_pam_notifications_push_" + time.Now().Format(time.RFC3339)
 }

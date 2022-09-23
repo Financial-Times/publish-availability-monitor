@@ -29,7 +29,7 @@ func TestBuildFtHealthcheckUrl(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		uri, _ := url.Parse(tc.validationURL)
-		if actual, _ := buildFtHealthcheckUrl(*uri, tc.health); actual != tc.expectedHealthURL {
+		if actual := buildFtHealthcheckURL(*uri, tc.health); actual != tc.expectedHealthURL {
 			t.Errorf("For [%s]:\n\tExpected: [%s]\n\tActual: [%s]", tc.validationURL, tc.expectedHealthURL, actual)
 		}
 	}
@@ -38,7 +38,7 @@ func TestBuildFtHealthcheckUrl(t *testing.T) {
 func TestPublishNoFailuresForSameUUIDs(t *testing.T) {
 	metricConfig := config.MetricConfig{}
 	interval := metrics.Interval{LowerBound: 5, UpperBound: 5}
-	newUrl := url.URL{}
+	newURL := url.URL{}
 	t0 := time.Now()
 	publishMetric1 := metrics.PublishMetric{
 		UUID:            "1234567",
@@ -47,7 +47,7 @@ func TestPublishNoFailuresForSameUUIDs(t *testing.T) {
 		Platform:        "",
 		PublishInterval: interval,
 		Config:          metricConfig,
-		Endpoint:        newUrl,
+		Endpoint:        newURL,
 		TID:             "tid_1234",
 		IsMarkedDeleted: false,
 	}
@@ -59,7 +59,7 @@ func TestPublishNoFailuresForSameUUIDs(t *testing.T) {
 		Platform:        "",
 		PublishInterval: interval,
 		Config:          metricConfig,
-		Endpoint:        newUrl,
+		Endpoint:        newURL,
 		TID:             "tid_6789",
 		IsMarkedDeleted: false,
 	}
@@ -71,7 +71,7 @@ func TestPublishNoFailuresForSameUUIDs(t *testing.T) {
 		Platform:        "",
 		PublishInterval: interval,
 		Config:          metricConfig,
-		Endpoint:        newUrl,
+		Endpoint:        newURL,
 		TID:             "tid_6789",
 		IsMarkedDeleted: false,
 	}
@@ -91,7 +91,7 @@ func TestPublishNoFailuresForSameUUIDs(t *testing.T) {
 func TestPublishFailureForDistinctUUIDs(t *testing.T) {
 	metricConfig := config.MetricConfig{}
 	interval := metrics.Interval{LowerBound: 5, UpperBound: 5}
-	newUrl := url.URL{}
+	newURL := url.URL{}
 	t0 := time.Now()
 	publishMetric1 := metrics.PublishMetric{
 		UUID:            "12345",
@@ -100,7 +100,7 @@ func TestPublishFailureForDistinctUUIDs(t *testing.T) {
 		Platform:        "",
 		PublishInterval: interval,
 		Config:          metricConfig,
-		Endpoint:        newUrl,
+		Endpoint:        newURL,
 		TID:             "tid_1234",
 		IsMarkedDeleted: false,
 	}
@@ -112,7 +112,7 @@ func TestPublishFailureForDistinctUUIDs(t *testing.T) {
 		Platform:        "",
 		PublishInterval: interval,
 		Config:          metricConfig,
-		Endpoint:        newUrl,
+		Endpoint:        newURL,
 		TID:             "tid_6789",
 		IsMarkedDeleted: false,
 	}
@@ -124,7 +124,7 @@ func TestPublishFailureForDistinctUUIDs(t *testing.T) {
 		Platform:        "",
 		PublishInterval: interval,
 		Config:          metricConfig,
-		Endpoint:        newUrl,
+		Endpoint:        newURL,
 		TID:             "tid_6789",
 		IsMarkedDeleted: false,
 	}

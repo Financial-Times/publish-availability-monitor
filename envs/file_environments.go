@@ -212,6 +212,7 @@ func updateValidationCredentials(data []byte, log *logger.UPPLogger) error {
 	return nil
 }
 
+//nolint:gocognit
 func configureFileFeeds(envs []Environment, removedEnvs []string, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig, log *logger.UPPLogger) {
 	for _, envName := range removedEnvs {
 		feeds, found := subscribedFeeds[envName]

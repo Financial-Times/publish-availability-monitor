@@ -54,12 +54,12 @@ func doExternalValidation(p validationParam, validCheck func(int) bool, deletedC
 		contentType = p.contentType + "+json"
 	}
 
-	resp, err := httpCaller.DoCall(httpcaller.Config{ //nolint:bodyclose
+	resp, err := httpCaller.DoCall(httpcaller.Config{
 		HTTPMethod:  "POST",
 		URL:         p.validationURL,
 		Username:    p.username,
 		Password:    p.password,
-		TxID:        httpcaller.ConstructPamTxId(p.txID),
+		TID:         httpcaller.ConstructPamTID(p.txID),
 		ContentType: contentType,
 		Entity:      bytes.NewReader(p.binaryContent),
 	})
@@ -68,33 +68,22 @@ func doExternalValidation(p validationParam, validCheck func(int) bool, deletedC
 		logEntry.WithError(err).Warn("External validation for content failed while creating validation request. Skipping external validation.")
 		return ValidationResponse{true, deletedCheck()}
 	}
-	defer cleanupResp(resp, logEntry)
+	defer resp.Body.Close()
 
-	log.Infof("External validation received statusCode [%d]", resp.StatusCode)
+	logEntry.Infof("External validation received statusCode [%d]", resp.StatusCode)
 
 	bs, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.WithError(err).Warn("External validation reading response body error")
+		logEntry.WithError(err).Warn("External validation reading response body error")
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNotFound {
-		log.Infof("External validation received statusCode [%d], received error: [%v]", resp.StatusCode, string(bs))
+		logEntry.Infof("External validation received statusCode [%d], received error: [%v]", resp.StatusCode, string(bs))
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
-		log.Infof("External validation received statusCode [%d], content is marked as deleted.", resp.StatusCode)
+		logEntry.Infof("External validation received statusCode [%d], content is marked as deleted.", resp.StatusCode)
 	}
 
 	return ValidationResponse{validCheck(resp.StatusCode), deletedCheck(resp.StatusCode)}
-}
-
-func cleanupResp(resp *http.Response, log *logger.LogEntry) {
-	_, err := io.Copy(io.Discard, resp.Body)
-	if err != nil {
-		log.WithError(err).Warn("External validation cleanup failed while discarding body")
-	}
-	err = resp.Body.Close()
-	if err != nil {
-		log.WithError(err).Warn("External validation cleanup failed while closing body")
-	}
 }

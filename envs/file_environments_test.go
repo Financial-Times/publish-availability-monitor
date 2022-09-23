@@ -22,6 +22,7 @@ const (
 				"read-url": "https://test-env.ft.com"
 			}
 		]`
+	//nolint:gosec
 	validEnvCredentialsConfig = `
 		[
 			{
@@ -30,12 +31,13 @@ const (
 				"password": "test-pwd"
 			}
 		]`
+	//nolint:gosec
 	validValidationCredentialsConfig = `
 		{
 			"username": "test-user",
 			"password": "test-pwd"
 		}`
-	invalidJsonConfig = `invalid-config`
+	invalidJSONConfig = `invalid-config`
 )
 
 func TestParseEnvsIntoMap(t *testing.T) {
@@ -201,7 +203,7 @@ func TestUpdateValidationCredentialNilFile(t *testing.T) {
 }
 
 func TestUpdateValidationCredentialsInvalidConfig(t *testing.T) {
-	fileName := prepareFile(invalidJsonConfig)
+	fileName := prepareFile(invalidJSONConfig)
 	validatorCredentials := Credentials{
 		Username: "test-username",
 		Password: "test-password",
@@ -467,7 +469,7 @@ func TestUpdateEnvsIfChangedNoChanges(t *testing.T) {
 }
 
 func TestUpdateEnvsIfChangedInvalidEnvsFile(t *testing.T) {
-	envsFile := prepareFile(invalidJsonConfig)
+	envsFile := prepareFile(invalidJSONConfig)
 	defer os.Remove(envsFile)
 	credsFile := prepareFile(validEnvCredentialsConfig)
 	defer os.Remove(credsFile)
@@ -488,7 +490,7 @@ func TestUpdateEnvsIfChangedInvalidEnvsFile(t *testing.T) {
 func TestUpdateEnvsIfChangedInvalidCredsFile(t *testing.T) {
 	envsFile := prepareFile(validEnvConfig)
 	defer os.Remove(envsFile)
-	credsFile := prepareFile(invalidJsonConfig)
+	credsFile := prepareFile(invalidJSONConfig)
 	defer os.Remove(credsFile)
 
 	environments := NewEnvironments()
@@ -505,9 +507,9 @@ func TestUpdateEnvsIfChangedInvalidCredsFile(t *testing.T) {
 }
 
 func TestUpdateEnvsIfChangedInvalidFiles(t *testing.T) {
-	envsFile := prepareFile(invalidJsonConfig)
+	envsFile := prepareFile(invalidJSONConfig)
 	defer os.Remove(envsFile)
-	credsFile := prepareFile(invalidJsonConfig)
+	credsFile := prepareFile(invalidJSONConfig)
 	defer os.Remove(credsFile)
 
 	environments := NewEnvironments()
@@ -536,7 +538,7 @@ func TestUpdateValidationCredentialsIfChangedFileDoesntExist(t *testing.T) {
 }
 
 func TestUpdateValidationCredentialsIfChangedInvalidFile(t *testing.T) {
-	validationCredsFile := prepareFile(invalidJsonConfig)
+	validationCredsFile := prepareFile(invalidJSONConfig)
 	defer os.Remove(validationCredsFile)
 
 	validatorCredentials = ""

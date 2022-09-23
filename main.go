@@ -77,17 +77,20 @@ func main() {
 		}
 	}
 
-	h := NewKafkaMessageHandler(appConfig, environments, subscribedFeeds, metricSink, metricContainer, e2eTestUUIDs, log)
-	c := kafka.NewConsumer(kafka.ConsumerConfig{
-		BrokersConnectionString: appConfig.QueueConf.BrokersConnectionString,
-		ConsumerGroup:           appConfig.QueueConf.ConsumerGroup,
-		Options:                 kafka.DefaultConsumerOptions(),
-	}, []*kafka.Topic{kafka.NewTopic(
-		appConfig.QueueConf.Topic,
-		kafka.WithLagTolerance(int64(appConfig.QueueConf.KafkaLagTolerance)))},
-		log)
+	messageHandler := NewKafkaMessageHandler(appConfig, environments, subscribedFeeds, metricSink, metricContainer, e2eTestUUIDs, log)
+	consumer := kafka.NewConsumer(
+		kafka.ConsumerConfig{
+			BrokersConnectionString: appConfig.QueueConf.ConnectionString,
+			ConsumerGroup:           appConfig.QueueConf.ConsumerGroup,
+			Options:                 kafka.DefaultConsumerOptions(),
+		},
+		[]*kafka.Topic{
+			kafka.NewTopic(appConfig.QueueConf.Topic, kafka.WithLagTolerance(int64(appConfig.QueueConf.LagTolerance))),
+		},
+		log,
+	)
 
-	go startHTTPServer(appConfig, environments, subscribedFeeds, metricContainer, c, log)
+	go startHTTPServer(appConfig, environments, subscribedFeeds, metricContainer, consumer, log)
 
 	publishMetricDestinations := []metrics.Destination{
 		metrics.NewSplunkFeeder(appConfig.SplunkConf.LogPrefix),
@@ -100,7 +103,21 @@ func main() {
 	aggregator := metrics.NewAggregator(metricSink, publishMetricDestinations, capabilityMetricDestinations, log)
 	go aggregator.Run()
 
-	readKafkaMessages(c, h, environments, log)
+	for !environments.AreReady() {
+		log.Info("Environments not set, retry in 3s...")
+		time.Sleep(3 * time.Second)
+	}
+
+	go consumer.Start(messageHandler.HandleMessage)
+	defer func() {
+		if err := consumer.Close(); err != nil {
+			log.WithError(err).Error("Error terminating consumer")
+		}
+	}()
+
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	<-ch
 }
 
 func startHTTPServer(
@@ -126,7 +143,7 @@ func startHTTPServer(
 	router.HandleFunc(status.BuildInfoPathDW, status.BuildInfoHandler)
 
 	http.Handle("/", router)
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", nil) //nolint:gosec
 	if err != nil {
 		log.Panicf("Couldn't set up HTTP listener: %+v\n", err)
 	}
@@ -136,22 +153,6 @@ func loadHistory(metricContainer *metrics.History) func(w http.ResponseWriter, r
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, metricContainer.String())
 	}
-}
-
-func readKafkaMessages(c *kafka.Consumer, h MessageHandler, environments *envs.Environments, log *logger.UPPLogger) {
-	for !environments.AreReady() {
-		log.Info("Environments not set, retry in 3s...")
-		time.Sleep(3 * time.Second)
-	}
-
-	go func() {
-		c.Start(h.HandleMessage)
-	}()
-
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	<-ch
-	c.Close()
 }
 
 func sliceContains(s []string, e string) bool {

@@ -24,10 +24,10 @@ type AppConfig struct {
 
 // QueueConfig is the configuration for kafka consumer queue
 type QueueConfig struct {
-	ConsumerGroup           string `json:"consumerGroup"`
-	KafkaLagTolerance       int    `json:"lagTolerance"`
-	Topic                   string `json:"topic"`
-	BrokersConnectionString string `json:"connectionString"`
+	ConnectionString string `json:"connectionString"`
+	Topic            string `json:"topic"`
+	ConsumerGroup    string `json:"consumerGroup"`
+	LagTolerance     int    `json:"lagTolerance"`
 }
 
 // MetricConfig is the configuration of a PublishMetric

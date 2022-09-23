@@ -86,7 +86,7 @@ func TestGenericContent_Validate(t *testing.T) {
 			txID := "tid_1234"
 			testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				assert.Equal(t, "/validate", req.RequestURI)
-				assert.Equal(t, httpcaller.ConstructPamTxId(txID), req.Header.Get("X-Request-Id"))
+				assert.Equal(t, httpcaller.ConstructPamTID(txID), req.Header.Get("X-Request-Id"))
 				assert.Equal(t, "POST", req.Method)
 				assert.Equal(t, test.Content.Type+"+json", req.Header.Get("Content-Type"))
 

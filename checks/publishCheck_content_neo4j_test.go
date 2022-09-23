@@ -11,8 +11,10 @@ import (
 func TestIsCurrentOperationFinished_ContentNeo4jCheck_InvalidContent(t *testing.T) {
 	currentTid := "tid_1234"
 	testResponse := `{ "uuid" : "1234-1234"`
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentNeo4jCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(200, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
 	log := logger.NewUPPLogger("test", "PANIC")
 
@@ -24,8 +26,10 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_InvalidContent(t *testing.
 func TestIsCurrentOperationFinished_ContentNeo4jCheck_InvalidUUID(t *testing.T) {
 	currentTid := "tid_1234"
 	testResponse := `{ "uuid" : "1234-1235"}`
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentNeo4jCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(200, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
 	log := logger.NewUPPLogger("test", "PANIC")
 
@@ -37,8 +41,10 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_InvalidUUID(t *testing.T) 
 func TestIsCurrentOperationFinished_ContentNeo4jCheck_Finished(t *testing.T) {
 	currentTid := "tid_1234"
 	testResponse := fmt.Sprintf(`{ "uuid" : "1234-1234", "publishReference" : "%s"}`, currentTid)
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentNeo4jCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(200, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
 	log := logger.NewUPPLogger("test", "PANIC")
 
@@ -52,8 +58,10 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_WithAuthentication(t *test
 	testResponse := fmt.Sprintf(`{ "uuid" : "1234-1234", "publishReference" : "%s"}`, currentTid)
 	username := "jdoe"
 	password := "frodo"
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentNeo4jCheck{
-		mockAuthenticatedHTTPCaller(t, "tid_pam_5678", username, password, buildResponse(200, testResponse)),
+		mockAuthenticatedHTTPCaller(t, "tid_pam_5678", username, password, response),
 	}
 	log := logger.NewUPPLogger("test", "PANIC")
 
@@ -65,8 +73,10 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_WithAuthentication(t *test
 func TestIsCurrentOperationFinished_ContentNeo4jCheck_NotFinished(t *testing.T) {
 	currentTid := "tid_1234"
 	testResponse := `{ "uuid" : "1234-1234", "publishReference" : "tid_1235"}`
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentNeo4jCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(200, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
 	log := logger.NewUPPLogger("test", "PANIC")
 
@@ -78,8 +88,10 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_NotFinished(t *testing.T) 
 func TestIsCurrentOperationFinished_ContentNeo4jCheck_MarkedDeleted_Finished(t *testing.T) {
 	currentTid := "tid_1234"
 	testResponse := fmt.Sprintf(`{ "uuid" : "1234-1234", "publishReference" : "%s"}`, currentTid)
+	response := buildResponse(404, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentNeo4jCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(404, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
 	log := logger.NewUPPLogger("test", "PANIC")
 
@@ -91,8 +103,10 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_MarkedDeleted_Finished(t *
 func TestIsCurrentOperationFinished_ContentNeo4jCheck_MarkedDeleted_NotFinished(t *testing.T) {
 	currentTid := "tid_1234"
 	testResponse := fmt.Sprintf(`{ "uuid" : "1234-1234", "publishReference" : "%s"}`, currentTid)
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentNeo4jCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(200, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
 	log := logger.NewUPPLogger("test", "PANIC")
 

@@ -20,7 +20,7 @@ func (video Video) Initialize(binaryContent []byte) Content {
 	return video
 }
 
-func (video Video) Validate(externalValidationEndpoint string, txId string, username string, password string, log *logger.UPPLogger) ValidationResponse {
+func (video Video) Validate(externalValidationEndpoint, tid, username, password string, log *logger.UPPLogger) ValidationResponse {
 	uuid := video.GetUUID()
 
 	if uuidutils.ValidateUUID(uuid) != nil {
@@ -28,18 +28,18 @@ func (video Video) Validate(externalValidationEndpoint string, txId string, user
 		return ValidationResponse{IsValid: false, IsMarkedDeleted: video.isMarkedDeleted()}
 	}
 
-	validationParam := validationParam{
+	param := validationParam{
 		binaryContent: video.BinaryContent,
 		validationURL: externalValidationEndpoint,
 		username:      username,
 		password:      password,
-		txID:          txId,
+		txID:          tid,
 		uuid:          uuid,
 		contentType:   video.GetType(),
 	}
 
 	return doExternalValidation(
-		validationParam,
+		param,
 		video.isValid,
 		video.isMarkedDeleted,
 		log,

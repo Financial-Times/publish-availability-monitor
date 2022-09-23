@@ -25,6 +25,7 @@ type SchedulerParam struct {
 	environments    *envs.Environments
 }
 
+//nolint:gocognit
 func ScheduleChecks(
 	p *SchedulerParam,
 	endpointSpecificChecks map[string]EndpointSpecificCheck,
@@ -117,7 +118,7 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 
 	//compute the actual seconds left until the SLA to compensate for the
 	//time passed between publish and the message reaching this point
-	secondsUntilSLA := publishSLA.Sub(time.Now()).Seconds()
+	secondsUntilSLA := time.Until(publishSLA).Seconds()
 	check.log.Infof("Checking %s. [%v] seconds until SLA.",
 		LoggingContextForCheck(check.Metric.Config.Alias,
 			check.Metric.UUID,
@@ -193,7 +194,6 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 			return
 		}
 	}
-
 }
 
 func strSliceContains(slice []string, str string) bool {

@@ -25,7 +25,7 @@ type Config struct {
 	Username    string
 	Password    string
 	APIKey      string
-	TxID        string
+	TID         string
 	ContentType string
 	Entity      io.Reader
 }
@@ -64,8 +64,8 @@ func (c DefaultCaller) DoCall(config Config) (resp *http.Response, err error) {
 		req.Header.Add("X-Api-Key", config.APIKey)
 	}
 
-	if config.TxID != "" {
-		req.Header.Add("X-Request-Id", config.TxID)
+	if config.TID != "" {
+		req.Header.Add("X-Request-Id", config.TID)
 	}
 
 	if config.ContentType != "" {
@@ -75,17 +75,18 @@ func (c DefaultCaller) DoCall(config Config) (resp *http.Response, err error) {
 	req.Header.Add("User-Agent", "UPP Publish Availability Monitor")
 
 	op := func() error {
-		resp, err = c.client.Do(req)
+		resp, err = c.client.Do(req) //nolint:bodyclose
 		if err != nil {
 			return err
 		}
+
 		if resp.StatusCode >= 500 && resp.StatusCode < 600 {
 			//Error status code: create an err in order to trigger a retry
-			return fmt.Errorf("Error status code received: %d", resp.StatusCode)
+			return fmt.Errorf("error status code received: %d", resp.StatusCode)
 		}
 		return nil
 	}
 
-	retry.Do(op, retry.RetryChecker(func(err error) bool { return err != nil }), retry.MaxTries(2))
+	_ = retry.Do(op, retry.RetryChecker(func(err error) bool { return err != nil }), retry.MaxTries(2))
 	return resp, err
 }

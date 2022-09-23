@@ -1,10 +1,10 @@
 package checks
 
 import (
-	"github.com/Financial-Times/go-logger/v2"
 	"testing"
 	"time"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/content"
 	"github.com/Financial-Times/publish-availability-monitor/envs"

@@ -104,7 +104,7 @@ func TestUnmarshalContent_ValidVideoMessage(t *testing.T) {
 	for _, testCase := range testCases {
 		resultContent, err := h.unmarshalContent(testCase.videoMessage)
 		if err != nil {
-			t.Errorf("Expected success, but error occured [%v]", err)
+			t.Errorf("Expected success, but error occurred [%v]", err)
 			return
 		}
 		valRes := resultContent.Validate("", "", "", "", log)
@@ -116,7 +116,7 @@ func TestUnmarshalContent_ValidDeletedVideoMessage(t *testing.T) {
 	h := kafkaMessageHandler{}
 	resultContent, err := h.unmarshalContent(validDeleteVideoMsg)
 	if err != nil {
-		t.Errorf("Expected success, but error occured [%v]", err)
+		t.Errorf("Expected success, but error occurred [%v]", err)
 		return
 	}
 	log := logger.NewUPPLogger("test", "PANIC")
@@ -129,7 +129,7 @@ func TestUnmarshalContent_InvalidVideoMessage(t *testing.T) {
 	h := kafkaMessageHandler{}
 	resultContent, err := h.unmarshalContent(invalidVideoMsg)
 	if err != nil {
-		t.Errorf("Expected success, but error occured [%v]", err)
+		t.Errorf("Expected success, but error occurred [%v]", err)
 		return
 	}
 	log := logger.NewUPPLogger("test", "PANIC")
