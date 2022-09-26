@@ -23,7 +23,15 @@ type MessageHandler interface {
 	HandleMessage(msg kafka.FTMessage)
 }
 
-func NewKafkaMessageHandler(appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.History, e2eTestUUIDs []string, log *logger.UPPLogger) MessageHandler {
+func NewKafkaMessageHandler(
+	appConfig *config.AppConfig,
+	environments *envs.Environments,
+	subscribedFeeds map[string][]feeds.Feed,
+	metricSink chan metrics.PublishMetric,
+	metricContainer *metrics.History,
+	e2eTestUUIDs []string,
+	log *logger.UPPLogger,
+) MessageHandler {
 	return &kafkaMessageHandler{
 		appConfig:       appConfig,
 		environments:    environments,

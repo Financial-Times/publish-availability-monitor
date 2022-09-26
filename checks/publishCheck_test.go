@@ -454,11 +454,11 @@ func (t *testHTTPCaller) DoCall(config httpcaller.Config) (*http.Response, error
 }
 
 // builds testHTTPCaller with the given mocked responses in the provided order
-func mockHTTPCaller(t *testing.T, txID string, responses ...*http.Response) httpcaller.Caller {
-	return &testHTTPCaller{t: t, tid: txID, mockResponses: responses}
+func mockHTTPCaller(t *testing.T, tid string, responses ...*http.Response) httpcaller.Caller {
+	return &testHTTPCaller{t: t, tid: tid, mockResponses: responses}
 }
 
 // builds testHTTPCaller with the given mocked responses in the provided order
-func mockAuthenticatedHTTPCaller(t *testing.T, txID string, username string, password string, responses ...*http.Response) httpcaller.Caller {
-	return &testHTTPCaller{t: t, tid: txID, authUser: username, authPass: password, mockResponses: responses}
+func mockAuthenticatedHTTPCaller(t *testing.T, tid string, username string, password string, responses ...*http.Response) httpcaller.Caller {
+	return &testHTTPCaller{t: t, tid: tid, authUser: username, authPass: password, mockResponses: responses}
 }

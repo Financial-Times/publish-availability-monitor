@@ -33,7 +33,7 @@ func (video Video) Validate(externalValidationEndpoint, tid, username, password 
 		validationURL: externalValidationEndpoint,
 		username:      username,
 		password:      password,
-		txID:          tid,
+		tid:           tid,
 		uuid:          uuid,
 		contentType:   video.GetType(),
 	}

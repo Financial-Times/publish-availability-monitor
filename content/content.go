@@ -12,7 +12,7 @@ import (
 // Content is the interface for different type of contents from different CMSs.
 type Content interface {
 	Initialize(binaryContent []byte) Content
-	Validate(externalValidationEndpoint string, txID string, username string, password string, log *logger.UPPLogger) ValidationResponse
+	Validate(externalValidationEndpoint, tid, username, password string, log *logger.UPPLogger) ValidationResponse
 	GetType() string
 	GetUUID() string
 }
@@ -27,7 +27,7 @@ type validationParam struct {
 	validationURL    string
 	username         string
 	password         string
-	txID             string
+	tid              string
 	uuid             string
 	contentType      string
 	isGenericPublish bool
@@ -40,7 +40,7 @@ func init() {
 }
 
 func doExternalValidation(p validationParam, validCheck func(int) bool, deletedCheck func(...int) bool, log *logger.UPPLogger) ValidationResponse {
-	logEntry := log.WithUUID(p.uuid).WithTransactionID(p.txID)
+	logEntry := log.WithUUID(p.uuid).WithTransactionID(p.tid)
 
 	if p.validationURL == "" {
 		logEntry.Warnf("External validation for content. Validation endpoint URL is missing for content type=[%s]", p.contentType)
@@ -59,7 +59,7 @@ func doExternalValidation(p validationParam, validCheck func(int) bool, deletedC
 		URL:         p.validationURL,
 		Username:    p.username,
 		Password:    p.password,
-		TID:         httpcaller.ConstructPamTID(p.txID),
+		TID:         httpcaller.ConstructPamTID(p.tid),
 		ContentType: contentType,
 		Entity:      bytes.NewReader(p.binaryContent),
 	})

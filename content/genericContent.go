@@ -19,7 +19,7 @@ func (gc GenericContent) Initialize(binaryContent []byte) Content {
 	return gc
 }
 
-func (gc GenericContent) Validate(externalValidationEndpoint string, txID string, username string, password string, log *logger.UPPLogger) ValidationResponse {
+func (gc GenericContent) Validate(externalValidationEndpoint, tid, username, password string, log *logger.UPPLogger) ValidationResponse {
 	if uuidutils.ValidateUUID(gc.GetUUID()) != nil {
 		log.WithUUID(gc.GetUUID()).Warn("Generic content UUID is invalid")
 		return ValidationResponse{IsValid: false, IsMarkedDeleted: gc.isMarkedDeleted()}
@@ -30,7 +30,7 @@ func (gc GenericContent) Validate(externalValidationEndpoint string, txID string
 		validationURL:    externalValidationEndpoint,
 		username:         username,
 		password:         password,
-		txID:             txID,
+		tid:              tid,
 		uuid:             gc.GetUUID(),
 		contentType:      gc.GetType(),
 		isGenericPublish: true,

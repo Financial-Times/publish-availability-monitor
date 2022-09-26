@@ -70,13 +70,13 @@ func (t *testHTTPCaller) DoCall(config httpcaller.Config) (*http.Response, error
 }
 
 // builds testHTTPCaller with the given mocked responses in the provided order
-func mockHTTPCaller(t *testing.T, txIDPrefix string, responses ...*mockResponse) httpcaller.Caller {
-	return &testHTTPCaller{t: t, tidPrefix: txIDPrefix, mockResponses: responses}
+func mockHTTPCaller(t *testing.T, tidPrefix string, responses ...*mockResponse) httpcaller.Caller {
+	return &testHTTPCaller{t: t, tidPrefix: tidPrefix, mockResponses: responses}
 }
 
 // builds testHTTPCaller with the given mocked responses in the provided order
-func mockAuthenticatedHTTPCaller(t *testing.T, txIDPrefix string, username string, password string, apiKey string, responses ...*mockResponse) httpcaller.Caller {
-	return &testHTTPCaller{t: t, tidPrefix: txIDPrefix, authUser: username, authPass: password, apiKey: apiKey, mockResponses: responses}
+func mockAuthenticatedHTTPCaller(t *testing.T, tidPrefix string, username string, password string, apiKey string, responses ...*mockResponse) httpcaller.Caller {
+	return &testHTTPCaller{t: t, tidPrefix: tidPrefix, authUser: username, authPass: password, apiKey: apiKey, mockResponses: responses}
 }
 
 // this is necessary to be able to build an http.Response

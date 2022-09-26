@@ -83,10 +83,10 @@ func TestGenericContent_Validate(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			txID := "tid_1234"
+			tid := "tid_1234"
 			testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				assert.Equal(t, "/validate", req.RequestURI)
-				assert.Equal(t, httpcaller.ConstructPamTID(txID), req.Header.Get("X-Request-Id"))
+				assert.Equal(t, httpcaller.ConstructPamTID(tid), req.Header.Get("X-Request-Id"))
 				assert.Equal(t, "POST", req.Method)
 				assert.Equal(t, test.Content.Type+"+json", req.Header.Get("Content-Type"))
 
@@ -98,7 +98,7 @@ func TestGenericContent_Validate(t *testing.T) {
 				w.WriteHeader(test.ExternalValidationResponseCode)
 			}))
 
-			validationResponse := test.Content.Validate(testServer.URL+"/validate", txID, "", "", log)
+			validationResponse := test.Content.Validate(testServer.URL+"/validate", tid, "", "", log)
 			assert.Equal(t, test.Content.isMarkedDeleted(), validationResponse.IsMarkedDeleted)
 			assert.Equal(t, test.Expected, validationResponse)
 		})
