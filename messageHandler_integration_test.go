@@ -38,7 +38,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 			AppConfig: &config.AppConfig{
 				Threshold: 5,
 				ValidationEndpoints: map[string]string{
-					"application/vnd.ft-upp-article-internal": testServer.URL,
+					"application/vnd.ft-upp-article-internal+json": testServer.URL,
 				},
 				MetricConf: []config.MetricConfig{
 					{
@@ -58,7 +58,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 				Headers: map[string]string{
 					"Origin-System-Id":  "http://cmdb.ft.com/systems/cct",
 					"X-Request-Id":      "SYNTHETIC-REQ-MON077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"Content-Type":      "application/vnd.ft-upp-article-internal",
+					"Content-Type":      "application/vnd.ft-upp-article-internal+json",
 					"Message-Timestamp": time.Now().Format(checks.DateLayout),
 				},
 				Body: `{
@@ -77,7 +77,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 			AppConfig: &config.AppConfig{
 				Threshold: 1,
 				ValidationEndpoints: map[string]string{
-					"application/vnd.ft-upp-article-internal": testServer.URL,
+					"application/vnd.ft-upp-article-internal+json": testServer.URL,
 				},
 				MetricConf: []config.MetricConfig{
 					{
@@ -91,7 +91,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 				Headers: map[string]string{
 					"Origin-System-Id":  "http://cmdb.ft.com/systems/cct",
 					"X-Request-Id":      "SYNTHETIC-REQ-MON077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"Content-Type":      "application/vnd.ft-upp-article-internal",
+					"Content-Type":      "application/vnd.ft-upp-article-internal+json",
 					"Message-Timestamp": time.Now().Format(checks.DateLayout),
 				},
 				Body: `{
@@ -116,7 +116,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 				Headers: map[string]string{
 					"Origin-System-Id":  "http://cmdb.ft.com/systems/cct",
 					"X-Request-Id":      "tid_077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"Content-Type":      "application/vnd.ft-upp-article-internal",
+					"Content-Type":      "application/vnd.ft-upp-article-internal+json",
 					"Message-Timestamp": time.Now().Format(checks.DateLayout),
 				},
 				Body: `{
@@ -130,7 +130,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 			AppConfig: &config.AppConfig{
 				Threshold: 1,
 				ValidationEndpoints: map[string]string{
-					"application/vnd.ft-upp-article-internal": testServer.URL,
+					"application/vnd.ft-upp-article-internal+json": testServer.URL,
 				},
 				MetricConf: []config.MetricConfig{
 					{
@@ -144,7 +144,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 				Headers: map[string]string{
 					"Origin-System-Id":  "http://cmdb.ft.com/systems/cct",
 					"X-Request-Id":      "tid_077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"Content-Type":      "application/vnd.ft-upp-article-internal",
+					"Content-Type":      "application/vnd.ft-upp-article-internal+json",
 					"Message-Timestamp": time.Now().Format(checks.DateLayout),
 				},
 				Body: `{
@@ -158,14 +158,14 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 			AppConfig: &config.AppConfig{
 				Threshold: 5,
 				ValidationEndpoints: map[string]string{
-					"application/vnd.ft-upp-article-internal": testServer.URL,
+					"application/vnd.ft-upp-article-internal+json": testServer.URL,
 				},
 				MetricConf: []config.MetricConfig{
 					{
 						Endpoint:     "/whatever/",
 						Granularity:  1,
 						Alias:        "notifications-push",
-						ContentTypes: []string{"application/vnd.ft-upp-article-internal"},
+						ContentTypes: []string{"application/vnd.ft-upp-article-internal+json"},
 					},
 				},
 			},
@@ -173,7 +173,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 				Headers: map[string]string{
 					"Origin-System-Id":  "http://cmdb.ft.com/systems/cct",
 					"X-Request-Id":      "tid_077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"Content-Type":      "application/vnd.ft-upp-article-internal",
+					"Content-Type":      "application/vnd.ft-upp-article-internal+json",
 					"Message-Timestamp": time.Now().Format(checks.DateLayout),
 				},
 				Body: `{
@@ -191,14 +191,14 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 			AppConfig: &config.AppConfig{
 				Threshold: 5,
 				ValidationEndpoints: map[string]string{
-					"application/vnd.ft-upp-article-internal": testServer.URL,
+					"application/vnd.ft-upp-article-internal+json": testServer.URL,
 				},
 				MetricConf: []config.MetricConfig{
 					{
 						Endpoint:     "/whatever/",
 						Granularity:  1,
 						Alias:        "notifications-push",
-						ContentTypes: []string{"application/vnd.ft-upp-article-internal"},
+						ContentTypes: []string{"application/vnd.ft-upp-article-internal+json"},
 					},
 				},
 			},
@@ -206,7 +206,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 				Headers: map[string]string{
 					"Origin-System-Id":  "http://cmdb.ft.com/systems/cct",
 					"X-Request-Id":      "tid_077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"Content-Type":      "application/vnd.ft-upp-article-internal",
+					"Content-Type":      "application/vnd.ft-upp-article-internal+json",
 					"Message-Timestamp": time.Now().Format(checks.DateLayout),
 				},
 				Body: `{

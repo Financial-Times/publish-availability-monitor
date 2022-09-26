@@ -14,14 +14,14 @@
       "granularity": 40,
       "contentTypes": [
         "video",
-        "application/vnd.ft-upp-article-internal",
-        "application/vnd.ft-upp-content-placeholder-internal",
-        "application/vnd.ft-upp-image",
-        "application/vnd.ft-upp-image-set",
-        "application/vnd.ft-upp-graphic",
-        "application/vnd.ft-upp-live-blog-package-internal",
-        "application/vnd.ft-upp-live-blog-post-internal",
-        "application/vnd.ft-upp-audio"
+        "application/vnd.ft-upp-article-internal+json",
+        "application/vnd.ft-upp-content-placeholder-internal+json",
+        "application/vnd.ft-upp-image+json",
+        "application/vnd.ft-upp-image-set+json",
+        "application/vnd.ft-upp-graphic+json",
+        "application/vnd.ft-upp-live-blog-package-internal+json",
+        "application/vnd.ft-upp-live-blog-post-internal+json",
+        "application/vnd.ft-upp-audio+json"
       ]
     },
     {
@@ -30,10 +30,10 @@
       "health": "/__content-rw-neo4j/__health",
       "granularity": 40,
       "contentTypes": [
-        "application/vnd.ft-upp-article-internal",
-        "application/vnd.ft-upp-live-blog-package-internal",
-        "application/vnd.ft-upp-live-blog-post-internal",
-        "application/vnd.ft-upp-audio"
+        "application/vnd.ft-upp-article-internal+json",
+        "application/vnd.ft-upp-live-blog-package-internal+json",
+        "application/vnd.ft-upp-live-blog-post-internal+json",
+        "application/vnd.ft-upp-audio+json"
       ]
     },
     {
@@ -42,7 +42,7 @@
       "alias": "content-collection-neo4j",
       "health": "/__content-collection-rw-neo4j/__health",
       "contentTypes": [
-        "application/vnd.ft-upp-content-collection"
+        "application/vnd.ft-upp-content-collection+json"
       ]
     },
     {
@@ -51,7 +51,7 @@
       "health": "/__document-store-api/__health",
       "granularity": 40,
       "contentTypes": [
-        "application/vnd.ft-upp-content-placeholder-internal"
+        "application/vnd.ft-upp-content-placeholder-internal+json"
       ]
     },
     {
@@ -60,7 +60,7 @@
       "alias": "lists",
       "health": "/__public-lists-api/__health",
       "contentTypes": [
-        "application/vnd.ft-upp-list"
+        "application/vnd.ft-upp-list+json"
       ]
     },
     {
@@ -69,7 +69,7 @@
       "alias": "pages",
       "health": "/__public-pages-api/__health",
       "contentTypes": [
-        "application/vnd.ft-upp-page"
+        "application/vnd.ft-upp-page+json"
       ]
     },
     {
@@ -78,11 +78,11 @@
       "alias": "notifications",
       "health": "/__notifications-rw/__health",
       "contentTypes": [
-        "application/vnd.ft-upp-article-internal",
-        "application/vnd.ft-upp-content-placeholder-internal",
-        "application/vnd.ft-upp-live-blog-package-internal",
-        "application/vnd.ft-upp-live-blog-post-internal",
-        "application/vnd.ft-upp-audio"
+        "application/vnd.ft-upp-article-internal+json",
+        "application/vnd.ft-upp-content-placeholder-internal+json",
+        "application/vnd.ft-upp-live-blog-package-internal+json",
+        "application/vnd.ft-upp-live-blog-post-internal+json",
+        "application/vnd.ft-upp-audio+json"
       ]
     },
     {
@@ -92,10 +92,10 @@
       "apiKey": "NOTIFICATIONS_PUSH_API_KEY",
       "health": "/__notifications-push/__health",
       "contentTypes": [
-        "application/vnd.ft-upp-article-internal",
-        "application/vnd.ft-upp-live-blog-package-internal",
-        "application/vnd.ft-upp-live-blog-post-internal",
-        "application/vnd.ft-upp-audio"
+        "application/vnd.ft-upp-article-internal+json",
+        "application/vnd.ft-upp-live-blog-package-internal+json",
+        "application/vnd.ft-upp-live-blog-post-internal+json",
+        "application/vnd.ft-upp-audio+json"
       ]
     },
     {
@@ -104,7 +104,7 @@
       "alias": "list-notifications",
       "health": "/__list-notifications-rw/__health",
       "contentTypes": [
-        "application/vnd.ft-upp-list"
+        "application/vnd.ft-upp-list+json"
       ]
     },
     {
@@ -114,7 +114,7 @@
       "apiKey": "LIST_NOTIFICATIONS_PUSH_API_KEY",
       "health": "/__list-notifications-push/__health",
       "contentTypes": [
-        "application/vnd.ft-upp-list"
+        "application/vnd.ft-upp-list+json"
       ]
     },
     {
@@ -123,7 +123,7 @@
        "alias": "page-notifications",
        "health": "/__page-notifications-rw/__health",
        "contentTypes": [
-         "application/vnd.ft-upp-page"
+         "application/vnd.ft-upp-page+json"
        ]
     },
     {
@@ -133,7 +133,7 @@
       "apiKey": "PAGE_NOTIFICATIONS_PUSH_API_KEY",
       "health": "/__page-notifications-push/__health",
       "contentTypes": [
-        "application/vnd.ft-upp-page"
+        "application/vnd.ft-upp-page+json"
       ]
     },
     {
@@ -142,9 +142,9 @@
       "alias": "internal-components",
       "health": "/__document-store-api/__health",
       "contentTypes": [
-        "application/vnd.ft-upp-article-internal",
-        "application/vnd.ft-upp-live-blog-package-internal",
-        "application/vnd.ft-upp-live-blog-post-internal"
+        "application/vnd.ft-upp-article-internal+json",
+        "application/vnd.ft-upp-live-blog-package-internal+json",
+        "application/vnd.ft-upp-live-blog-post-internal+json"
       ]
     }
   ],
@@ -156,17 +156,17 @@
   },
   "validationEndpoints": {
     "video": "VIDEO_MAPPER_URL",
-    "application/vnd.ft-upp-article-internal": "UPP_INTERNAL_ARTICLE_VALIDATOR_URL",
-    "application/vnd.ft-upp-list": "UPP_LIST_VALIDATOR_URL",
-    "application/vnd.ft-upp-page": "UPP_PAGE_VALIDATOR_URL",
-    "application/vnd.ft-upp-content-placeholder-internal": "UPP_INTERNAL_CPH_VALIDATOR_URL",
-    "application/vnd.ft-upp-image": "UPP_IMAGE_VALIDATOR_URL",
-    "application/vnd.ft-upp-image-set": "UPP_IMAGE_SET_VALIDATOR_URL",
-    "application/vnd.ft-upp-graphic": "UPP_GRAPHIC_VALIDATOR_URL",
-    "application/vnd.ft-upp-content-collection": "UPP_CONTENT_COLLECTION_VALIDATOR_URL",
-    "application/vnd.ft-upp-live-blog-package-internal": "UPP_INTERNAL_LIVE_BLOG_PACKAGE_VALIDATOR_URL",
-    "application/vnd.ft-upp-live-blog-post-internal": "UPP_INTERNAL_LIVE_BLOG_POST_VALIDATOR_URL",
-    "application/vnd.ft-upp-audio": "UPP_AUDIO_VALIDATOR_URL"
+    "application/vnd.ft-upp-article-internal+json": "UPP_INTERNAL_ARTICLE_VALIDATOR_URL",
+    "application/vnd.ft-upp-list+json": "UPP_LIST_VALIDATOR_URL",
+    "application/vnd.ft-upp-page+json": "UPP_PAGE_VALIDATOR_URL",
+    "application/vnd.ft-upp-content-placeholder-internal+json": "UPP_INTERNAL_CPH_VALIDATOR_URL",
+    "application/vnd.ft-upp-image+json": "UPP_IMAGE_VALIDATOR_URL",
+    "application/vnd.ft-upp-image-set+json": "UPP_IMAGE_SET_VALIDATOR_URL",
+    "application/vnd.ft-upp-graphic+json": "UPP_GRAPHIC_VALIDATOR_URL",
+    "application/vnd.ft-upp-content-collection+json": "UPP_CONTENT_COLLECTION_VALIDATOR_URL",
+    "application/vnd.ft-upp-live-blog-package-internal+json": "UPP_INTERNAL_LIVE_BLOG_PACKAGE_VALIDATOR_URL",
+    "application/vnd.ft-upp-live-blog-post-internal+json": "UPP_INTERNAL_LIVE_BLOG_POST_VALIDATOR_URL",
+    "application/vnd.ft-upp-audio+json": "UPP_AUDIO_VALIDATOR_URL"
   },
   "capabilities": [
     {

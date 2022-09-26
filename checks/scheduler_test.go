@@ -47,7 +47,7 @@ func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 				Granularity: 1,
 				Alias:       "content",
 				ContentTypes: []string{
-					"application/vnd.ft-upp-image",
+					"application/vnd.ft-upp-image+json",
 				},
 			},
 		},
@@ -63,7 +63,7 @@ func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 		Password: "pass1",
 	})
 
-	var genericImage = content.GenericContent{UUID: "e28b12f7-9796-3331-b030-05082f0b8157", Type: "application/vnd.ft-upp-image"}
+	var genericImage = content.GenericContent{UUID: "e28b12f7-9796-3331-b030-05082f0b8157", Type: "application/vnd.ft-upp-image+json"}
 	capturingMetrics := runScheduleChecks(testing, genericImage, mockEnvironments, appConfig)
 
 	require.NotNil(testing, capturingMetrics)
@@ -79,7 +79,7 @@ func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testi
 				Granularity: 1,
 				Alias:       "internal-components",
 				ContentTypes: []string{
-					"application/vnd.ft-upp-article-internal",
+					"application/vnd.ft-upp-article-internal+json",
 				},
 			},
 		},
@@ -96,7 +96,7 @@ func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testi
 		Password: "pass1",
 	})
 
-	var genericArticleInternal = content.GenericContent{UUID: "a24da1d4-1524-2322-c231-25032d0f8334", Type: "application/vnd.ft-upp-article-internal"}
+	var genericArticleInternal = content.GenericContent{UUID: "a24da1d4-1524-2322-c231-25032d0f8334", Type: "application/vnd.ft-upp-article-internal+json"}
 	capturingMetrics := runScheduleChecks(testing, genericArticleInternal, mockEnvironments, appConfig)
 
 	require.NotNil(testing, capturingMetrics)

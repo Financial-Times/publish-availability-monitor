@@ -12,7 +12,7 @@
             "alias": "content",
             "granularity": 10,
             "contentTypes": [
-                "application/vnd.ft-upp-article-internal"
+                "application/vnd.ft-upp-article-internal+json"
             ]
         }
     ],
@@ -23,7 +23,7 @@
         "failureThreshold": 2
     },
     "validationEndpoints": {
-        "application/vnd.ft-upp-article-internal": "__upp-internal-article-validator/validate"
+        "application/vnd.ft-upp-article-internal+json": "__upp-internal-article-validator/validate"
     },
     "capabilities": [
         {

@@ -51,7 +51,7 @@ func doExternalValidation(p validationParam, validCheck func(int) bool, deletedC
 
 	contentType := "application/json"
 	if p.isGenericPublish {
-		contentType = p.contentType + "+json"
+		contentType = p.contentType
 	}
 
 	resp, err := httpCaller.DoCall(httpcaller.Config{
