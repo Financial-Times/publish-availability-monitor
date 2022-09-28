@@ -37,18 +37,19 @@ spec:
         env:
         - name: ENVIRONMENT
           value: "{{ .Values.envs.environment }}"
+        - name: LOG_LEVEL
+          value: "{{ .Values.envs.log_level }}"
         - name: KAFKA_TOPIC
           value: "{{ .Values.envs.kafka_topic }}"
-        - name: KAFKA_PROXY_HOST
+        - name: KAFKA_CONSUMER_GROUP
+          value: "{{ .Values.envs.kafka_consumer_group }}"
+        - name: KAFKA_LAG_TOLERANCE
+          value: "{{ .Values.envs.kafka_lag_tolerance }}"
+        - name: KAFKA_ADDR
           valueFrom:
             configMapKeyRef:
               name: global-config
-              key: kafka.proxy.url
-        - name: QUEUE_ADDR
-          valueFrom:
-            configMapKeyRef:
-              name: global-config
-              key: kafka.proxy.url.with.protocol
+              key: msk.kafka.broker.url
         - name: CONTENT_URL
           value: "{{ .Values.envs.content_url }}"
         - name: CONTENT_NEO4J_URL

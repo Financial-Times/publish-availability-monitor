@@ -6,20 +6,21 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
-	log "github.com/Sirupsen/logrus"
 )
 
 const NotificationsPull = "Notifications-Pull"
 
 type NotificationsPullFeed struct {
 	baseNotificationsFeed
-	notificationsUrl         string
+	notificationsURL         string
 	notificationsQueryString string
-	notificationsUrlLock     *sync.Mutex
+	notificationsURLLock     *sync.Mutex
 	interval                 int
 	ticker                   *time.Ticker
 	poller                   chan struct{}
+	log                      *logger.UPPLogger
 }
 
 // ignore unused field (e.g. requestUrl)
@@ -52,7 +53,7 @@ func (f *NotificationsPullFeed) Start() {
 }
 
 func (f *NotificationsPullFeed) Stop() {
-	log.Infof("shutting down notifications pull feed for %s", f.baseUrl)
+	f.log.Infof("shutting down notifications pull feed for %s", f.baseURL)
 	close(f.poller)
 }
 
@@ -61,28 +62,36 @@ func (f *NotificationsPullFeed) FeedType() string {
 }
 
 func (f *NotificationsPullFeed) pollNotificationsFeed() {
-	f.notificationsUrlLock.Lock()
-	defer f.notificationsUrlLock.Unlock()
+	f.notificationsURLLock.Lock()
+	defer f.notificationsURLLock.Unlock()
 
-	txId := f.buildNotificationsTxId()
-	notificationsUrl := f.notificationsUrl + "?" + f.notificationsQueryString
-	resp, err := f.httpCaller.DoCall(httpcaller.Config{URL: notificationsUrl, Username: f.username, Password: f.password, TxID: txId})
+	tid := f.buildNotificationsTID()
+	log := f.log.WithTransactionID(tid)
+	notificationsURL := f.notificationsURL + "?" + f.notificationsQueryString
 
+	resp, err := f.httpCaller.DoCall(httpcaller.Config{
+		URL:      notificationsURL,
+		Username: f.username,
+		Password: f.password,
+		TID:      tid,
+	})
 	if err != nil {
-		log.WithField("transaction_id", txId).WithError(err).Errorf("error calling notifications %s", notificationsUrl)
+		log.WithError(err).Errorf("error calling notifications %s", notificationsURL)
 		return
 	}
-	defer cleanupResp(resp)
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	if resp.StatusCode != 200 {
-		log.WithField("transaction_id", txId).Errorf("Notifications [%s] status NOT OK: [%d]", notificationsUrl, resp.StatusCode)
+		log.Errorf("Notifications [%s] status NOT OK: [%d]", notificationsURL, resp.StatusCode)
 		return
 	}
 
 	var notifications notificationsResponse
 	err = json.NewDecoder(resp.Body).Decode(&notifications)
 	if err != nil {
-		log.WithField("transaction_id", txId).Errorf("Cannot decode json response: [%s]", err.Error())
+		log.WithError(err).Error("Cannot decode json response")
 		return
 	}
 
@@ -91,7 +100,7 @@ func (f *NotificationsPullFeed) pollNotificationsFeed() {
 
 	for _, v := range notifications.Notifications {
 		n := v
-		uuid := parseUuidFromUrl(n.ID)
+		uuid := parseUUIDFromURL(n.ID)
 		var history []*Notification
 		var found bool
 		if history, found = f.notifications[uuid]; !found {
@@ -102,15 +111,15 @@ func (f *NotificationsPullFeed) pollNotificationsFeed() {
 		f.notifications[uuid] = history
 	}
 
-	nextPageUrl, err := url.Parse(notifications.Links[0].Href)
+	nextPageURL, err := url.Parse(notifications.Links[0].Href)
 	if err != nil {
-		log.Errorf("unparseable next url: [%s]", notifications.Links[0].Href)
+		log.WithError(err).Errorf("unparseable next url: [%s]", notifications.Links[0].Href)
 		return // and hope that a retry will fix this
 	}
 
-	f.notificationsQueryString = nextPageUrl.RawQuery
+	f.notificationsQueryString = nextPageURL.RawQuery
 }
 
-func (f *NotificationsPullFeed) buildNotificationsTxId() string {
+func (f *NotificationsPullFeed) buildNotificationsTID() string {
 	return "tid_pam_notifications_pull_" + time.Now().Format(time.RFC3339)
 }

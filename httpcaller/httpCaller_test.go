@@ -27,7 +27,7 @@ func stubServer(t *testing.T, expectedMethod string, expectedHeaders map[string]
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Hello world"))
+		_, _ = w.Write([]byte("Hello world"))
 	}))
 
 	return server
@@ -75,16 +75,16 @@ func TestAuthenticated(t *testing.T) {
 }
 
 func TestTransactionId(t *testing.T) {
-	txId := "tid_myTxId"
+	tid := "tid_myTxId"
 
 	server := stubServer(t, "GET", map[string]string{
 		"User-Agent":   "UPP Publish Availability Monitor",
-		"X-Request-Id": txId,
+		"X-Request-Id": tid,
 	}, nil)
 	defer server.Close()
 
 	httpCaller := NewCaller(10)
-	resp, err := httpCaller.DoCall(Config{URL: server.URL, TxID: txId})
+	resp, err := httpCaller.DoCall(Config{URL: server.URL, TID: tid})
 	assert.Nil(t, err, "unexpected error")
 
 	assertExpectedResponse(t, resp)

@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -43,10 +44,10 @@ func mockFeed(name string, uuid string, notifications []*feeds.Notification) tes
 
 func TestFeedContainsMatchingNotification(t *testing.T) {
 	testUUID := uuid.NewString()
-	testTxID := "tid_0123wxyz"
+	testTID := "tid_0123wxyz"
 	testLastModified := "2016-10-28T14:00:00.000Z"
 
-	n := feeds.Notification{ID: testUUID, PublishReference: testTxID, LastModified: testLastModified}
+	n := feeds.Notification{ID: testUUID, PublishReference: testTID, LastModified: testLastModified}
 	notifications := []*feeds.Notification{&n}
 	f := mockFeed(feedName, testUUID, notifications)
 	subscribedFeeds := make(map[string][]feeds.Feed)
@@ -57,15 +58,25 @@ func TestFeedContainsMatchingNotification(t *testing.T) {
 		subscribedFeeds,
 		feedName,
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID).build(), "", "", 0, 0, nil, nil)
+	pc := NewPublishCheck(
+		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTID).build(),
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	)
 	finished, _ := notificationsCheck.isCurrentOperationFinished(pc)
 	assert.True(t, finished, "Operation should be considered finished")
 }
 
 func TestFeedMissingNotification(t *testing.T) {
 	testUUID := uuid.NewString()
-	testTxID := "tid_0123wxyz"
+	testTID := "tid_0123wxyz"
 
 	f := mockFeed(feedName, uuid.NewString(), []*feeds.Notification{})
 	subscribedFeeds := make(map[string][]feeds.Feed)
@@ -76,20 +87,30 @@ func TestFeedMissingNotification(t *testing.T) {
 		subscribedFeeds,
 		feedName,
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID).build(), "", "", 0, 0, nil, nil)
+	pc := NewPublishCheck(
+		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTID).build(),
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	)
 	finished, _ := notificationsCheck.isCurrentOperationFinished(pc)
 	assert.False(t, finished, "Operation should not be considered finished")
 }
 
 func TestFeedContainsEarlierNotification(t *testing.T) {
 	testUUID := uuid.NewString()
-	testTxID1 := "tid_0123abcd"
+	testTID1 := "tid_0123abcd"
 	testLastModified1 := "2016-10-28T13:59:00.000Z"
-	testTxID2 := "tid_0123wxyz"
+	testTID2 := "tid_0123wxyz"
 	testLastModified2, _ := time.Parse(DateLayout, "2016-10-28T14:00:00.000Z")
 
-	n := feeds.Notification{ID: testUUID, PublishReference: testTxID1, LastModified: testLastModified1}
+	n := feeds.Notification{ID: testUUID, PublishReference: testTID1, LastModified: testLastModified1}
 	notifications := []*feeds.Notification{&n}
 	f := mockFeed(feedName, testUUID, notifications)
 	subscribedFeeds := make(map[string][]feeds.Feed)
@@ -100,8 +121,18 @@ func TestFeedContainsEarlierNotification(t *testing.T) {
 		subscribedFeeds,
 		feedName,
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID2).withPublishDate(testLastModified2).build(), "", "", 0, 0, nil, nil)
+	pc := NewPublishCheck(
+		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTID2).withPublishDate(testLastModified2).build(),
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	)
 	finished, ignore := notificationsCheck.isCurrentOperationFinished(pc)
 	assert.False(t, finished, "Operation should not be considered finished")
 	assert.False(t, ignore, "Operation should not be skipped")
@@ -109,12 +140,12 @@ func TestFeedContainsEarlierNotification(t *testing.T) {
 
 func TestFeedContainsLaterNotification(t *testing.T) {
 	testUUID := uuid.NewString()
-	testTxID1 := "tid_0123abcd"
+	testTID1 := "tid_0123abcd"
 	testLastModified1 := "2016-10-28T14:00:00.000Z"
-	testTxID2 := "tid_0123wxyz"
+	testTID2 := "tid_0123wxyz"
 	testLastModified2, _ := time.Parse(DateLayout, "2016-10-28T13:59:00.000Z")
 
-	n := feeds.Notification{ID: testUUID, PublishReference: testTxID1, LastModified: testLastModified1}
+	n := feeds.Notification{ID: testUUID, PublishReference: testTID1, LastModified: testLastModified1}
 	notifications := []*feeds.Notification{&n}
 	f := mockFeed(feedName, testUUID, notifications)
 	subscribedFeeds := make(map[string][]feeds.Feed)
@@ -125,20 +156,30 @@ func TestFeedContainsLaterNotification(t *testing.T) {
 		subscribedFeeds,
 		feedName,
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID2).withPublishDate(testLastModified2).build(), "", "", 0, 0, nil, nil)
+	pc := NewPublishCheck(
+		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTID2).withPublishDate(testLastModified2).build(),
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	)
 	_, ignore := notificationsCheck.isCurrentOperationFinished(pc)
 	assert.True(t, ignore, "Operation should be skipped")
 }
 
 func TestFeedContainsUnparseableNotification(t *testing.T) {
 	testUUID := uuid.NewString()
-	testTxID1 := "tid_0123abcd"
+	testTID1 := "tid_0123abcd"
 	testLastModified1 := "foo-bar-baz"
-	testTxID2 := "tid_0123wxyz"
+	testTID2 := "tid_0123wxyz"
 	testLastModified2, _ := time.Parse(DateLayout, "2016-10-28T13:59:00.000Z")
 
-	n := feeds.Notification{ID: testUUID, PublishReference: testTxID1, LastModified: testLastModified1}
+	n := feeds.Notification{ID: testUUID, PublishReference: testTID1, LastModified: testLastModified1}
 	notifications := []*feeds.Notification{&n}
 	f := mockFeed(feedName, testUUID, notifications)
 	subscribedFeeds := make(map[string][]feeds.Feed)
@@ -149,8 +190,18 @@ func TestFeedContainsUnparseableNotification(t *testing.T) {
 		subscribedFeeds,
 		feedName,
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID2).withPublishDate(testLastModified2).build(), "", "", 0, 0, nil, nil)
+	pc := NewPublishCheck(
+		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTID2).withPublishDate(testLastModified2).build(),
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	)
 	finished, ignore := notificationsCheck.isCurrentOperationFinished(pc)
 	assert.False(t, finished, "Operation should not be considered finished")
 	assert.False(t, ignore, "Operation should not be skipped")
@@ -158,10 +209,10 @@ func TestFeedContainsUnparseableNotification(t *testing.T) {
 
 func TestMissingFeed(t *testing.T) {
 	testUUID := uuid.NewString()
-	testTxID := "tid_0123wxyz"
+	testTID := "tid_0123wxyz"
 	testLastModified := "2016-10-28T14:00:00.000Z"
 
-	n := feeds.Notification{ID: testUUID, PublishReference: testTxID, LastModified: testLastModified}
+	n := feeds.Notification{ID: testUUID, PublishReference: testTID, LastModified: testLastModified}
 	notifications := []*feeds.Notification{&n}
 	f := mockFeed("foo", testUUID, notifications)
 	subscribedFeeds := make(map[string][]feeds.Feed)
@@ -172,8 +223,18 @@ func TestMissingFeed(t *testing.T) {
 		subscribedFeeds,
 		feedName,
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID).build(), "", "", 0, 0, nil, nil)
+	pc := NewPublishCheck(
+		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTID).build(),
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	)
 	finished, ignore := notificationsCheck.isCurrentOperationFinished(pc)
 	assert.False(t, finished, "Operation should not be considered finished")
 	assert.False(t, ignore, "Operation should not be ignored")
@@ -181,10 +242,10 @@ func TestMissingFeed(t *testing.T) {
 
 func TestMissingEnvironment(t *testing.T) {
 	testUUID := uuid.NewString()
-	testTxID := "tid_0123wxyz"
+	testTID := "tid_0123wxyz"
 	testLastModified := "2016-10-28T14:00:00.000Z"
 
-	n := feeds.Notification{ID: testUUID, PublishReference: testTxID, LastModified: testLastModified}
+	n := feeds.Notification{ID: testUUID, PublishReference: testTID, LastModified: testLastModified}
 	notifications := []*feeds.Notification{&n}
 	f := mockFeed(feedName, testUUID, notifications)
 	subscribedFeeds := make(map[string][]feeds.Feed)
@@ -195,8 +256,18 @@ func TestMissingEnvironment(t *testing.T) {
 		subscribedFeeds,
 		feedName,
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	pc := NewPublishCheck(newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTxID).build(), "", "", 0, 0, nil, nil)
+	pc := NewPublishCheck(
+		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTID).build(),
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	)
 	finished, ignore := notificationsCheck.isCurrentOperationFinished(pc)
 	assert.False(t, finished, "Operation should not be considered finished")
 	assert.False(t, ignore, "Operation should not be ignored")
@@ -205,7 +276,9 @@ func TestMissingEnvironment(t *testing.T) {
 func TestShouldSkipCheck_ContentIsNotMarkedAsDeleted_CheckNotSkipped(t *testing.T) {
 	pm := newPublishMetricBuilder().withMarkedDeleted(false).build()
 	notificationsCheck := NotificationsCheck{}
-	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil)
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil, log)
 
 	if notificationsCheck.shouldSkipCheck(pc) {
 		t.Errorf("Expected failure")
@@ -214,9 +287,13 @@ func TestShouldSkipCheck_ContentIsNotMarkedAsDeleted_CheckNotSkipped(t *testing.
 
 func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsExist_CheckNotSkipped(t *testing.T) {
 	pm := newPublishMetricBuilder().withMarkedDeleted(true).withEndpoint("http://notifications-endpoint:8080/content/notifications").build()
-	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil)
+	log := logger.NewUPPLogger("test", "PANIC")
+	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil, log)
+	response := buildResponse(200, `[{"id": "foobar", "lastModified" : "foobaz", "publishReference" : "unitTestRef" }]`)
+	defer response.Body.Close()
 	notificationsCheck := NotificationsCheck{
-		mockHTTPCaller(t, "", buildResponse(200, `[{"id": "foobar", "lastModified" : "foobaz", "publishReference" : "unitTestRef" }]`)), nil, feedName,
+		httpCaller: mockHTTPCaller(t, "", response),
+		feedName:   feedName,
 	}
 	if notificationsCheck.shouldSkipCheck(pc) {
 		t.Errorf("Expected failure")
@@ -225,9 +302,13 @@ func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsExist_Chec
 
 func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsDoesNotExist_CheckSkipped(t *testing.T) {
 	pm := newPublishMetricBuilder().withMarkedDeleted(true).withEndpoint("http://notifications-endpoint:8080/content/notifications").build()
-	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil)
+	log := logger.NewUPPLogger("test", "PANIC")
+	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil, log)
+	response := buildResponse(200, `[]`)
+	defer response.Body.Close()
 	notificationsCheck := NotificationsCheck{
-		mockHTTPCaller(t, "", buildResponse(200, `[]`)), nil, feedName,
+		httpCaller: mockHTTPCaller(t, "", response),
+		feedName:   feedName,
 	}
 	if !notificationsCheck.shouldSkipCheck(pc) {
 		t.Errorf("Expected success")

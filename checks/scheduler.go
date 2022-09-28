@@ -5,12 +5,11 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/content"
 	"github.com/Financial-Times/publish-availability-monitor/envs"
-	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/Financial-Times/publish-availability-monitor/metrics"
-	log "github.com/Sirupsen/logrus"
 )
 
 var (
@@ -26,7 +25,15 @@ type SchedulerParam struct {
 	environments    *envs.Environments
 }
 
-func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, endpointSpecificChecks map[string]EndpointSpecificCheck, appConfig *config.AppConfig, metricSink chan metrics.PublishMetric, e2eTestUUIDs []string) {
+//nolint:gocognit
+func ScheduleChecks(
+	p *SchedulerParam,
+	endpointSpecificChecks map[string]EndpointSpecificCheck,
+	appConfig *config.AppConfig,
+	metricSink chan metrics.PublishMetric,
+	e2eTestUUIDs []string,
+	log *logger.UPPLogger,
+) {
 	isE2ETest := config.IsE2ETestTransactionID(p.tid, e2eTestUUIDs)
 
 	for _, metric := range appConfig.MetricConf {
@@ -55,7 +62,7 @@ func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 				}
 
 				if err != nil {
-					log.Errorf("Cannot parse url [%v], error: [%v]", metric.Endpoint, err.Error())
+					log.WithError(err).Errorf("Cannot parse url [%v]", metric.Endpoint)
 					continue
 				}
 
@@ -73,7 +80,16 @@ func ScheduleChecks(p *SchedulerParam, subscribedFeeds map[string][]feeds.Feed, 
 				}
 
 				var checkInterval = appConfig.Threshold / metric.Granularity
-				var publishCheck = NewPublishCheck(publishMetric, env.Username, env.Password, appConfig.Threshold, checkInterval, metricSink, endpointSpecificChecks)
+				var publishCheck = NewPublishCheck(
+					publishMetric,
+					env.Username,
+					env.Password,
+					appConfig.Threshold,
+					checkInterval,
+					metricSink,
+					endpointSpecificChecks,
+					log,
+				)
 				go scheduleCheck(*publishCheck, p.metricContainer)
 			}
 		} else {
@@ -102,8 +118,8 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 
 	//compute the actual seconds left until the SLA to compensate for the
 	//time passed between publish and the message reaching this point
-	secondsUntilSLA := publishSLA.Sub(time.Now()).Seconds()
-	log.Infof("Checking %s. [%v] seconds until SLA.",
+	secondsUntilSLA := time.Until(publishSLA).Seconds()
+	check.log.Infof("Checking %s. [%v] seconds until SLA.",
 		LoggingContextForCheck(check.Metric.Config.Alias,
 			check.Metric.UUID,
 			check.Metric.Platform,
@@ -118,7 +134,7 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 	}()
 
 	secondsSincePublish := time.Since(check.Metric.PublishDate).Seconds()
-	log.Infof("Checking %s. [%v] seconds elapsed since publish.",
+	check.log.Infof("Checking %s. [%v] seconds elapsed since publish.",
 		LoggingContextForCheck(check.Metric.Config.Alias,
 			check.Metric.UUID,
 			check.Metric.Platform,
@@ -126,7 +142,7 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 		int(secondsSincePublish))
 
 	elapsedIntervals := secondsSincePublish / float64(check.CheckInterval)
-	log.Infof("Checking %s. Skipping first [%v] checks",
+	check.log.Infof("Checking %s. Skipping first [%v] checks",
 		LoggingContextForCheck(check.Metric.Config.Alias,
 			check.Metric.UUID,
 			check.Metric.Platform,
@@ -139,7 +155,7 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 	for {
 		checkSuccessful, ignoreCheck := check.DoCheck()
 		if ignoreCheck {
-			log.Infof("Ignore check for %s",
+			check.log.Infof("Ignore check for %s",
 				LoggingContextForCheck(check.Metric.Config.Alias,
 					check.Metric.UUID,
 					check.Metric.Platform,
@@ -178,7 +194,6 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 			return
 		}
 	}
-
 }
 
 func strSliceContains(slice []string, str string) bool {

@@ -3,8 +3,8 @@ package content
 import (
 	"net/http"
 
+	"github.com/Financial-Times/go-logger/v2"
 	uuidutils "github.com/Financial-Times/uuid-utils-go"
-	log "github.com/Sirupsen/logrus"
 )
 
 const videoType = "video"
@@ -20,27 +20,29 @@ func (video Video) Initialize(binaryContent []byte) Content {
 	return video
 }
 
-func (video Video) Validate(externalValidationEndpoint string, txId string, username string, password string) ValidationResponse {
-	if uuidutils.ValidateUUID(video.GetUUID()) != nil {
-		log.Warnf("Video invalid: invalid UUID: [%s]", video.GetUUID())
+func (video Video) Validate(externalValidationEndpoint, tid, username, password string, log *logger.UPPLogger) ValidationResponse {
+	uuid := video.GetUUID()
+
+	if uuidutils.ValidateUUID(uuid) != nil {
+		log.WithUUID(uuid).Warnf("Invalid video UUID")
 		return ValidationResponse{IsValid: false, IsMarkedDeleted: video.isMarkedDeleted()}
 	}
 
-	validationParam := validationParam{
-		video.BinaryContent,
-		externalValidationEndpoint,
-		username,
-		password,
-		txId,
-		video.GetUUID(),
-		video.GetType(),
-		false,
+	param := validationParam{
+		binaryContent: video.BinaryContent,
+		validationURL: externalValidationEndpoint,
+		username:      username,
+		password:      password,
+		tid:           tid,
+		uuid:          uuid,
+		contentType:   video.GetType(),
 	}
 
 	return doExternalValidation(
-		validationParam,
+		param,
 		video.isValid,
 		video.isMarkedDeleted,
+		log,
 	)
 }
 

@@ -1,13 +1,16 @@
 package metrics
 
 import (
-	"io/ioutil"
+	"io"
 	"net"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/config"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGraphiteSend(t *testing.T) {
@@ -72,17 +75,18 @@ func TestGraphiteSend(t *testing.T) {
 		},
 	}
 
+	log := logger.NewUPPLogger("test", "PANIC")
+
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			srv, err := net.Listen("tcp", "127.0.0.1:0")
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
+
 			defer srv.Close()
 
 			test.AppConfig.GraphiteAddress = srv.Addr().String()
 
-			sender := NewGraphiteSender(test.AppConfig)
+			sender := NewGraphiteSender(test.AppConfig, log)
 			metricConfig := test.AppConfig.MetricConf[0]
 			metric := PublishMetric{
 				PublishOK:       test.PublishOk,
@@ -103,7 +107,7 @@ func TestGraphiteSend(t *testing.T) {
 				}
 				defer conn.Close()
 
-				buf, err := ioutil.ReadAll(conn)
+				buf, err := io.ReadAll(conn)
 				if err != nil {
 					errCh <- err
 					return
@@ -118,13 +122,9 @@ func TestGraphiteSend(t *testing.T) {
 				})
 
 				statusMetric, timeMetric := metrics[0], metrics[1]
-				if !strings.HasPrefix(statusMetric, test.ExpectedStatusPrefix) {
-					t.Fatalf("expected metric with prefix %v, got %v", test.ExpectedStatusPrefix, statusMetric)
-				}
 
-				if !strings.HasPrefix(timeMetric, test.ExpectedTimePrefix) {
-					t.Fatalf("expected metric with prefix %v, got %v", test.ExpectedTimePrefix, timeMetric)
-				}
+				assert.True(t, strings.HasPrefix(statusMetric, test.ExpectedStatusPrefix))
+				assert.True(t, strings.HasPrefix(timeMetric, test.ExpectedTimePrefix))
 			case err := <-errCh:
 				t.Fatal(err)
 			case <-time.After(1 * time.Second):

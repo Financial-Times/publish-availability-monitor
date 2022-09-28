@@ -1,21 +1,17 @@
 package feeds
 
 import (
-	"io"
-	"io/ioutil"
-	"net/http"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
-	log "github.com/Sirupsen/logrus"
 )
 
 type baseNotificationsFeed struct {
 	feedName          string
 	httpCaller        httpcaller.Caller
-	baseUrl           string
+	baseURL           string
 	username          string
 	password          string
 	expiry            int
@@ -23,18 +19,7 @@ type baseNotificationsFeed struct {
 	notificationsLock *sync.RWMutex
 }
 
-func cleanupResp(resp *http.Response) {
-	_, err := io.Copy(ioutil.Discard, resp.Body)
-	if err != nil {
-		log.Infof("[%v]", err)
-	}
-	err = resp.Body.Close()
-	if err != nil {
-		log.Infof("[%v]", err)
-	}
-}
-
-func parseUuidFromUrl(url string) string {
+func parseUUIDFromURL(url string) string {
 	i := strings.LastIndex(url, "/")
 	return url[i+1:]
 }
@@ -95,5 +80,5 @@ func (f *baseNotificationsFeed) NotificationsFor(uuid string) []*Notification {
 }
 
 func (f *baseNotificationsFeed) FeedURL() string {
-	return f.baseUrl
+	return f.baseURL
 }

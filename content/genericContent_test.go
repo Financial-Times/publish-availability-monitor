@@ -1,11 +1,12 @@
 package content
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,7 +20,7 @@ func TestGenericContent_Validate(t *testing.T) {
 		"valid generic content": {
 			Content: GenericContent{
 				UUID:    "077f5ac2-0491-420e-a5d0-982e0f86204b",
-				Type:    "application/vnd.ft-upp-article-internal",
+				Type:    "application/vnd.ft-upp-article-internal+json",
 				Deleted: false,
 				BinaryContent: []byte(`{
 					"uuid": "077f5ac2-0491-420e-a5d0-982e0f86204b",
@@ -42,7 +43,7 @@ func TestGenericContent_Validate(t *testing.T) {
 		"valid deleted generic content": {
 			Content: GenericContent{
 				UUID:    "077f5ac2-0491-420e-a5d0-982e0f86204b",
-				Type:    "application/vnd.ft-upp-article-internal",
+				Type:    "application/vnd.ft-upp-article-internal+json",
 				Deleted: true,
 				BinaryContent: []byte(`{
 					"uuid": "077f5ac2-0491-420e-a5d0-982e0f86204b",
@@ -70,7 +71,7 @@ func TestGenericContent_Validate(t *testing.T) {
 		"generic content with failed external validatotion is invalid": {
 			Content: GenericContent{
 				UUID:          "077f5ac2-0491-420e-a5d0-982e0f86204b",
-				Type:          "application/vnd.ft-upp-article-internal",
+				Type:          "application/vnd.ft-upp-article-internal+json",
 				BinaryContent: []byte(`invalid payload`),
 			},
 			ExternalValidationResponseCode: http.StatusUnsupportedMediaType,
@@ -78,16 +79,18 @@ func TestGenericContent_Validate(t *testing.T) {
 		},
 	}
 
+	log := logger.NewUPPLogger("test", "PANIC")
+
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			txID := "tid_1234"
+			tid := "tid_1234"
 			testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 				assert.Equal(t, "/validate", req.RequestURI)
-				assert.Equal(t, httpcaller.ConstructPamTxId(txID), req.Header.Get("X-Request-Id"))
+				assert.Equal(t, httpcaller.ConstructPamTID(tid), req.Header.Get("X-Request-Id"))
 				assert.Equal(t, "POST", req.Method)
-				assert.Equal(t, test.Content.Type+"+json", req.Header.Get("Content-Type"))
+				assert.Equal(t, test.Content.Type, req.Header.Get("Content-Type"))
 
-				reqBody, err := ioutil.ReadAll(req.Body)
+				reqBody, err := io.ReadAll(req.Body)
 				assert.NoError(t, err)
 				defer req.Body.Close()
 
@@ -95,7 +98,7 @@ func TestGenericContent_Validate(t *testing.T) {
 				w.WriteHeader(test.ExternalValidationResponseCode)
 			}))
 
-			validationResponse := test.Content.Validate(testServer.URL+"/validate", txID, "", "")
+			validationResponse := test.Content.Validate(testServer.URL+"/validate", tid, "", "", log)
 			assert.Equal(t, test.Content.isMarkedDeleted(), validationResponse.IsMarkedDeleted)
 			assert.Equal(t, test.Expected, validationResponse)
 		})

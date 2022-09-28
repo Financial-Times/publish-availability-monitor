@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/Financial-Times/publish-availability-monitor/metrics"
 	"github.com/stretchr/testify/assert"
@@ -17,24 +18,48 @@ import (
 func TestIsCurrentOperationFinished_ContentCheck_InvalidContent(t *testing.T) {
 	currentTid := "tid_1234"
 	testResponse := `{ "uuid" : "1234-1234"`
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(200, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(
+		pm,
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	))
 	assert.False(t, finished, "Expected error.")
 }
 
 func TestIsCurrentOperationFinished_ContentCheck_Finished(t *testing.T) {
 	currentTid := "tid_1234"
 	testResponse := fmt.Sprintf(`{ "uuid" : "1234-1234", "publishReference" : "%s"}`, currentTid)
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(200, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(
+		pm,
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	))
 	assert.True(t, finished, "operation should have finished successfully")
 }
 
@@ -43,48 +68,96 @@ func TestIsCurrentOperationFinished_ContentCheck_WithAuthentication(t *testing.T
 	testResponse := fmt.Sprintf(`{ "uuid" : "1234-1234", "publishReference" : "%s"}`, currentTid)
 	username := "jdoe"
 	password := "frodo"
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentCheck{
-		mockAuthenticatedHTTPCaller(t, "tid_pam_5678", username, password, buildResponse(200, testResponse)),
+		mockAuthenticatedHTTPCaller(t, "tid_pam_5678", username, password, response),
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, username, password, 0, 0, nil, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(
+		pm,
+		username,
+		password,
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	))
 	assert.True(t, finished, "operation should have finished successfully")
 }
 
 func TestIsCurrentOperationFinished_ContentCheck_NotFinished(t *testing.T) {
 	currentTid := "tid_1234"
 	testResponse := `{ "uuid" : "1234-1234", "publishReference" : "tid_1235"}`
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(200, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(
+		pm,
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	))
 	assert.False(t, finished, "Expected failure.")
 }
 
 func TestIsCurrentOperationFinished_ContentCheck_MarkedDeleted_Finished(t *testing.T) {
 	currentTid := "tid_1234"
 	testResponse := fmt.Sprintf(`{ "uuid" : "1234-1234", "publishReference" : "%s"}`, currentTid)
+	response := buildResponse(404, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(404, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).withMarkedDeleted(true).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(
+		pm,
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	))
 	assert.True(t, finished, "operation should have finished successfully.")
 }
 
 func TestIsCurrentOperationFinished_ContentCheck_MarkedDeleted_NotFinished(t *testing.T) {
 	currentTid := "tid_1234"
 	testResponse := fmt.Sprintf(`{ "uuid" : "1234-1234", "publishReference" : "%s"}`, currentTid)
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(200, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).withMarkedDeleted(true).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(
+		pm,
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	))
 	assert.False(t, finished, "operation should not have finished")
 }
 
@@ -93,30 +166,54 @@ func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsAfterCurrentP
 	publishDate, err := time.Parse(DateLayout, "2016-01-08T14:22:06.271Z")
 	assert.Nil(t, err, "Failure in setting up test data")
 
-	testResponse := fmt.Sprint(`{ "uuid" : "1234-1234", "publishReference" : "tid_1235", "lastModified" : "2016-01-08T14:22:07.391Z" }`)
+	testResponse := `{ "uuid" : "1234-1234", "publishReference" : "tid_1235", "lastModified" : "2016-01-08T14:22:07.391Z" }`
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(200, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).withPublishDate(publishDate).build()
-	_, ignoreCheck := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
+	_, ignoreCheck := contentCheck.isCurrentOperationFinished(NewPublishCheck(
+		pm,
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	))
 	assert.True(t, ignoreCheck, "check should be ignored")
 }
 
-//fails for dateLayout="2006-01-02T15:04:05.000Z"
+// fails for dateLayout="2006-01-02T15:04:05.000Z"
 func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsBeforeCurrentPublishDateSpecifiedWith2Decimals_IgnoreCheckFalse(t *testing.T) {
 	currentTid := "tid_1234"
 
 	publishDate, err := time.Parse(DateLayout, "2016-02-01T14:30:21.55Z")
 	assert.Nil(t, err, "Failure in setting up test data")
 
-	testResponse := fmt.Sprint(`{ "uuid" : "1234-1234", "publishReference" : "tid_1235", "lastModified" : "2016-02-01T14:30:21.549Z" }`)
+	testResponse := `{ "uuid" : "1234-1234", "publishReference" : "tid_1235", "lastModified" : "2016-02-01T14:30:21.549Z" }`
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(200, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).withPublishDate(publishDate).build()
-	_, ignoreCheck := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
+	_, ignoreCheck := contentCheck.isCurrentOperationFinished(NewPublishCheck(
+		pm,
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	))
 	assert.False(t, ignoreCheck, "check should not be ignored")
 }
 
@@ -125,13 +222,25 @@ func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsBeforeCurrent
 	publishDate, err := time.Parse(DateLayout, "2016-01-08T14:22:06.271Z")
 	assert.Nil(t, err, "Failure in setting up test data")
 
-	testResponse := fmt.Sprint(`{ "uuid" : "1234-1234", "publishReference" : "tid_1235", "lastModified" : "2016-01-08T14:22:05.391Z" }`)
+	testResponse := `{ "uuid" : "1234-1234", "publishReference" : "tid_1235", "lastModified" : "2016-01-08T14:22:05.391Z" }`
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(200, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).withPublishDate(publishDate).build()
-	_, ignoreCheck := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
+	_, ignoreCheck := contentCheck.isCurrentOperationFinished(NewPublishCheck(
+		pm,
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	))
 	assert.False(t, ignoreCheck, "check should not be ignored")
 }
 
@@ -140,13 +249,25 @@ func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsBeforeCurrent
 	publishDate, err := time.Parse(DateLayout, "2016-01-08T14:22:06.271Z")
 	assert.Nil(t, err, "Failure in setting up test data")
 
-	testResponse := fmt.Sprint(`{ "uuid" : "1234-1234", "publishReference" : "tid_1235", "lastModified" : "2016-01-08T14:22:05.391Z" }`)
+	testResponse := `{ "uuid" : "1234-1234", "publishReference" : "tid_1235", "lastModified" : "2016-01-08T14:22:05.391Z" }`
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(200, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).withPublishDate(publishDate).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(
+		pm,
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	))
 	assert.False(t, finished, "operation should not have finished")
 }
 
@@ -157,12 +278,24 @@ func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateEqualsCurrentPu
 	assert.Nil(t, err, "Failure in setting up test data")
 
 	testResponse := fmt.Sprintf(`{ "uuid" : "1234-1234", "publishReference" : "%s", "lastModified" : "%s" }`, currentTid, publishDateAsString)
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(200, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).withPublishDate(publishDate).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(
+		pm,
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	))
 	assert.True(t, finished, "operation should have finished successfully")
 }
 
@@ -173,12 +306,24 @@ func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsNullCurrentTI
 	assert.Nil(t, err, "Failure in setting up test data")
 
 	testResponse := fmt.Sprintf(`{ "uuid" : "1234-1234", "publishReference" : "%s", "lastModified" : null }`, currentTid)
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(200, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).withPublishDate(publishDate).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(
+		pm,
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	))
 	assert.True(t, finished, "operation should have finished successfully")
 }
 
@@ -189,12 +334,24 @@ func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsEmptyStringCu
 	assert.Nil(t, err, "Failure in setting up test data")
 
 	testResponse := fmt.Sprintf(`{ "uuid" : "1234-1234", "publishReference" : "%s", "lastModified" : "" }`, currentTid)
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
 	contentCheck := &ContentCheck{
-		mockHTTPCaller(t, "tid_pam_1234", buildResponse(200, testResponse)),
+		mockHTTPCaller(t, "tid_pam_1234", response),
 	}
+	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).withPublishDate(publishDate).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(
+		pm,
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	))
 	assert.True(t, finished, "operation should have finished successfully")
 }
 
@@ -208,7 +365,7 @@ type publishMetricBuilder interface {
 	build() metrics.PublishMetric
 }
 
-//PublishMetricBuilder implementation
+// PublishMetricBuilder implementation
 type pmBuilder struct {
 	UUID          string
 	endpoint      url.URL
@@ -267,7 +424,7 @@ func newPublishMetricBuilder() publishMetricBuilder {
 func buildResponse(statusCode int, content string) *http.Response {
 	return &http.Response{
 		StatusCode: statusCode,
-		Body:       nopCloser{bytes.NewBuffer([]byte(content))},
+		Body:       io.NopCloser(bytes.NewBuffer([]byte(content))),
 	}
 }
 
@@ -276,7 +433,7 @@ type testHTTPCaller struct {
 	t             *testing.T
 	authUser      string
 	authPass      string
-	txId          string
+	tid           string
 	mockResponses []*http.Response
 	current       int
 }
@@ -287,8 +444,8 @@ func (t *testHTTPCaller) DoCall(config httpcaller.Config) (*http.Response, error
 		return buildResponse(401, `{message: "Not authenticated"}`), nil
 	}
 
-	if t.txId != "" {
-		assert.Equal(t.t, t.txId, config.TxID, "transaction id")
+	if t.tid != "" {
+		assert.Equal(t.t, t.tid, config.TID, "transaction id")
 	}
 
 	response := t.mockResponses[t.current]
@@ -296,24 +453,12 @@ func (t *testHTTPCaller) DoCall(config httpcaller.Config) (*http.Response, error
 	return response, nil
 }
 
-func (t *testHTTPCaller) DoCallWithEntity(httpMethod string, url string, username string, password string, txId string, contentType string, entity io.Reader) (*http.Response, error) {
-	return nil, nil
+// builds testHTTPCaller with the given mocked responses in the provided order
+func mockHTTPCaller(t *testing.T, tid string, responses ...*http.Response) httpcaller.Caller {
+	return &testHTTPCaller{t: t, tid: tid, mockResponses: responses}
 }
 
 // builds testHTTPCaller with the given mocked responses in the provided order
-func mockHTTPCaller(t *testing.T, txID string, responses ...*http.Response) httpcaller.Caller {
-	return &testHTTPCaller{t: t, txId: txID, mockResponses: responses}
+func mockAuthenticatedHTTPCaller(t *testing.T, tid string, username string, password string, responses ...*http.Response) httpcaller.Caller {
+	return &testHTTPCaller{t: t, tid: tid, authUser: username, authPass: password, mockResponses: responses}
 }
-
-// builds testHTTPCaller with the given mocked responses in the provided order
-func mockAuthenticatedHTTPCaller(t *testing.T, txID string, username string, password string, responses ...*http.Response) httpcaller.Caller {
-	return &testHTTPCaller{t: t, txId: txID, authUser: username, authPass: password, mockResponses: responses}
-}
-
-// this is necessary to be able to build an http.Response
-// the body has to be a ReadCloser
-type nopCloser struct {
-	io.Reader
-}
-
-func (nopCloser) Close() error { return nil }

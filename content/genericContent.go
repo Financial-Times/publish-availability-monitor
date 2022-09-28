@@ -3,8 +3,8 @@ package content
 import (
 	"net/http"
 
+	"github.com/Financial-Times/go-logger/v2"
 	uuidutils "github.com/Financial-Times/uuid-utils-go"
-	log "github.com/Sirupsen/logrus"
 )
 
 type GenericContent struct {
@@ -19,27 +19,28 @@ func (gc GenericContent) Initialize(binaryContent []byte) Content {
 	return gc
 }
 
-func (gc GenericContent) Validate(externalValidationEndpoint string, txID string, username string, password string) ValidationResponse {
+func (gc GenericContent) Validate(externalValidationEndpoint, tid, username, password string, log *logger.UPPLogger) ValidationResponse {
 	if uuidutils.ValidateUUID(gc.GetUUID()) != nil {
-		log.Warnf("Generic content UUID is invalid: [%s]", gc.GetUUID())
+		log.WithUUID(gc.GetUUID()).Warn("Generic content UUID is invalid")
 		return ValidationResponse{IsValid: false, IsMarkedDeleted: gc.isMarkedDeleted()}
 	}
 
 	param := validationParam{
-		gc.BinaryContent,
-		externalValidationEndpoint,
-		username,
-		password,
-		txID,
-		gc.GetUUID(),
-		gc.GetType(),
-		true,
+		binaryContent:    gc.BinaryContent,
+		validationURL:    externalValidationEndpoint,
+		username:         username,
+		password:         password,
+		tid:              tid,
+		uuid:             gc.GetUUID(),
+		contentType:      gc.GetType(),
+		isGenericPublish: true,
 	}
 
 	return doExternalValidation(
 		param,
 		gc.isValid,
 		gc.isMarkedDeleted,
+		log,
 	)
 }
 

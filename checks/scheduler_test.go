@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/content"
 	"github.com/Financial-Times/publish-availability-monitor/envs"
-	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/Financial-Times/publish-availability-monitor/metrics"
 	"github.com/stretchr/testify/require"
 )
@@ -47,7 +47,7 @@ func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 				Granularity: 1,
 				Alias:       "content",
 				ContentTypes: []string{
-					"application/vnd.ft-upp-image",
+					"application/vnd.ft-upp-image+json",
 				},
 			},
 		},
@@ -63,7 +63,7 @@ func TestScheduleChecksForContentAreCorrect(testing *testing.T) {
 		Password: "pass1",
 	})
 
-	var genericImage = content.GenericContent{UUID: "e28b12f7-9796-3331-b030-05082f0b8157", Type: "application/vnd.ft-upp-image"}
+	var genericImage = content.GenericContent{UUID: "e28b12f7-9796-3331-b030-05082f0b8157", Type: "application/vnd.ft-upp-image+json"}
 	capturingMetrics := runScheduleChecks(testing, genericImage, mockEnvironments, appConfig)
 
 	require.NotNil(testing, capturingMetrics)
@@ -79,7 +79,7 @@ func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testi
 				Granularity: 1,
 				Alias:       "internal-components",
 				ContentTypes: []string{
-					"application/vnd.ft-upp-article-internal",
+					"application/vnd.ft-upp-article-internal+json",
 				},
 			},
 		},
@@ -96,7 +96,7 @@ func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testi
 		Password: "pass1",
 	})
 
-	var genericArticleInternal = content.GenericContent{UUID: "a24da1d4-1524-2322-c231-25032d0f8334", Type: "application/vnd.ft-upp-article-internal"}
+	var genericArticleInternal = content.GenericContent{UUID: "a24da1d4-1524-2322-c231-25032d0f8334", Type: "application/vnd.ft-upp-article-internal+json"}
 	capturingMetrics := runScheduleChecks(testing, genericArticleInternal, mockEnvironments, appConfig)
 
 	require.NotNil(testing, capturingMetrics)
@@ -104,23 +104,38 @@ func TestScheduleChecksForContentWithInternalComponentsAreCorrect(testing *testi
 	require.Equal(testing, readURL+"/internalcomponents/", capturingMetrics.First().Endpoint.String())
 }
 
-func runScheduleChecks(testing *testing.T, content content.Content, mockEnvironments *envs.Environments, appConfig *config.AppConfig) *metrics.History {
+func runScheduleChecks(t *testing.T, content content.Content, mockEnvironments *envs.Environments, appConfig *config.AppConfig) *metrics.History {
 	capturingMetrics := metrics.NewHistory(make([]metrics.PublishMetric, 0))
 
 	tid := "tid_1234"
 	publishDate, err := time.Parse(DateLayout, "2016-01-08T14:22:06.271Z")
 	if err != nil {
-		testing.Error("Failure in setting up test data")
+		t.Error("Failure in setting up test data")
 		return nil
 	}
 
+	param := &SchedulerParam{
+		contentToCheck:  content,
+		publishDate:     publishDate,
+		tid:             tid,
+		isMarkedDeleted: true,
+		metricContainer: capturingMetrics,
+		environments:    mockEnvironments,
+	}
 	//redefine map to avoid actual checks
 	endpointSpecificChecks := map[string]EndpointSpecificCheck{}
 	//redefine metricSink to avoid hang
 	metricSink := make(chan metrics.PublishMetric, 2)
-	subscribedFeeds := map[string][]feeds.Feed{}
+	log := logger.NewUPPLogger("test", "PANIC")
 
-	ScheduleChecks(&SchedulerParam{content, publishDate, tid, true, capturingMetrics, mockEnvironments}, subscribedFeeds, endpointSpecificChecks, appConfig, metricSink, nil)
+	ScheduleChecks(
+		param,
+		endpointSpecificChecks,
+		appConfig,
+		metricSink,
+		nil,
+		log,
+	)
 	for {
 		if capturingMetrics.Len() == mockEnvironments.Len() {
 			return capturingMetrics

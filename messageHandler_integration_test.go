@@ -10,18 +10,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	"github.com/Financial-Times/go-logger/v2"
+	"github.com/Financial-Times/kafka-client-go/v3"
 	"github.com/Financial-Times/publish-availability-monitor/checks"
 	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/envs"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/Financial-Times/publish-availability-monitor/metrics"
-	log "github.com/Sirupsen/logrus"
 )
 
 func TestHandleMessage_ProducesMetrics(t *testing.T) {
-	log.SetLevel(log.PanicLevel)
+	log := logger.NewUPPLogger("publish-availability-monitor", "INFO")
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -29,7 +29,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 	tests := map[string]struct {
 		AppConfig            *config.AppConfig
 		E2ETestUUIDs         []string
-		KafkaMessage         consumer.Message
+		KafkaMessage         kafka.FTMessage
 		NotificationsPayload string
 		IsMetricExpected     bool
 		ExpectedMetric       metrics.PublishMetric
@@ -38,7 +38,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 			AppConfig: &config.AppConfig{
 				Threshold: 5,
 				ValidationEndpoints: map[string]string{
-					"application/vnd.ft-upp-article-internal": testServer.URL,
+					"application/vnd.ft-upp-article-internal+json": testServer.URL,
 				},
 				MetricConf: []config.MetricConfig{
 					{
@@ -54,11 +54,11 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 				},
 			},
 			E2ETestUUIDs: []string{"077f5ac2-0491-420e-a5d0-982e0f86204b"},
-			KafkaMessage: consumer.Message{
+			KafkaMessage: kafka.FTMessage{
 				Headers: map[string]string{
 					"Origin-System-Id":  "http://cmdb.ft.com/systems/cct",
 					"X-Request-Id":      "SYNTHETIC-REQ-MON077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"Content-Type":      "application/vnd.ft-upp-article-internal",
+					"Content-Type":      "application/vnd.ft-upp-article-internal+json",
 					"Message-Timestamp": time.Now().Format(checks.DateLayout),
 				},
 				Body: `{
@@ -77,7 +77,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 			AppConfig: &config.AppConfig{
 				Threshold: 1,
 				ValidationEndpoints: map[string]string{
-					"application/vnd.ft-upp-article-internal": testServer.URL,
+					"application/vnd.ft-upp-article-internal+json": testServer.URL,
 				},
 				MetricConf: []config.MetricConfig{
 					{
@@ -87,11 +87,11 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 					},
 				},
 			},
-			KafkaMessage: consumer.Message{
+			KafkaMessage: kafka.FTMessage{
 				Headers: map[string]string{
 					"Origin-System-Id":  "http://cmdb.ft.com/systems/cct",
 					"X-Request-Id":      "SYNTHETIC-REQ-MON077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"Content-Type":      "application/vnd.ft-upp-article-internal",
+					"Content-Type":      "application/vnd.ft-upp-article-internal+json",
 					"Message-Timestamp": time.Now().Format(checks.DateLayout),
 				},
 				Body: `{
@@ -112,11 +112,11 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 					},
 				},
 			},
-			KafkaMessage: consumer.Message{
+			KafkaMessage: kafka.FTMessage{
 				Headers: map[string]string{
 					"Origin-System-Id":  "http://cmdb.ft.com/systems/cct",
 					"X-Request-Id":      "tid_077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"Content-Type":      "application/vnd.ft-upp-article-internal",
+					"Content-Type":      "application/vnd.ft-upp-article-internal+json",
 					"Message-Timestamp": time.Now().Format(checks.DateLayout),
 				},
 				Body: `{
@@ -130,7 +130,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 			AppConfig: &config.AppConfig{
 				Threshold: 1,
 				ValidationEndpoints: map[string]string{
-					"application/vnd.ft-upp-article-internal": testServer.URL,
+					"application/vnd.ft-upp-article-internal+json": testServer.URL,
 				},
 				MetricConf: []config.MetricConfig{
 					{
@@ -140,11 +140,11 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 					},
 				},
 			},
-			KafkaMessage: consumer.Message{
+			KafkaMessage: kafka.FTMessage{
 				Headers: map[string]string{
 					"Origin-System-Id":  "http://cmdb.ft.com/systems/cct",
 					"X-Request-Id":      "tid_077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"Content-Type":      "application/vnd.ft-upp-article-internal",
+					"Content-Type":      "application/vnd.ft-upp-article-internal+json",
 					"Message-Timestamp": time.Now().Format(checks.DateLayout),
 				},
 				Body: `{
@@ -158,22 +158,22 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 			AppConfig: &config.AppConfig{
 				Threshold: 5,
 				ValidationEndpoints: map[string]string{
-					"application/vnd.ft-upp-article-internal": testServer.URL,
+					"application/vnd.ft-upp-article-internal+json": testServer.URL,
 				},
 				MetricConf: []config.MetricConfig{
 					{
 						Endpoint:     "/whatever/",
 						Granularity:  1,
 						Alias:        "notifications-push",
-						ContentTypes: []string{"application/vnd.ft-upp-article-internal"},
+						ContentTypes: []string{"application/vnd.ft-upp-article-internal+json"},
 					},
 				},
 			},
-			KafkaMessage: consumer.Message{
+			KafkaMessage: kafka.FTMessage{
 				Headers: map[string]string{
 					"Origin-System-Id":  "http://cmdb.ft.com/systems/cct",
 					"X-Request-Id":      "tid_077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"Content-Type":      "application/vnd.ft-upp-article-internal",
+					"Content-Type":      "application/vnd.ft-upp-article-internal+json",
 					"Message-Timestamp": time.Now().Format(checks.DateLayout),
 				},
 				Body: `{
@@ -191,22 +191,22 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 			AppConfig: &config.AppConfig{
 				Threshold: 5,
 				ValidationEndpoints: map[string]string{
-					"application/vnd.ft-upp-article-internal": testServer.URL,
+					"application/vnd.ft-upp-article-internal+json": testServer.URL,
 				},
 				MetricConf: []config.MetricConfig{
 					{
 						Endpoint:     "/whatever/",
 						Granularity:  1,
 						Alias:        "notifications-push",
-						ContentTypes: []string{"application/vnd.ft-upp-article-internal"},
+						ContentTypes: []string{"application/vnd.ft-upp-article-internal+json"},
 					},
 				},
 			},
-			KafkaMessage: consumer.Message{
+			KafkaMessage: kafka.FTMessage{
 				Headers: map[string]string{
 					"Origin-System-Id":  "http://cmdb.ft.com/systems/cct",
 					"X-Request-Id":      "tid_077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"Content-Type":      "application/vnd.ft-upp-article-internal",
+					"Content-Type":      "application/vnd.ft-upp-article-internal+json",
 					"Message-Timestamp": time.Now().Format(checks.DateLayout),
 				},
 				Body: `{
@@ -238,7 +238,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 			}
 
 			baseURL, _ := url.Parse("http://www.example.org")
-			f := feeds.NewNotificationsFeed("notifications-push", *baseURL, 10, 1, "", "", "")
+			f := feeds.NewNotificationsFeed("notifications-push", *baseURL, 10, 1, "", "", "", log)
 			f.(*feeds.NotificationsPushFeed).SetHTTPCaller(httpCaller)
 			f.Start()
 			defer f.Stop()
@@ -249,7 +249,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 			var metricsCh = make(chan metrics.PublishMetric)
 			var metricsHistory = metrics.NewHistory(make([]metrics.PublishMetric, 0))
 
-			mh := NewKafkaMessageHandler(test.AppConfig, testEnvs, subscribedFeeds, metricsCh, metricsHistory, test.E2ETestUUIDs)
+			mh := NewKafkaMessageHandler(test.AppConfig, testEnvs, subscribedFeeds, metricsCh, metricsHistory, test.E2ETestUUIDs, log)
 			kmh := mh.(*kafkaMessageHandler)
 
 			kmh.HandleMessage(test.KafkaMessage)

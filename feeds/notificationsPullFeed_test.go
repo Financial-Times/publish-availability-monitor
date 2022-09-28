@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -36,7 +37,7 @@ type testHTTPCaller struct {
 	authUser      string
 	authPass      string
 	apiKey        string
-	txIdPrefix    string
+	tidPrefix     string
 	mockResponses []*mockResponse
 	current       int
 }
@@ -51,9 +52,9 @@ func (t *testHTTPCaller) DoCall(config httpcaller.Config) (*http.Response, error
 		return buildResponse(401, `{"message":"No api key"}`, nil).response, nil
 	}
 
-	if t.txIdPrefix != "" {
-		assert.True(t.t, strings.HasPrefix(config.TxID, t.txIdPrefix), "transaction id should start with "+t.txIdPrefix)
-		timestamp := config.TxID[len(t.txIdPrefix):]
+	if t.tidPrefix != "" {
+		assert.True(t.t, strings.HasPrefix(config.TID, t.tidPrefix), "transaction id should start with "+t.tidPrefix)
+		timestamp := config.TID[len(t.tidPrefix):]
 		_, err := time.Parse(time.RFC3339, timestamp)
 		assert.Nil(t.t, err, "transaction id suffix did not parse as a timestamp")
 	}
@@ -69,13 +70,13 @@ func (t *testHTTPCaller) DoCall(config httpcaller.Config) (*http.Response, error
 }
 
 // builds testHTTPCaller with the given mocked responses in the provided order
-func mockHTTPCaller(t *testing.T, txIDPrefix string, responses ...*mockResponse) httpcaller.Caller {
-	return &testHTTPCaller{t: t, txIdPrefix: txIDPrefix, mockResponses: responses}
+func mockHTTPCaller(t *testing.T, tidPrefix string, responses ...*mockResponse) httpcaller.Caller {
+	return &testHTTPCaller{t: t, tidPrefix: tidPrefix, mockResponses: responses}
 }
 
 // builds testHTTPCaller with the given mocked responses in the provided order
-func mockAuthenticatedHTTPCaller(t *testing.T, txIDPrefix string, username string, password string, apiKey string, responses ...*mockResponse) httpcaller.Caller {
-	return &testHTTPCaller{t: t, txIdPrefix: txIDPrefix, authUser: username, authPass: password, apiKey: apiKey, mockResponses: responses}
+func mockAuthenticatedHTTPCaller(t *testing.T, tidPrefix string, username string, password string, apiKey string, responses ...*mockResponse) httpcaller.Caller {
+	return &testHTTPCaller{t: t, tidPrefix: tidPrefix, authUser: username, authPass: password, apiKey: apiKey, mockResponses: responses}
 }
 
 // this is necessary to be able to build an http.Response
@@ -121,8 +122,10 @@ func TestNotificationsArePolled(t *testing.T) {
 
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_pull_", buildResponse(200, notifications, nil))
 
-	baseUrl, _ := url.Parse("http://www.example.org?type=all")
-	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "")
+	baseURL, _ := url.Parse("http://www.example.org?type=all")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	f := NewNotificationsFeed("notifications", *baseURL, 10, 1, "", "", "", log)
 
 	f.(*NotificationsPullFeed).SetHTTPCaller(httpCaller)
 	f.Start()
@@ -148,8 +151,10 @@ func TestMultipleNotificationsAreMapped(t *testing.T) {
 
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_pull_", buildResponse(200, response, nil))
 
-	baseUrl, _ := url.Parse("http://www.example.org?type=all")
-	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "")
+	baseURL, _ := url.Parse("http://www.example.org?type=all")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	f := NewNotificationsFeed("notifications", *baseURL, 10, 1, "", "", "", log)
 
 	f.(*NotificationsPullFeed).SetHTTPCaller(httpCaller)
 	f.Start()
@@ -157,7 +162,7 @@ func TestMultipleNotificationsAreMapped(t *testing.T) {
 
 	time.Sleep(time.Duration(1200) * time.Millisecond)
 
-	for i, _ := range uuids {
+	for i := range uuids {
 		actual := f.NotificationsFor(uuids[i])
 		assert.Len(t, actual, 1, "notifications for item")
 		assert.Equal(t, "http://www.ft.com/thing/"+uuids[i], actual[0].ID, "ID")
@@ -166,8 +171,10 @@ func TestMultipleNotificationsAreMapped(t *testing.T) {
 }
 
 func TestNotificationsForReturnsEmptyIfNotFound(t *testing.T) {
-	baseUrl, _ := url.Parse("http://www.example.org")
-	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "")
+	baseURL, _ := url.Parse("http://www.example.org")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	f := NewNotificationsFeed("notifications", *baseURL, 10, 1, "", "", "", log)
 
 	response := f.NotificationsFor(uuid.NewString())
 	assert.Len(t, response, 0, "notifications for item")
@@ -189,8 +196,10 @@ func TestNotificationsForReturnsAllMatches(t *testing.T) {
 
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_pull_", buildResponse(200, notifications1, nil), buildResponse(200, notifications2, nil))
 
-	baseUrl, _ := url.Parse("http://www.example.org")
-	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "")
+	baseURL, _ := url.Parse("http://www.example.org")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	f := NewNotificationsFeed("notifications", *baseURL, 10, 1, "", "", "", log)
 	f.(*NotificationsPullFeed).SetHTTPCaller(httpCaller)
 	f.Start()
 	defer f.Stop()
@@ -212,8 +221,10 @@ func TestNotificationsPollingContinuesAfterErrorResponse(t *testing.T) {
 
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_pull_", buildResponse(500, "", nil), buildResponse(200, notifications, nil))
 
-	baseUrl, _ := url.Parse("http://www.example.org")
-	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "")
+	baseURL, _ := url.Parse("http://www.example.org")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	f := NewNotificationsFeed("notifications", *baseURL, 10, 1, "", "", "", log)
 	f.(*NotificationsPullFeed).SetHTTPCaller(httpCaller)
 	f.Start()
 	defer f.Stop()
@@ -234,8 +245,10 @@ func TestNotificationsArePurged(t *testing.T) {
 
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_pull_", buildResponse(200, notifications, nil))
 
-	baseUrl, _ := url.Parse("http://www.example.org")
-	f := NewNotificationsFeed("notifications", *baseUrl, 1, 1, "", "", "")
+	baseURL, _ := url.Parse("http://www.example.org")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	f := NewNotificationsFeed("notifications", *baseURL, 1, 1, "", "", "", log)
 	f.(*NotificationsPullFeed).SetHTTPCaller(httpCaller)
 	f.Start()
 	defer f.Stop()
@@ -271,8 +284,10 @@ func TestNotificationsPollingFollowsOpaqueLink(t *testing.T) {
 
 	httpCaller := mockHTTPCaller(t, "tid_pam_notifications_pull_", buildResponse(200, notifications1, nil), buildResponse(200, notifications2, &nextPageQuery))
 
-	baseUrl, _ := url.Parse("http://www.example.org")
-	f := NewNotificationsFeed("notifications", *baseUrl, 10, 1, "", "", "")
+	baseURL, _ := url.Parse("http://www.example.org")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	f := NewNotificationsFeed("notifications", *baseURL, 10, 1, "", "", "", log)
 	f.(*NotificationsPullFeed).SetHTTPCaller(httpCaller)
 	f.Start()
 	defer f.Stop()

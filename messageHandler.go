@@ -6,7 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	"github.com/Financial-Times/go-logger/v2"
+	"github.com/Financial-Times/kafka-client-go/v3"
 	"github.com/Financial-Times/publish-availability-monitor/checks"
 	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/content"
@@ -14,16 +15,23 @@ import (
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/Financial-Times/publish-availability-monitor/metrics"
-	log "github.com/Sirupsen/logrus"
 )
 
 const systemIDKey = "Origin-System-Id"
 
 type MessageHandler interface {
-	HandleMessage(msg consumer.Message)
+	HandleMessage(msg kafka.FTMessage)
 }
 
-func NewKafkaMessageHandler(appConfig *config.AppConfig, environments *envs.Environments, subscribedFeeds map[string][]feeds.Feed, metricSink chan metrics.PublishMetric, metricContainer *metrics.History, e2eTestUUIDs []string) MessageHandler {
+func NewKafkaMessageHandler(
+	appConfig *config.AppConfig,
+	environments *envs.Environments,
+	subscribedFeeds map[string][]feeds.Feed,
+	metricSink chan metrics.PublishMetric,
+	metricContainer *metrics.History,
+	e2eTestUUIDs []string,
+	log *logger.UPPLogger,
+) MessageHandler {
 	return &kafkaMessageHandler{
 		appConfig:       appConfig,
 		environments:    environments,
@@ -31,6 +39,7 @@ func NewKafkaMessageHandler(appConfig *config.AppConfig, environments *envs.Envi
 		metricSink:      metricSink,
 		metricContainer: metricContainer,
 		e2eTestUUIDs:    e2eTestUUIDs,
+		log:             log,
 	}
 }
 
@@ -41,35 +50,38 @@ type kafkaMessageHandler struct {
 	metricSink      chan metrics.PublishMetric
 	metricContainer *metrics.History
 	e2eTestUUIDs    []string
+	log             *logger.UPPLogger
 }
 
-func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
+func (h *kafkaMessageHandler) HandleMessage(msg kafka.FTMessage) {
 	tid := msg.Headers["X-Request-Id"]
-	log.Infof("Received message with TID [%v]", tid)
+	log := h.log.WithTransactionID(tid)
+
+	log.Info("Received message")
 
 	if h.isIgnorableMessage(msg) {
-		log.Infof("Message [%v] is ignorable. Skipping...", tid)
+		log.Info("Message is ignorable. Skipping...")
 		return
 	}
 
 	publishedContent, err := h.unmarshalContent(msg)
 	if err != nil {
-		log.Warnf("Cannot unmarshal message [%v], error: [%v]", tid, err.Error())
+		h.log.WithError(err).Warn("Cannot unmarshal message")
 		return
 	}
 
 	publishDateString := msg.Headers["Message-Timestamp"]
 	publishDate, err := time.Parse(checks.DateLayout, publishDateString)
 	if err != nil {
-		log.Errorf("Cannot parse publish date [%v] from message [%v], error: [%v]",
-			publishDateString, tid, err.Error())
+		h.log.WithError(err).Errorf("Cannot parse publish date [%v]",
+			publishDateString)
 		return
 	}
 
 	var paramsToSchedule []*checks.SchedulerParam
 
-	for _, preCheck := range checks.МainPreChecks() {
-		ok, scheduleParam := preCheck(publishedContent, tid, publishDate, h.appConfig, h.metricContainer, h.environments)
+	for _, preCheck := range checks.MainPreChecks() {
+		ok, scheduleParam := preCheck(publishedContent, tid, publishDate, h.appConfig, h.metricContainer, h.environments, h.log)
 		if ok {
 			paramsToSchedule = append(paramsToSchedule, scheduleParam)
 		} else {
@@ -99,23 +111,23 @@ func (h *kafkaMessageHandler) HandleMessage(msg consumer.Message) {
 	}
 
 	for _, scheduleParam := range paramsToSchedule {
-		checks.ScheduleChecks(scheduleParam, h.subscribedFeeds, endpointSpecificChecks, h.appConfig, h.metricSink, h.e2eTestUUIDs)
+		checks.ScheduleChecks(scheduleParam, endpointSpecificChecks, h.appConfig, h.metricSink, h.e2eTestUUIDs, h.log)
 	}
 }
 
-func (h *kafkaMessageHandler) isIgnorableMessage(msg consumer.Message) bool {
+func (h *kafkaMessageHandler) isIgnorableMessage(msg kafka.FTMessage) bool {
 	tid := msg.Headers["X-Request-Id"]
 
-	isSyntetic := h.isSyntheticTransactionID(tid)
+	isSynthetic := h.isSyntheticTransactionID(tid)
 	isE2ETest := config.IsE2ETestTransactionID(tid, h.e2eTestUUIDs)
 	isCarousel := h.isContentCarouselTransactionID(tid)
 
-	if isSyntetic && isE2ETest {
-		log.Infof("Message [%v] is E2E Test.", tid)
+	if isSynthetic && isE2ETest {
+		h.log.WithTransactionID(tid).Infof("Message is E2E Test.")
 		return false
 	}
 
-	return isSyntetic || isCarousel
+	return isSynthetic || isCarousel
 }
 
 func (h *kafkaMessageHandler) isSyntheticTransactionID(tid string) bool {
@@ -127,7 +139,7 @@ func (h *kafkaMessageHandler) isContentCarouselTransactionID(tid string) bool {
 }
 
 // UnmarshalContent unmarshals the message body into the appropriate content type based on the systemID header.
-func (h *kafkaMessageHandler) unmarshalContent(msg consumer.Message) (content.Content, error) {
+func (h *kafkaMessageHandler) unmarshalContent(msg kafka.FTMessage) (content.Content, error) {
 	binaryContent := []byte(msg.Body)
 
 	headers := msg.Headers
@@ -151,7 +163,7 @@ func (h *kafkaMessageHandler) unmarshalContent(msg consumer.Message) (content.Co
 	}
 }
 
-func unmarshalGenericContent(msg consumer.Message) (content.GenericContent, error) {
+func unmarshalGenericContent(msg kafka.FTMessage) (content.GenericContent, error) {
 	binaryContent := []byte(msg.Body)
 	var genericContent content.GenericContent
 	err := json.Unmarshal(binaryContent, &genericContent)

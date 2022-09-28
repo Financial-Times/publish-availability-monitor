@@ -7,6 +7,9 @@ service:
 envs:
   environment: "dev"
   kafka_topic: "PreNativeCmsPublicationEvents"
+  kafka_consumer_group: "publish-availability-monitor"
+  kafka_lag_tolerance: 120
+  log_level: "INFO"
   content_url: "/__document-store-api/content/"
   content_neo4j_url: "/__content-rw-neo4j/content/"
   content_collection_neo4j_url: "/__content-collection-rw-neo4j/content-collection/content-package/"

@@ -1,13 +1,10 @@
 {
     "threshold": 30,
     "queueConfig": {
-        "address": [
-            "http://kafka-proxy:8080"
-        ],
-        "group": "ExamplePubMonitorGroupName",
+        "connectionString": "kafka:9092",
         "topic": "NativeCmsPublicationEvents",
-        "queue": "kafka",
-        "concurrentProcessing": true
+        "consumerGroup": "ExamplePubMonitorGroupName",
+        "lagTolerance": 120
     },
     "metricConfig": [
         {
@@ -15,7 +12,7 @@
             "alias": "content",
             "granularity": 10,
             "contentTypes": [
-                "application/vnd.ft-upp-article-internal"
+                "application/vnd.ft-upp-article-internal+json"
             ]
         }
     ],
@@ -26,7 +23,7 @@
         "failureThreshold": 2
     },
     "validationEndpoints": {
-        "application/vnd.ft-upp-article-internal": "__upp-internal-article-validator/validate"
+        "application/vnd.ft-upp-article-internal+json": "__upp-internal-article-validator/validate"
     },
     "capabilities": [
         {

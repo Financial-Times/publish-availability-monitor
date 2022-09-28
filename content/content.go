@@ -3,17 +3,16 @@ package content
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"net/http"
 
+	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
-	log "github.com/Sirupsen/logrus"
 )
 
 // Content is the interface for different type of contents from different CMSs.
 type Content interface {
 	Initialize(binaryContent []byte) Content
-	Validate(externalValidationEndpoint string, txID string, username string, password string) ValidationResponse
+	Validate(externalValidationEndpoint, tid, username, password string, log *logger.UPPLogger) ValidationResponse
 	GetType() string
 	GetUUID() string
 }
@@ -28,7 +27,7 @@ type validationParam struct {
 	validationURL    string
 	username         string
 	password         string
-	txID             string
+	tid              string
 	uuid             string
 	contentType      string
 	isGenericPublish bool
@@ -40,53 +39,51 @@ func init() {
 	httpCaller = httpcaller.NewCaller(10)
 }
 
-func doExternalValidation(p validationParam, validCheck func(int) bool, deletedCheck func(...int) bool) ValidationResponse {
+func doExternalValidation(p validationParam, validCheck func(int) bool, deletedCheck func(...int) bool, log *logger.UPPLogger) ValidationResponse {
+	logEntry := log.WithUUID(p.uuid).WithTransactionID(p.tid)
+
 	if p.validationURL == "" {
-		log.Warnf("External validation for content uuid=[%s] transaction_id=[%s]. Validation endpoint URL is missing for content type=[%s]", p.uuid, p.txID, p.contentType)
+		logEntry.Warnf("External validation for content. Validation endpoint URL is missing for content type=[%s]", p.contentType)
 		return ValidationResponse{false, deletedCheck()}
 	}
 
+	logEntry = logEntry.WithField("validation_url", p.validationURL)
+
 	contentType := "application/json"
 	if p.isGenericPublish {
-		contentType = p.contentType + "+json"
+		contentType = p.contentType
 	}
 
-	resp, err := httpCaller.DoCall(httpcaller.Config{ //nolint:bodyclose
-		HTTPMethod: "POST", URL: p.validationURL, Username: p.username, Password: p.password,
-		TxID:        httpcaller.ConstructPamTxId(p.txID),
-		ContentType: contentType, Entity: bytes.NewReader(p.binaryContent)})
+	resp, err := httpCaller.DoCall(httpcaller.Config{
+		HTTPMethod:  "POST",
+		URL:         p.validationURL,
+		Username:    p.username,
+		Password:    p.password,
+		TID:         httpcaller.ConstructPamTID(p.tid),
+		ContentType: contentType,
+		Entity:      bytes.NewReader(p.binaryContent),
+	})
 
 	if err != nil {
-		log.Warnf("External validation for content uuid=[%s] transaction_id=[%s] validationURL=[%s], creating validation request error: [%v]. Skipping external validation.", p.uuid, p.txID, p.validationURL, err)
+		logEntry.WithError(err).Warn("External validation for content failed while creating validation request. Skipping external validation.")
 		return ValidationResponse{true, deletedCheck()}
 	}
-	defer cleanupResp(resp)
+	defer resp.Body.Close()
 
-	log.Infof("External validation for content uuid=[%s] transaction_id=[%s] validationURL=[%s], received statusCode [%d]", p.uuid, p.txID, p.validationURL, resp.StatusCode)
+	logEntry.Infof("External validation received statusCode [%d]", resp.StatusCode)
 
-	bs, err := ioutil.ReadAll(resp.Body)
+	bs, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Warnf("External validation for content uuid=[%s] transaction_id=[%s] validationURL=[%s], reading response body error: [%v]", p.uuid, p.txID, p.validationURL, err)
+		logEntry.WithError(err).Warn("External validation reading response body error")
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNotFound {
-		log.Infof("External validation for content uuid=[%s] transaction_id=[%s] validationURL=[%s], received statusCode [%d], received error: [%v]", p.uuid, p.txID, p.validationURL, resp.StatusCode, string(bs))
+		logEntry.Infof("External validation received statusCode [%d], received error: [%v]", resp.StatusCode, string(bs))
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
-		log.Infof("External validation for content uuid=[%s] transaction_id=[%s] validationURL=[%s], received statusCode [%d], content is marked as deleted.", p.uuid, p.txID, p.validationURL, resp.StatusCode)
+		logEntry.Infof("External validation received statusCode [%d], content is marked as deleted.", resp.StatusCode)
 	}
 
 	return ValidationResponse{validCheck(resp.StatusCode), deletedCheck(resp.StatusCode)}
-}
-
-func cleanupResp(resp *http.Response) {
-	_, err := io.Copy(ioutil.Discard, resp.Body)
-	if err != nil {
-		log.Warnf("External validation cleanup failed with error: [%v]", err)
-	}
-	err = resp.Body.Close()
-	if err != nil {
-		log.Warnf("External validation cleanup failed with error: [%v]", err)
-	}
 }

@@ -3,7 +3,8 @@ package main
 import (
 	"testing"
 
-	"github.com/Financial-Times/message-queue-gonsumer/consumer"
+	"github.com/Financial-Times/go-logger/v2"
+	"github.com/Financial-Times/kafka-client-go/v3"
 	"github.com/Financial-Times/publish-availability-monitor/content"
 	"github.com/stretchr/testify/assert"
 )
@@ -44,7 +45,7 @@ func TestIsIgnorableMessage(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			h := kafkaMessageHandler{}
-			kafkaMessage := consumer.Message{
+			kafkaMessage := kafka.FTMessage{
 				Headers: map[string]string{
 					"X-Request-Id": test.TransactionID,
 				},
@@ -61,22 +62,18 @@ func TestIsIgnorableMessage(t *testing.T) {
 
 func TestTestIsIgnorableMessage_SyntheticE2ETest(t *testing.T) {
 	e2eTestUUIDs := []string{"e4d2885f-1140-400b-9407-921e1c7378cd"}
+	log := logger.NewUPPLogger("publish-availability-monitor", "INFO")
 
-	mh := NewKafkaMessageHandler(nil, nil, nil, nil, nil, e2eTestUUIDs)
+	mh := NewKafkaMessageHandler(nil, nil, nil, nil, nil, e2eTestUUIDs, log)
 	kmh := mh.(*kafkaMessageHandler)
 
-	kafkaMessage := consumer.Message{
+	kafkaMessage := kafka.FTMessage{
 		Headers: map[string]string{
 			"X-Request-Id": syntheticTID,
 		},
 	}
 
-	got := kmh.isIgnorableMessage(kafkaMessage)
-	expected := false
-
-	if got != expected {
-		t.Fatalf("expected %v, got %v", expected, got)
-	}
+	assert.Equal(t, false, kmh.isIgnorableMessage(kafkaMessage))
 }
 
 func TestUnmarshalContent_InvalidMessageMissingHeader_Error(t *testing.T) {
@@ -95,20 +92,22 @@ func TestUnmarshalContent_InvalidMessageWrongSystemId_Error(t *testing.T) {
 
 func TestUnmarshalContent_ValidVideoMessage(t *testing.T) {
 	testCases := []struct {
-		videoMessage consumer.Message
+		videoMessage kafka.FTMessage
 	}{
 		{validVideoMsg},
 		{validVideoMsg2},
 	}
 
 	h := kafkaMessageHandler{}
+	log := logger.NewUPPLogger("test", "PANIC")
+
 	for _, testCase := range testCases {
 		resultContent, err := h.unmarshalContent(testCase.videoMessage)
 		if err != nil {
-			t.Errorf("Expected success, but error occured [%v]", err)
+			t.Errorf("Expected success, but error occurred [%v]", err)
 			return
 		}
-		valRes := resultContent.Validate("", "", "", "")
+		valRes := resultContent.Validate("", "", "", "", log)
 		assert.False(t, valRes.IsMarkedDeleted, "Expected published content.")
 	}
 }
@@ -117,10 +116,12 @@ func TestUnmarshalContent_ValidDeletedVideoMessage(t *testing.T) {
 	h := kafkaMessageHandler{}
 	resultContent, err := h.unmarshalContent(validDeleteVideoMsg)
 	if err != nil {
-		t.Errorf("Expected success, but error occured [%v]", err)
+		t.Errorf("Expected success, but error occurred [%v]", err)
 		return
 	}
-	valRes := resultContent.Validate("", "", "", "")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	valRes := resultContent.Validate("", "", "", "", log)
 	assert.True(t, valRes.IsMarkedDeleted, "Expected deleted content.")
 }
 
@@ -128,10 +129,12 @@ func TestUnmarshalContent_InvalidVideoMessage(t *testing.T) {
 	h := kafkaMessageHandler{}
 	resultContent, err := h.unmarshalContent(invalidVideoMsg)
 	if err != nil {
-		t.Errorf("Expected success, but error occured [%v]", err)
+		t.Errorf("Expected success, but error occurred [%v]", err)
 		return
 	}
-	valRes := resultContent.Validate("", "", "", "")
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	valRes := resultContent.Validate("", "", "", "", log)
 	assert.False(t, valRes.IsValid, "Expected invalid content.")
 }
 
@@ -190,20 +193,20 @@ func TestUnmarshalContent_GenericContent_Audio(t *testing.T) {
 	assert.Equal(t, []byte(validGenericAudioMessage.Body), genericContent.BinaryContent)
 }
 
-var invalidMessageWrongHeader = consumer.Message{
+var invalidMessageWrongHeader = kafka.FTMessage{
 	Headers: map[string]string{
 		"Foobar-System-Id": "http://cmdb.ft.com/systems/cct",
 	},
 	Body: "{}",
 }
-var invalidMessageWrongSystemID = consumer.Message{
+var invalidMessageWrongSystemID = kafka.FTMessage{
 	Headers: map[string]string{
 		"Origin-System-Id": "web-foobar",
 	},
 	Body: "{}",
 }
 
-var validVideoMsg = consumer.Message{
+var validVideoMsg = kafka.FTMessage{
 	Headers: map[string]string{
 		"Origin-System-Id": "http://cmdb.ft.com/systems/next-video-editor",
 	},
@@ -212,7 +215,7 @@ var validVideoMsg = consumer.Message{
 	}`,
 }
 
-var validVideoMsg2 = consumer.Message{
+var validVideoMsg2 = kafka.FTMessage{
 	Headers: map[string]string{
 		"Origin-System-Id": "http://cmdb.ft.com/systems/next-video-editor",
 	},
@@ -222,7 +225,7 @@ var validVideoMsg2 = consumer.Message{
 	}`,
 }
 
-var validDeleteVideoMsg = consumer.Message{
+var validDeleteVideoMsg = kafka.FTMessage{
 	Headers: map[string]string{
 		"Origin-System-Id": "http://cmdb.ft.com/systems/next-video-editor",
 	},
@@ -232,7 +235,7 @@ var validDeleteVideoMsg = consumer.Message{
 	}`,
 }
 
-var invalidVideoMsg = consumer.Message{
+var invalidVideoMsg = kafka.FTMessage{
 	Headers: map[string]string{
 		"Origin-System-Id": "http://cmdb.ft.com/systems/next-video-editor",
 	},
@@ -242,7 +245,7 @@ var invalidVideoMsg = consumer.Message{
 	}`,
 }
 
-var validGenericContentMessage = consumer.Message{
+var validGenericContentMessage = kafka.FTMessage{
 	Headers: map[string]string{
 		"Origin-System-Id": "http://cmdb.ft.com/systems/cct",
 		"X-Request-Id":     "tid_0123wxyz",
@@ -282,7 +285,7 @@ var validGenericContentMessage = consumer.Message{
 	  }`,
 }
 
-var validDeletedGenericContentMessage = consumer.Message{
+var validDeletedGenericContentMessage = kafka.FTMessage{
 	Headers: map[string]string{
 		"Origin-System-Id": "http://cmdb.ft.com/systems/cct",
 		"X-Request-Id":     "tid_0123wxyz",
@@ -310,7 +313,7 @@ var validDeletedGenericContentMessage = consumer.Message{
 	  }`,
 }
 
-var validGenericAudioMessage = consumer.Message{
+var validGenericAudioMessage = kafka.FTMessage{
 	Headers: map[string]string{
 		"Origin-System-Id": "http://cmdb.ft.com/systems/next-video-editor",
 		"X-Request-Id":     "tid_0123wxyz",
