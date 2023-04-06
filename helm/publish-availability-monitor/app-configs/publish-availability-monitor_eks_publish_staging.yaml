@@ -2,8 +2,7 @@
 replicaCount: 1
 service:
   name: publish-availability-monitor
-
-
+  accountName: eksctl-publish-availability-monitor-serviceaccount
 envs:
   environment: "staging"
   kafka_topic: "PreNativeCmsPublicationEvents"
