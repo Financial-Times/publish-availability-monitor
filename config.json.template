@@ -2,6 +2,7 @@
   "threshold": 120,
   "queueConfig": {
     "connectionString": "KAFKA_ADDR",
+    "clusterARN": "KAFKA_CLUSTER_ARN",
     "consumerGroup": "KAFKA_CONSUMER_GROUP",
     "lagTolerance": "KAFKA_LAG_TOLERANCE",
     "topic": "KAFKA_TOPIC"

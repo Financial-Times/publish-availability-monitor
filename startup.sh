@@ -3,6 +3,7 @@ sed -i "s \"KAFKA_TOPIC\" \"$KAFKA_TOPIC\" " /config.json
 sed -i "s \"KAFKA_CONSUMER_GROUP\" \"$KAFKA_CONSUMER_GROUP\" " /config.json
 sed -i "s \"KAFKA_LAG_TOLERANCE\" $KAFKA_LAG_TOLERANCE " /config.json
 sed -i "s \"KAFKA_ADDR\" \"$KAFKA_ADDR\" " /config.json
+sed -i "s \"KAFKA_CLUSTER_ARN\" \"$KAFKA_CLUSTER_ARN\" " /config.json
 sed -i "s \"CONTENT_URL\" \"$CONTENT_URL\" " /config.json
 sed -i "s \"CONTENT_NEO4J_URL\" \"$CONTENT_NEO4J_URL\" " /config.json
 sed -i "s \"CONTENT_COLLECTION_NEO4J_URL\" \"$CONTENT_COLLECTION_NEO4J_URL\" " /config.json

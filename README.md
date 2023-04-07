@@ -31,6 +31,7 @@ With Docker:
 ```shell
   docker run -it \
     --env KAFKA_ADDR=<addr> \
+    --env KAFKA_CLUSTER_ARN=<arn> \
     --env CONTENT_URL=<document store api article endpoint path> \
     --env LISTS_URL=<public lists api endpoint path> \
     --env PAGES_URL=<public pages api endpoint path> \

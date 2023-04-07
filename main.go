@@ -77,9 +77,15 @@ func main() {
 		}
 	}
 
+	var arn *string
+	if appConfig.QueueConf.ClusterARN != "" {
+		arn = &appConfig.QueueConf.ClusterARN
+	}
+
 	messageHandler := NewKafkaMessageHandler(appConfig, environments, subscribedFeeds, metricSink, metricContainer, e2eTestUUIDs, log)
 	consumer, err := kafka.NewConsumer(
 		kafka.ConsumerConfig{
+			ClusterArn:              arn,
 			BrokersConnectionString: appConfig.QueueConf.ConnectionString,
 			ConsumerGroup:           appConfig.QueueConf.ConsumerGroup,
 			Options:                 kafka.DefaultConsumerOptions(),

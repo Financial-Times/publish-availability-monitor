@@ -24,6 +24,7 @@ type AppConfig struct {
 
 // QueueConfig is the configuration for kafka consumer queue
 type QueueConfig struct {
+	ClusterARN       string `json:"clusterARN"`
 	ConnectionString string `json:"connectionString"`
 	Topic            string `json:"topic"`
 	ConsumerGroup    string `json:"consumerGroup"`
