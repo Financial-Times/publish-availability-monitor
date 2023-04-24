@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/Financial-Times/go-logger/v2"
-	"github.com/Financial-Times/kafka-client-go/v3"
+	"github.com/Financial-Times/kafka-client-go/v4"
 	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/envs"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
@@ -77,9 +77,15 @@ func main() {
 		}
 	}
 
+	var arn *string
+	if appConfig.QueueConf.ClusterARN != "" {
+		arn = &appConfig.QueueConf.ClusterARN
+	}
+
 	messageHandler := NewKafkaMessageHandler(appConfig, environments, subscribedFeeds, metricSink, metricContainer, e2eTestUUIDs, log)
-	consumer := kafka.NewConsumer(
+	consumer, err := kafka.NewConsumer(
 		kafka.ConsumerConfig{
+			ClusterArn:              arn,
 			BrokersConnectionString: appConfig.QueueConf.ConnectionString,
 			ConsumerGroup:           appConfig.QueueConf.ConsumerGroup,
 			Options:                 kafka.DefaultConsumerOptions(),
@@ -89,6 +95,9 @@ func main() {
 		},
 		log,
 	)
+	if err != nil {
+		log.WithError(err).Fatal("Failed to create Kafka consumer")
+	}
 
 	go startHTTPServer(appConfig, environments, subscribedFeeds, metricContainer, consumer, log)
 
@@ -110,7 +119,7 @@ func main() {
 
 	go consumer.Start(messageHandler.HandleMessage)
 	defer func() {
-		if err := consumer.Close(); err != nil {
+		if err = consumer.Close(); err != nil {
 			log.WithError(err).Error("Error terminating consumer")
 		}
 	}()

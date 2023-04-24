@@ -28,6 +28,7 @@ spec:
                 values:
                 - {{ .Values.service.name }}
             topologyKey: "kubernetes.io/hostname"
+      serviceAccountName: {{ .Values.service.accountName }}
       containers:
       - name: {{ .Values.service.name }}
         image: "{{ .Values.image.repository }}:{{ .Chart.Version }}"
@@ -50,6 +51,11 @@ spec:
             configMapKeyRef:
               name: global-config
               key: msk.kafka.broker.url
+        - name: KAFKA_CLUSTER_ARN
+          valueFrom:
+            configMapKeyRef:
+              name: global-config
+              key: msk.kafka.cluster.arn
         - name: CONTENT_URL
           value: "{{ .Values.envs.content_url }}"
         - name: CONTENT_NEO4J_URL
