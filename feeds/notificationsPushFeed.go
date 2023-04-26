@@ -3,6 +3,7 @@ package feeds
 import (
 	"bufio"
 	"encoding/json"
+	"io"
 	"strings"
 	"sync"
 	"time"
@@ -98,7 +99,7 @@ func (f *NotificationsPushFeed) consumeFeed() bool {
 		f.purgeObsoleteNotifications()
 
 		event, err := br.ReadString('\n')
-		if err != nil {
+		if err != nil && err != io.EOF {
 			log.WithError(err).Info("Disconnected from push feed")
 			return f.isConsuming()
 		}
