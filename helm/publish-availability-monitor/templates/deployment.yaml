@@ -156,7 +156,7 @@ spec:
             path: {{ .Values.volumes.validation_credentials_file_name }}
       - name: read-envs-config
         configMap:
-          name: global-secrets
+          name: global-config
           items:
           - key: pam.read.environments
             path: {{ .Values.volumes.read_envs_config_file_name }}
