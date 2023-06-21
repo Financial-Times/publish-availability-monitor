@@ -81,8 +81,8 @@ spec:
         - name: LIST_NOTIFICATIONS_PUSH_API_KEY
           valueFrom:
             secretKeyRef:
-              name: publish-availability-monitor-secrets
-              key: list_notifications_push.api_key
+              name: doppler-global-secrets
+              key: PAM_LIST_NOTIFICATIONS_PUSH_API_KEY
         - name: PAGE_NOTIFICATIONS_URL
           value: "{{ .Values.envs.page_notifications_url }}"
         - name: PAGE_NOTIFICATIONS_PUSH_URL
@@ -90,20 +90,20 @@ spec:
         - name: PAGE_NOTIFICATIONS_PUSH_API_KEY
           valueFrom:
             secretKeyRef:
-              name: publish-availability-monitor-secrets
-              key: page_notifications_push.api_key
+              name: doppler-global-secrets
+              key: PAM_PAGE_NOTIFICATIONS_PUSH_API_KEY
         - name: NOTIFICATIONS_PUSH_API_KEY
           valueFrom:
             secretKeyRef:
-              name: publish-availability-monitor-secrets
-              key: notifications_push.api_key
+              name: doppler-global-secrets
+              key: PAM_NOTIFICATIONS_PUSH_API_KEY
         - name: GRAPHITE_ADDRESS
           value: "{{ .Values.envs.graphite_address }}"
         - name: GRAPHITE_UUID
           valueFrom:
             secretKeyRef:
-              name: publish-availability-monitor-secrets
-              key: graphite.uuid
+              name: doppler-global-secrets
+              key: PAM_GRAPHITE_UUID
         {{- $base_url := default .Values.cluster.delivery.url .Values.envs.validation_endpoints.base_url }}
         - name: VIDEO_MAPPER_URL
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.video_mapper }}"
@@ -148,11 +148,11 @@ spec:
       volumes:
       - name: pam-secrets
         secret:
-          secretName: publish-availability-monitor-secrets
+          secretName: doppler-global-secrets
           items:
-          - key: read-credentials
+          - key: PAM_READ_CREDENTIALS
             path: {{ .Values.volumes.read_env_credentials_file_name }}
-          - key: validator-credentials
+          - key: PAM_VALIDATOR_CREDENTIALS
             path: {{ .Values.volumes.validation_credentials_file_name }}
       - name: read-envs-config
         configMap:
