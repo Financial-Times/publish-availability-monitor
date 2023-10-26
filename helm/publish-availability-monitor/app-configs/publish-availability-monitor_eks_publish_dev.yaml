@@ -41,6 +41,8 @@ envs:
     upp_internal_live_blog_package_validator: "__upp-internal-live-blog-package-validator/validate"
     upp_internal_live_blog_post_validator: "__upp-internal-live-blog-post-validator/validate"
     upp_audio_validator: "__upp-audio-validator/validate"
+    upp_clip_validator: "__upp-clip-validator/validate"
+    upp_clip_set_validator: "__upp-clip-set-validator/validate"
 
 cluster:
   delivery:
