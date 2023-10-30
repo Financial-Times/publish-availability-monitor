@@ -156,7 +156,7 @@ func (h *kafkaMessageHandler) unmarshalContent(msg kafka.FTMessage) (content.Con
 			return nil, err
 		}
 		return video.Initialize(binaryContent), nil
-	case "http://cmdb.ft.com/systems/cct", "http://cmdb.ft.com/systems/spark-lists", "http://cmdb.ft.com/systems/spark":
+	case "http://cmdb.ft.com/systems/cct", "http://cmdb.ft.com/systems/spark-lists", "http://cmdb.ft.com/systems/spark", "http://cmdb.ft.com/systems/spark-clips":
 		return unmarshalGenericContent(msg)
 	default:
 		return nil, fmt.Errorf("unsupported content with system ID: [%s]", systemID)
