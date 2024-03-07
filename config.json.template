@@ -24,7 +24,8 @@
         "application/vnd.ft-upp-live-blog-post-internal+json",
         "application/vnd.ft-upp-audio+json",
         "application/vnd.ft-upp-clip+json",
-        "application/vnd.ft-upp-clip-set+json"
+        "application/vnd.ft-upp-clip-set+json",
+        "application/vnd.ft-upp-content-relation+json"
       ]
     },
     {
@@ -171,7 +172,8 @@
     "application/vnd.ft-upp-live-blog-post-internal+json": "UPP_INTERNAL_LIVE_BLOG_POST_VALIDATOR_URL",
     "application/vnd.ft-upp-audio+json": "UPP_AUDIO_VALIDATOR_URL",
     "application/vnd.ft-upp-clip+json": "UPP_CLIP_VALIDATOR_URL",
-    "application/vnd.ft-upp-clip-set+json": "UPP_CLIP_SET_VALIDATOR_URL"
+    "application/vnd.ft-upp-clip-set+json": "UPP_CLIP_SET_VALIDATOR_URL",
+    "application/vnd.ft-upp-content-relation+json": "UPP_CONTENT_RELATION_VALIDATOR_URL"
   },
   "capabilities": [
     {
