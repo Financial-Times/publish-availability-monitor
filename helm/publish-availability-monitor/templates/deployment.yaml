@@ -135,6 +135,8 @@ spec:
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_clip_set_validator }}"
         - name: UPP_CONTENT_RELATION_VALIDATOR_URL
           value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_content_relation_validator }}"
+        - name: UPP_CUSTOM_CODE_COMPONENT_VALIDATOR_URL
+          value: "{{ $base_url }}/{{ .Values.envs.validation_endpoints.upp_custom_code_component_validator }}"
         ports:
         - containerPort: 8080
         livenessProbe:

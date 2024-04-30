@@ -44,6 +44,7 @@ envs:
     upp_clip_validator: "__upp-clip-validator/validate"
     upp_clip_set_validator: "__upp-clip-set-validator/validate"
     upp_content_relation_validator: "__upp-content-relation-validator/validate"
+    upp_custom_code_component_validator: "__upp-custom-code-component-validator/validate"
 
 cluster:
   delivery:
