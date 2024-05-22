@@ -11,10 +11,12 @@ import (
 // PublishMetric holds the information about the metric we are measuring.
 type PublishMetric struct {
 	UUID            string
-	PublishOK       bool      //did it meet the SLA?
-	PublishDate     time.Time //the time WE get the message
+	EditorialDesk   string
+	Publication     []string
+	PublishOK       bool      // did it meet the SLA?
+	PublishDate     time.Time // the time WE get the message
 	Platform        string
-	PublishInterval Interval //the interval it was actually published in, ex. (10,20)
+	PublishInterval Interval // the interval it was actually published in, ex. (10,20)
 	Config          config.MetricConfig
 	Endpoint        url.URL
 	TID             string
@@ -23,9 +25,12 @@ type PublishMetric struct {
 }
 
 func (pm PublishMetric) String() string {
-	return fmt.Sprintf("Tid: %s, UUID: %s, Platform: %s, Endpoint: %s, PublishDate: %s, Duration: %d, Succeeded: %t.",
+	return fmt.Sprintf(
+		"Tid: %s, UUID: %s, Editorial Desk: %s, Publication %v, Platform: %s, Endpoint: %s, PublishDate: %s, Duration: %d, Succeeded: %t.",
 		pm.TID,
 		pm.UUID,
+		pm.EditorialDesk,
+		pm.Publication,
 		pm.Platform,
 		pm.Config.Alias,
 		pm.PublishDate.String(),

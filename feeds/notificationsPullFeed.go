@@ -73,7 +73,10 @@ func (f *NotificationsPullFeed) pollNotificationsFeed() {
 		URL:      notificationsURL,
 		Username: f.username,
 		Password: f.password,
-		TID:      tid,
+		XPolicies: []string{
+			"PBLC_READ_8e6c705e-1132-42a2-8db0-c295e29e8658,PBLC_READ_88fdde6c-2aa4-4f78-af02-9f680097cfd6",
+		},
+		TID: tid,
 	})
 	if err != nil {
 		log.WithError(err).Errorf("error calling notifications %s", notificationsURL)

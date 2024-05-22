@@ -12,6 +12,7 @@ sed -i "s \"LISTS_URL\" \"$LISTS_URL\" " /config.json
 sed -i "s \"PAGES_URL\" \"$PAGES_URL\" " /config.json
 sed -i "s \"LIST_NOTIFICATIONS_URL\" \"$LIST_NOTIFICATIONS_URL\" " /config.json
 sed -i "s \"PAGE_NOTIFICATIONS_URL\" \"$PAGE_NOTIFICATIONS_URL\" " /config.json
+sed -i "s \"NOTIFICATIONS_PUSH_PUBLICATION_MONITOR_LIST\" \"$NOTIFICATIONS_PUSH_PUBLICATION_MONITOR_LIST\" " /config.json
 sed -i "s \"NOTIFICATIONS_URL\" \"$NOTIFICATIONS_URL\" " /config.json
 sed -i "s \"LIST_NOTIFICATIONS_PUSH_URL\" \"$LIST_NOTIFICATIONS_PUSH_URL\" " /config.json
 sed -i "s \"PAGE_NOTIFICATIONS_PUSH_URL\" \"$PAGE_NOTIFICATIONS_PUSH_URL\" " /config.json

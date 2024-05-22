@@ -7,6 +7,7 @@
     "lagTolerance": "KAFKA_LAG_TOLERANCE",
     "topic": "KAFKA_TOPIC"
   },
+  "notificationsPushPublicationMonitorList": "NOTIFICATIONS_PUSH_PUBLICATION_MONITOR_LIST",
   "metricConfig": [
     {
       "endpoint": "CONTENT_URL",

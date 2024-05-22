@@ -8,10 +8,12 @@ import (
 )
 
 type GenericContent struct {
-	UUID          string `json:"uuid"`
-	Type          string `json:"-"` //This field is for internal application usage
-	BinaryContent []byte `json:"-"` //This field is for internal application usage
-	Deleted       bool   `json:"deleted,omitempty"`
+	UUID          string   `json:"uuid"`
+	EditorialDesk string   `json:"editorialDesk,omitempty"`
+	Publication   []string `json:"publication,omitempty"`
+	Type          string   `json:"-"` // This field is for internal application usage
+	BinaryContent []byte   `json:"-"` // This field is for internal application usage
+	Deleted       bool     `json:"deleted,omitempty"`
 }
 
 func (gc GenericContent) Initialize(binaryContent []byte) Content {
@@ -19,7 +21,10 @@ func (gc GenericContent) Initialize(binaryContent []byte) Content {
 	return gc
 }
 
-func (gc GenericContent) Validate(externalValidationEndpoint, tid, username, password string, log *logger.UPPLogger) ValidationResponse {
+func (gc GenericContent) Validate(
+	externalValidationEndpoint, tid, username, password string,
+	log *logger.UPPLogger,
+) ValidationResponse {
 	if uuidutils.ValidateUUID(gc.GetUUID()) != nil {
 		log.WithUUID(gc.GetUUID()).Warn("Generic content UUID is invalid")
 		return ValidationResponse{IsValid: false, IsMarkedDeleted: gc.isMarkedDeleted()}
@@ -50,6 +55,14 @@ func (gc GenericContent) GetType() string {
 
 func (gc GenericContent) GetUUID() string {
 	return gc.UUID
+}
+
+func (gc GenericContent) GetEditorialDesk() string {
+	return gc.EditorialDesk
+}
+
+func (gc GenericContent) GetPublication() []string {
+	return gc.Publication
 }
 
 func (gc GenericContent) isValid(status int) bool {

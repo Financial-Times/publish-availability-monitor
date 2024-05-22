@@ -22,9 +22,11 @@ import (
 
 func TestHandleMessage_ProducesMetrics(t *testing.T) {
 	log := logger.NewUPPLogger("publish-availability-monitor", "INFO")
-	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
+	testServer := httptest.NewServer(
+		http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
 
 	tests := map[string]struct {
 		AppConfig            *config.AppConfig
@@ -52,6 +54,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 						MetricAlias: "notifications-push",
 					},
 				},
+				NotificationsPushPublicationMonitorList: "88fdde6c-2aa4-4f78-af02-9f680097cfd6",
 			},
 			E2ETestUUIDs: []string{"077f5ac2-0491-420e-a5d0-982e0f86204b"},
 			KafkaMessage: kafka.FTMessage{
@@ -66,8 +69,11 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 					"type": "Article"
 				}`,
 			},
-			NotificationsPayload: getNotificationsPayload("077f5ac2-0491-420e-a5d0-982e0f86204b", "SYNTHETIC-REQ-MON077f5ac2-0491-420e-a5d0-982e0f86204b"),
-			IsMetricExpected:     true,
+			NotificationsPayload: getNotificationsPayload(
+				"077f5ac2-0491-420e-a5d0-982e0f86204b",
+				"SYNTHETIC-REQ-MON077f5ac2-0491-420e-a5d0-982e0f86204b",
+			),
+			IsMetricExpected: true,
 			ExpectedMetric: metrics.PublishMetric{
 				TID:       "SYNTHETIC-REQ-MON077f5ac2-0491-420e-a5d0-982e0f86204b",
 				PublishOK: true,
@@ -86,6 +92,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 						Alias:       "notifications-push",
 					},
 				},
+				NotificationsPushPublicationMonitorList: "88fdde6c-2aa4-4f78-af02-9f680097cfd6",
 			},
 			KafkaMessage: kafka.FTMessage{
 				Headers: map[string]string{
@@ -96,7 +103,8 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 				},
 				Body: `{
 					"uuid": "077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"type": "Article"
+					"type": "Article",
+					"publication": ["88fdde6c-2aa4-4f78-af02-9f680097cfd6"]
 				}`,
 			},
 			IsMetricExpected: false,
@@ -111,6 +119,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 						Alias:       "notifications-push",
 					},
 				},
+				NotificationsPushPublicationMonitorList: "88fdde6c-2aa4-4f78-af02-9f680097cfd6",
 			},
 			KafkaMessage: kafka.FTMessage{
 				Headers: map[string]string{
@@ -121,7 +130,8 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 				},
 				Body: `{
 					"uuid": "077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"type": "Article"
+					"type": "Article",
+					"publication": ["88fdde6c-2aa4-4f78-af02-9f680097cfd6"]
 				}`,
 			},
 			IsMetricExpected: false,
@@ -139,6 +149,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 						Alias:       "notifications-push",
 					},
 				},
+				NotificationsPushPublicationMonitorList: "88fdde6c-2aa4-4f78-af02-9f680097cfd6",
 			},
 			KafkaMessage: kafka.FTMessage{
 				Headers: map[string]string{
@@ -149,7 +160,8 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 				},
 				Body: `{
 					"uuid": "077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"type": "Article"
+					"type": "Article",
+					"publication": ["88fdde6c-2aa4-4f78-af02-9f680097cfd6"]
 				}`,
 			},
 			IsMetricExpected: false,
@@ -168,6 +180,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 						ContentTypes: []string{"application/vnd.ft-upp-article-internal+json"},
 					},
 				},
+				NotificationsPushPublicationMonitorList: "88fdde6c-2aa4-4f78-af02-9f680097cfd6",
 			},
 			KafkaMessage: kafka.FTMessage{
 				Headers: map[string]string{
@@ -178,7 +191,8 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 				},
 				Body: `{
 					"uuid": "077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"type": "Article"
+					"type": "Article",
+					"publication": ["88fdde6c-2aa4-4f78-af02-9f680097cfd6"]
 				}`,
 			},
 			IsMetricExpected: true,
@@ -201,6 +215,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 						ContentTypes: []string{"application/vnd.ft-upp-article-internal+json"},
 					},
 				},
+				NotificationsPushPublicationMonitorList: "88fdde6c-2aa4-4f78-af02-9f680097cfd6",
 			},
 			KafkaMessage: kafka.FTMessage{
 				Headers: map[string]string{
@@ -211,11 +226,15 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 				},
 				Body: `{
 					"uuid": "077f5ac2-0491-420e-a5d0-982e0f86204b",
-					"type": "Article"
+					"type": "Article",
+					"publication": ["88fdde6c-2aa4-4f78-af02-9f680097cfd6"]
 				}`,
 			},
-			NotificationsPayload: getNotificationsPayload("077f5ac2-0491-420e-a5d0-982e0f86204b", "tid_077f5ac2-0491-420e-a5d0-982e0f86204b"),
-			IsMetricExpected:     true,
+			NotificationsPayload: getNotificationsPayload(
+				"077f5ac2-0491-420e-a5d0-982e0f86204b",
+				"tid_077f5ac2-0491-420e-a5d0-982e0f86204b",
+			),
+			IsMetricExpected: true,
 			ExpectedMetric: metrics.PublishMetric{
 				TID:       "tid_077f5ac2-0491-420e-a5d0-982e0f86204b",
 				PublishOK: true,
@@ -227,7 +246,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 		test := test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			var testEnvs = envs.NewEnvironments()
+			testEnvs := envs.NewEnvironments()
 			testEnvs.SetEnvironment("env1", envs.Environment{
 				Name:    "env1",
 				ReadURL: "http://env1.example.org",
@@ -246,10 +265,18 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 			subscribedFeeds := map[string][]feeds.Feed{}
 			subscribedFeeds["env1"] = append(subscribedFeeds["env1"], f)
 
-			var metricsCh = make(chan metrics.PublishMetric)
-			var metricsHistory = metrics.NewHistory(make([]metrics.PublishMetric, 0))
+			metricsCh := make(chan metrics.PublishMetric)
+			metricsHistory := metrics.NewHistory(make([]metrics.PublishMetric, 0))
 
-			mh := NewKafkaMessageHandler(test.AppConfig, testEnvs, subscribedFeeds, metricsCh, metricsHistory, test.E2ETestUUIDs, log)
+			mh := NewKafkaMessageHandler(
+				test.AppConfig,
+				testEnvs,
+				subscribedFeeds,
+				metricsCh,
+				metricsHistory,
+				test.E2ETestUUIDs,
+				log,
+			)
 			kmh := mh.(*kafkaMessageHandler)
 
 			kmh.HandleMessage(test.KafkaMessage)
@@ -269,7 +296,11 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 			}
 
 			if metric.PublishOK != test.ExpectedMetric.PublishOK {
-				t.Fatalf("expected PublishOK %v, got %v", test.ExpectedMetric.PublishOK, metric.PublishOK)
+				t.Fatalf(
+					"expected PublishOK %v, got %v",
+					test.ExpectedMetric.PublishOK,
+					metric.PublishOK,
+				)
 			}
 		})
 	}
@@ -287,7 +318,10 @@ func getNotificationsPayload(uuid, tID string) string {
 	return strings.Replace(notifications, "\n", "", -1)
 }
 
-func waitForMetric(metricsCh chan metrics.PublishMetric, timeout time.Duration) (metrics.PublishMetric, error) {
+func waitForMetric(
+	metricsCh chan metrics.PublishMetric,
+	timeout time.Duration,
+) (metrics.PublishMetric, error) {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 

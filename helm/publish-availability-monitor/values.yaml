@@ -26,6 +26,7 @@ envs:
     video_mapper_endpoint: ""
     base_url: ""
   graphite_address: "graphitev2.ft.com:2003"
+  notifications_push_publication_monitor_list: "88fdde6c-2aa4-4f78-af02-9f680097cfd6"
 volumes:
   read_envs_config_mount_path: "/etc/pam/envs"
   secrets_mount_path: "/etc/pam/credentials"

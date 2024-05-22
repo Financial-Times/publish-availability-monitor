@@ -12,7 +12,7 @@ import (
 )
 
 func TestIsVideoValid_Valid(t *testing.T) {
-	var videoValid = Video{
+	videoValid := Video{
 		ID:            "e28b12f7-9796-3331-b030-05082f0b8157",
 		BinaryContent: []byte("valid-json"),
 	}
@@ -20,15 +20,17 @@ func TestIsVideoValid_Valid(t *testing.T) {
 	tid := "tid_1234"
 	pamTID := httpcaller.ConstructPamTID(tid)
 
-	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		assert.Equal(t, "/map", req.RequestURI)
-		assert.Equal(t, pamTID, req.Header.Get("X-Request-Id"))
+	testServer := httptest.NewServer(
+		http.HandlerFunc(func(_ http.ResponseWriter, req *http.Request) {
+			assert.Equal(t, "/map", req.RequestURI)
+			assert.Equal(t, pamTID, req.Header.Get("X-Request-Id"))
 
-		defer req.Body.Close()
-		reqBody, err := io.ReadAll(req.Body)
-		assert.NoError(t, err)
-		assert.Equal(t, videoValid.BinaryContent, reqBody)
-	}))
+			defer req.Body.Close()
+			reqBody, err := io.ReadAll(req.Body)
+			assert.NoError(t, err)
+			assert.Equal(t, videoValid.BinaryContent, reqBody)
+		}),
+	)
 
 	log := logger.NewUPPLogger("test", "PANIC")
 
@@ -37,7 +39,7 @@ func TestIsVideoValid_Valid(t *testing.T) {
 }
 
 func TestIsVideoValid_NoId(t *testing.T) {
-	var videoNoID = Video{}
+	videoNoID := Video{}
 	log := logger.NewUPPLogger("test", "PANIC")
 
 	validationResponse := videoNoID.Validate("", "", "", "", log)
@@ -45,7 +47,7 @@ func TestIsVideoValid_NoId(t *testing.T) {
 }
 
 func TestIsVideoValid_failedExternalValidation(t *testing.T) {
-	var videoInvalid = Video{
+	videoInvalid := Video{
 		ID:            "e28b12f7-9796-3331-b030-05082f0b8157",
 		BinaryContent: []byte("invalid-json"),
 	}
@@ -53,17 +55,19 @@ func TestIsVideoValid_failedExternalValidation(t *testing.T) {
 	tid := "tid_1234"
 	pamTID := httpcaller.ConstructPamTID(tid)
 
-	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		assert.Equal(t, "/map", req.RequestURI)
-		assert.Equal(t, pamTID, req.Header.Get("X-Request-Id"))
+	testServer := httptest.NewServer(
+		http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			assert.Equal(t, "/map", req.RequestURI)
+			assert.Equal(t, pamTID, req.Header.Get("X-Request-Id"))
 
-		defer req.Body.Close()
-		reqBody, err := io.ReadAll(req.Body)
-		assert.NoError(t, err)
-		assert.Equal(t, videoInvalid.BinaryContent, reqBody)
+			defer req.Body.Close()
+			reqBody, err := io.ReadAll(req.Body)
+			assert.NoError(t, err)
+			assert.Equal(t, videoInvalid.BinaryContent, reqBody)
 
-		w.WriteHeader(http.StatusBadRequest)
-	}))
+			w.WriteHeader(http.StatusBadRequest)
+		}),
+	)
 
 	log := logger.NewUPPLogger("test", "PANIC")
 	validationResponse := videoInvalid.Validate(testServer.URL+"/map", tid, "", "", log)
@@ -71,7 +75,7 @@ func TestIsVideoValid_failedExternalValidation(t *testing.T) {
 }
 
 func TestIsDeleted(t *testing.T) {
-	var videoNoDates = Video{
+	videoNoDates := Video{
 		ID:      "e28b12f7-9796-3331-b030-05082f0b8157",
 		Deleted: true,
 	}
