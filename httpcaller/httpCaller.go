@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/giantswarm/retry-go"
@@ -27,6 +28,7 @@ type Config struct {
 	APIKey      string
 	TID         string
 	ContentType string
+	XPolicies   []string
 	Entity      io.Reader
 }
 
@@ -72,6 +74,10 @@ func (c DefaultCaller) DoCall(config Config) (resp *http.Response, err error) {
 		req.Header.Add("Content-Type", config.ContentType)
 	}
 
+	if len(config.XPolicies) != 0 {
+		req.Header.Add("X-Policy", `[`+strings.Join(config.XPolicies, ",")+`]`)
+	}
+
 	req.Header.Add("User-Agent", "UPP Publish Availability Monitor")
 
 	op := func() error {
@@ -81,12 +87,16 @@ func (c DefaultCaller) DoCall(config Config) (resp *http.Response, err error) {
 		}
 
 		if resp.StatusCode >= 500 && resp.StatusCode < 600 {
-			//Error status code: create an err in order to trigger a retry
+			// Error status code: create an err in order to trigger a retry
 			return fmt.Errorf("error status code received: %d", resp.StatusCode)
 		}
 		return nil
 	}
 
-	_ = retry.Do(op, retry.RetryChecker(func(err error) bool { return err != nil }), retry.MaxTries(2))
+	_ = retry.Do(
+		op,
+		retry.RetryChecker(func(err error) bool { return err != nil }),
+		retry.MaxTries(2),
+	)
 	return resp, err
 }

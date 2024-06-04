@@ -161,7 +161,9 @@ func TestIsCurrentOperationFinished_ContentCheck_MarkedDeleted_NotFinished(t *te
 	assert.False(t, finished, "operation should not have finished")
 }
 
-func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsAfterCurrentPublishDate_IgnoreCheckTrue(t *testing.T) {
+func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsAfterCurrentPublishDate_IgnoreCheckTrue(
+	t *testing.T,
+) {
 	currentTid := "tid_1234"
 	publishDate, err := time.Parse(DateLayout, "2016-01-08T14:22:06.271Z")
 	assert.Nil(t, err, "Failure in setting up test data")
@@ -189,7 +191,9 @@ func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsAfterCurrentP
 }
 
 // fails for dateLayout="2006-01-02T15:04:05.000Z"
-func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsBeforeCurrentPublishDateSpecifiedWith2Decimals_IgnoreCheckFalse(t *testing.T) {
+func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsBeforeCurrentPublishDateSpecifiedWith2Decimals_IgnoreCheckFalse(
+	t *testing.T,
+) {
 	currentTid := "tid_1234"
 
 	publishDate, err := time.Parse(DateLayout, "2016-02-01T14:30:21.55Z")
@@ -217,7 +221,9 @@ func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsBeforeCurrent
 	assert.False(t, ignoreCheck, "check should not be ignored")
 }
 
-func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsBeforeCurrentPublishDate_IgnoreCheckFalse(t *testing.T) {
+func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsBeforeCurrentPublishDate_IgnoreCheckFalse(
+	t *testing.T,
+) {
 	currentTid := "tid_1234"
 	publishDate, err := time.Parse(DateLayout, "2016-01-08T14:22:06.271Z")
 	assert.Nil(t, err, "Failure in setting up test data")
@@ -244,7 +250,9 @@ func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsBeforeCurrent
 	assert.False(t, ignoreCheck, "check should not be ignored")
 }
 
-func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsBeforeCurrentPublishDate_NotFinished(t *testing.T) {
+func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsBeforeCurrentPublishDate_NotFinished(
+	t *testing.T,
+) {
 	currentTid := "tid_1234"
 	publishDate, err := time.Parse(DateLayout, "2016-01-08T14:22:06.271Z")
 	assert.Nil(t, err, "Failure in setting up test data")
@@ -271,13 +279,19 @@ func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsBeforeCurrent
 	assert.False(t, finished, "operation should not have finished")
 }
 
-func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateEqualsCurrentPublishDate_Finished(t *testing.T) {
+func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateEqualsCurrentPublishDate_Finished(
+	t *testing.T,
+) {
 	currentTid := "tid_1234"
 	publishDateAsString := "2016-01-08T14:22:06.271Z"
 	publishDate, err := time.Parse(DateLayout, publishDateAsString)
 	assert.Nil(t, err, "Failure in setting up test data")
 
-	testResponse := fmt.Sprintf(`{ "uuid" : "1234-1234", "publishReference" : "%s", "lastModified" : "%s" }`, currentTid, publishDateAsString)
+	testResponse := fmt.Sprintf(
+		`{ "uuid" : "1234-1234", "publishReference" : "%s", "lastModified" : "%s" }`,
+		currentTid,
+		publishDateAsString,
+	)
 	response := buildResponse(200, testResponse)
 	defer response.Body.Close()
 	contentCheck := &ContentCheck{
@@ -300,12 +314,17 @@ func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateEqualsCurrentPu
 }
 
 // fallback to publish reference check if last modified date is not valid
-func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsNullCurrentTIDAndPubReferenceMatch_Finished(t *testing.T) {
+func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsNullCurrentTIDAndPubReferenceMatch_Finished(
+	t *testing.T,
+) {
 	currentTid := "tid_1234"
 	publishDate, err := time.Parse(DateLayout, "2016-01-08T14:22:06.271Z")
 	assert.Nil(t, err, "Failure in setting up test data")
 
-	testResponse := fmt.Sprintf(`{ "uuid" : "1234-1234", "publishReference" : "%s", "lastModified" : null }`, currentTid)
+	testResponse := fmt.Sprintf(
+		`{ "uuid" : "1234-1234", "publishReference" : "%s", "lastModified" : null }`,
+		currentTid,
+	)
 	response := buildResponse(200, testResponse)
 	defer response.Body.Close()
 	contentCheck := &ContentCheck{
@@ -328,12 +347,17 @@ func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsNullCurrentTI
 }
 
 // fallback to publish reference check if last modified date is not valid
-func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsEmptyStringCurrentTIDAndPubReferenceMatch_Finished(t *testing.T) {
+func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsEmptyStringCurrentTIDAndPubReferenceMatch_Finished(
+	t *testing.T,
+) {
 	currentTid := "tid_1234"
 	publishDate, err := time.Parse(DateLayout, "2016-01-08T14:22:06.271Z")
 	assert.Nil(t, err, "Failure in setting up test data")
 
-	testResponse := fmt.Sprintf(`{ "uuid" : "1234-1234", "publishReference" : "%s", "lastModified" : "" }`, currentTid)
+	testResponse := fmt.Sprintf(
+		`{ "uuid" : "1234-1234", "publishReference" : "%s", "lastModified" : "" }`,
+		currentTid,
+	)
 	response := buildResponse(200, testResponse)
 	defer response.Body.Close()
 	contentCheck := &ContentCheck{
@@ -353,10 +377,67 @@ func TestIsCurrentOperationFinished_ContentCheck_LastModifiedDateIsEmptyStringCu
 		log,
 	))
 	assert.True(t, finished, "operation should have finished successfully")
+}
+
+func TestIsCurrentOperationFinished_PushNotifications_EditorialDesk_Ignored(t *testing.T) {
+	testResponse := `[]`
+
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
+
+	notificationCheck := &NotificationsCheck{
+		feedName:   "notifications-push",
+		httpCaller: mockHTTPCaller(t, "tid_pam_1234", response),
+	}
+
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	pm := newPublishMetricBuilder().withEditorialDesk(CentralBankingEditorialDesk).build()
+	_, ignoreCheck := notificationCheck.isCurrentOperationFinished(NewPublishCheck(
+		pm,
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	))
+	assert.True(t, ignoreCheck, "check should be ignored")
+}
+
+func TestIsCurrentOperationFinished_PushNotifications_Publication_Ignored(t *testing.T) {
+	testResponse := `[]`
+
+	response := buildResponse(200, testResponse)
+	defer response.Body.Close()
+
+	notificationCheck := &NotificationsCheck{
+		feedName:   "notifications-push",
+		httpCaller: mockHTTPCaller(t, "tid_pam_1234", response),
+	}
+
+	log := logger.NewUPPLogger("test", "PANIC")
+
+	pm := newPublishMetricBuilder().withPublication([]string{SustainableViewsPublication}).
+		build()
+	_, ignoreCheck := notificationCheck.isCurrentOperationFinished(NewPublishCheck(
+		pm,
+		"",
+		"",
+		0,
+		0,
+		nil,
+		nil,
+		log,
+	))
+	assert.True(t, ignoreCheck, "check should be ignored")
 }
 
 type publishMetricBuilder interface {
 	withUUID(string) publishMetricBuilder
+	withEditorialDesk(string) publishMetricBuilder
+	withPublication([]string) publishMetricBuilder
 	withEndpoint(string) publishMetricBuilder
 	withPlatform(string) publishMetricBuilder
 	withTID(string) publishMetricBuilder
@@ -368,6 +449,8 @@ type publishMetricBuilder interface {
 // PublishMetricBuilder implementation
 type pmBuilder struct {
 	UUID          string
+	EditorialDesk string
+	Publication   []string
 	endpoint      url.URL
 	platform      string
 	tid           string
@@ -377,6 +460,16 @@ type pmBuilder struct {
 
 func (b *pmBuilder) withUUID(uuid string) publishMetricBuilder {
 	b.UUID = uuid
+	return b
+}
+
+func (b *pmBuilder) withEditorialDesk(editorialDesk string) publishMetricBuilder {
+	b.EditorialDesk = editorialDesk
+	return b
+}
+
+func (b *pmBuilder) withPublication(publication []string) publishMetricBuilder {
+	b.Publication = publication
 	return b
 }
 
@@ -410,6 +503,8 @@ func (b *pmBuilder) build() metrics.PublishMetric {
 	return metrics.PublishMetric{
 		UUID:            b.UUID,
 		Endpoint:        b.endpoint,
+		EditorialDesk:   b.EditorialDesk,
+		Publication:     b.Publication,
 		Platform:        b.platform,
 		TID:             b.tid,
 		IsMarkedDeleted: b.markedDeleted,
@@ -459,6 +554,18 @@ func mockHTTPCaller(t *testing.T, tid string, responses ...*http.Response) httpc
 }
 
 // builds testHTTPCaller with the given mocked responses in the provided order
-func mockAuthenticatedHTTPCaller(t *testing.T, tid string, username string, password string, responses ...*http.Response) httpcaller.Caller {
-	return &testHTTPCaller{t: t, tid: tid, authUser: username, authPass: password, mockResponses: responses}
+func mockAuthenticatedHTTPCaller(
+	t *testing.T,
+	tid string,
+	username string,
+	password string,
+	responses ...*http.Response,
+) httpcaller.Caller {
+	return &testHTTPCaller{
+		t:             t,
+		tid:           tid,
+		authUser:      username,
+		authPass:      password,
+		mockResponses: responses,
+	}
 }

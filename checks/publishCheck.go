@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"slices"
 	"time"
 
 	"github.com/Financial-Times/go-logger/v2"
@@ -13,6 +14,14 @@ import (
 )
 
 const DateLayout = time.RFC3339Nano
+
+const (
+	NotificationsPullFeed       = "notifications"
+	NotificationsPushFeed       = "notifications-push"
+	CentralBankingEditorialDesk = "/FT/Professional/Central Banking"
+	FTPinkPublication           = "88fdde6c-2aa4-4f78-af02-9f680097cfd6"
+	SustainableViewsPublication = "8e6c705e-1132-42a2-8db0-c295e29e8658"
+)
 
 // PublishCheck performs an availability  check on a piece of content, at a
 // given endpoint, and returns whether the check was successful or not.
@@ -65,7 +74,12 @@ func (pc PublishCheck) DoCheck() (checkSuccessful, ignoreCheck bool) {
 }
 
 func (pc PublishCheck) String() string {
-	return LoggingContextForCheck(pc.Metric.Config.Alias, pc.Metric.UUID, pc.Metric.Platform, pc.Metric.TID)
+	return LoggingContextForCheck(
+		pc.Metric.Config.Alias,
+		pc.Metric.UUID,
+		pc.Metric.Platform,
+		pc.Metric.TID,
+	)
 }
 
 // EndpointSpecificCheck is the interface which determines the state of the operation we are currently checking.
@@ -84,7 +98,9 @@ func NewContentCheck(httpCaller httpcaller.Caller) ContentCheck {
 	return ContentCheck{httpCaller: httpCaller}
 }
 
-func (c ContentCheck) isCurrentOperationFinished(pc *PublishCheck) (operationFinished, ignoreCheck bool) {
+func (c ContentCheck) isCurrentOperationFinished(
+	pc *PublishCheck,
+) (operationFinished, ignoreCheck bool) {
 	pm := pc.Metric
 	url := pm.Endpoint.String() + pm.UUID
 	resp, err := c.httpCaller.DoCall(httpcaller.Config{
@@ -146,8 +162,11 @@ func NewContentNeo4jCheck(httpCaller httpcaller.Caller) ContentNeo4jCheck {
 	return ContentNeo4jCheck{httpCaller: httpCaller}
 }
 
+//
 //nolint:unparam
-func (c ContentNeo4jCheck) isCurrentOperationFinished(pc *PublishCheck) (operationFinished, ignoreCheck bool) {
+func (c ContentNeo4jCheck) isCurrentOperationFinished(
+	pc *PublishCheck,
+) (operationFinished, ignoreCheck bool) {
 	pm := pc.Metric
 	url := pm.Endpoint.String() + pm.UUID
 
@@ -155,8 +174,8 @@ func (c ContentNeo4jCheck) isCurrentOperationFinished(pc *PublishCheck) (operati
 		URL:      url,
 		Username: pc.username,
 		Password: pc.password,
-		TID:      httpcaller.ConstructPamTID(pm.TID)})
-
+		TID:      httpcaller.ConstructPamTID(pm.TID),
+	})
 	if err != nil {
 		pc.log.Warnf("Error calling URL: [%v] for %s", url, pc)
 		return false, false
@@ -207,21 +226,33 @@ func (c ContentNeo4jCheck) isCurrentOperationFinished(pc *PublishCheck) (operati
 type NotificationsCheck struct {
 	httpCaller      httpcaller.Caller
 	subscribedFeeds map[string][]feeds.Feed
+	monitorList     []string
 	feedName        string
 }
 
-func NewNotificationsCheck(httpCaller httpcaller.Caller, subscribedFeeds map[string][]feeds.Feed, feedName string) NotificationsCheck {
+func NewNotificationsCheck(
+	httpCaller httpcaller.Caller,
+	subscribedFeeds map[string][]feeds.Feed,
+	monitorList []string,
+	feedName string,
+) NotificationsCheck {
 	return NotificationsCheck{
 		httpCaller:      httpCaller,
 		subscribedFeeds: subscribedFeeds,
+		monitorList:     monitorList,
 		feedName:        feedName,
 	}
 }
 
-func (n NotificationsCheck) isCurrentOperationFinished(pc *PublishCheck) (operationFinished, ignoreCheck bool) {
+func (n NotificationsCheck) isCurrentOperationFinished(
+	pc *PublishCheck,
+) (operationFinished, ignoreCheck bool) {
 	notifications := n.checkFeed(pc.Metric.UUID, pc.Metric.Platform)
 	for _, e := range notifications {
-		checkData := map[string]interface{}{"publishReference": e.PublishReference, "lastModified": e.LastModified}
+		checkData := map[string]interface{}{
+			"publishReference": e.PublishReference,
+			"lastModified":     e.LastModified,
+		}
 		operationFinished, ignoreCheck := isSamePublishEvent(checkData, pc)
 		if operationFinished || ignoreCheck {
 			return operationFinished, ignoreCheck
@@ -233,11 +264,25 @@ func (n NotificationsCheck) isCurrentOperationFinished(pc *PublishCheck) (operat
 
 func (n NotificationsCheck) shouldSkipCheck(pc *PublishCheck) bool {
 	pm := pc.Metric
+
+	if isSkippableNotificationInNotificationsPush(n.feedName, n.monitorList, &pm) ||
+		isSkippableMotificationInNotificationPull(n.feedName, &pm) {
+		return true
+	}
+
 	if !pm.IsMarkedDeleted {
 		return false
 	}
+
 	url := pm.Endpoint.String() + "/" + pm.UUID
-	resp, err := n.httpCaller.DoCall(httpcaller.Config{URL: url, Username: pc.username, Password: pc.password, TID: httpcaller.ConstructPamTID(pm.TID)})
+	resp, err := n.httpCaller.DoCall(
+		httpcaller.Config{
+			URL:      url,
+			Username: pc.username,
+			Password: pc.password,
+			TID:      httpcaller.ConstructPamTID(pm.TID),
+		},
+	)
 	if err != nil {
 		pc.log.WithError(err).Warnf("Checking %s. Error calling URL: [%v]",
 			LoggingContextForCheck(pm.Config.Alias, pm.UUID, pm.Platform, pm.TID), url)
@@ -256,7 +301,7 @@ func (n NotificationsCheck) shouldSkipCheck(pc *PublishCheck) bool {
 	if err != nil {
 		return false
 	}
-	//ignore check if there are no previous notifications for this UUID
+	// ignore check if there are no previous notifications for this UUID
 	if len(notifications) == 0 {
 		return true
 	}
@@ -278,7 +323,10 @@ func (n NotificationsCheck) checkFeed(uuid string, envName string) []*feeds.Noti
 	return []*feeds.Notification{}
 }
 
-func isSamePublishEvent(jsonContent map[string]interface{}, pc *PublishCheck) (operationFinished, ignoreCheck bool) {
+func isSamePublishEvent(
+	jsonContent map[string]interface{},
+	pc *PublishCheck,
+) (operationFinished, ignoreCheck bool) {
 	pm := pc.Metric
 	if jsonContent["publishReference"] == pm.TID {
 		pc.log.Infof("Checking %s. Matched publish reference.", pc)
@@ -289,14 +337,29 @@ func isSamePublishEvent(jsonContent map[string]interface{}, pc *PublishCheck) (o
 	lastModifiedDate, ok := parseLastModifiedDate(jsonContent)
 	if ok {
 		if lastModifiedDate.After(pm.PublishDate) {
-			pc.log.Infof("Checking %s. Last modified date [%v] is after publish date [%v]", pc, lastModifiedDate, pm.PublishDate)
+			pc.log.Infof(
+				"Checking %s. Last modified date [%v] is after publish date [%v]",
+				pc,
+				lastModifiedDate,
+				pm.PublishDate,
+			)
 			return false, true
 		}
 		if lastModifiedDate.Equal(pm.PublishDate) {
-			pc.log.Infof("Checking %s. Last modified date [%v] is equal to publish date [%v]", pc, lastModifiedDate, pm.PublishDate)
+			pc.log.Infof(
+				"Checking %s. Last modified date [%v] is equal to publish date [%v]",
+				pc,
+				lastModifiedDate,
+				pm.PublishDate,
+			)
 			return true, false
 		}
-		pc.log.Infof("Checking %s. Last modified date [%v] is before publish date [%v]", pc, lastModifiedDate, pm.PublishDate)
+		pc.log.Infof(
+			"Checking %s. Last modified date [%v] is before publish date [%v]",
+			pc,
+			lastModifiedDate,
+			pm.PublishDate,
+		)
 	} else {
 		pc.log.Warnf("The field 'lastModified' is not valid: [%v]. Skip checking rapid-fire publishes for %s.", jsonContent["lastModified"], pc)
 	}
@@ -313,6 +376,49 @@ func parseLastModifiedDate(jsonContent map[string]interface{}) (*time.Time, bool
 	return nil, false
 }
 
-func LoggingContextForCheck(checkType string, uuid string, environment string, transactionID string) string {
-	return fmt.Sprintf("environment=[%v], checkType=[%v], uuid=[%v], transaction_id=[%v]", environment, checkType, uuid, transactionID)
+func LoggingContextForCheck(
+	checkType string,
+	uuid string,
+	environment string,
+	transactionID string,
+) string {
+	return fmt.Sprintf(
+		"environment=[%v], checkType=[%v], uuid=[%v], transaction_id=[%v]",
+		environment,
+		checkType,
+		uuid,
+		transactionID,
+	)
+}
+
+func isSkippableMotificationInNotificationPull(
+	fn string,
+	m *metrics.PublishMetric,
+) bool {
+	if fn == NotificationsPullFeed {
+		return m.EditorialDesk == CentralBankingEditorialDesk
+	}
+
+	return false
+}
+
+func isSkippableNotificationInNotificationsPush(
+	fn string,
+	ml []string,
+	m *metrics.PublishMetric,
+) bool {
+	if fn == NotificationsPushFeed {
+		var isFTPink bool
+
+		for _, p := range m.Publication {
+			if slices.Contains(ml, p) {
+				isFTPink = true
+				break
+			}
+		}
+
+		return m.EditorialDesk == CentralBankingEditorialDesk || !isFTPink
+	}
+
+	return false
 }

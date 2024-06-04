@@ -10,9 +10,11 @@ import (
 const videoType = "video"
 
 type Video struct {
-	ID            string `json:"id"`
-	Deleted       bool   `json:"deleted,omitempty"`
-	BinaryContent []byte `json:"-"` //This field is for internal application usage
+	ID            string   `json:"id"`
+	Deleted       bool     `json:"deleted,omitempty"`
+	EditorialDesk string   `json:"editorialDesk,omitempty"`
+	Publication   []string `json:"publication,omitempty"`
+	BinaryContent []byte   `json:"-"` // This field is for internal application usage
 }
 
 func (video Video) Initialize(binaryContent []byte) Content {
@@ -20,7 +22,10 @@ func (video Video) Initialize(binaryContent []byte) Content {
 	return video
 }
 
-func (video Video) Validate(externalValidationEndpoint, tid, username, password string, log *logger.UPPLogger) ValidationResponse {
+func (video Video) Validate(
+	externalValidationEndpoint, tid, username, password string,
+	log *logger.UPPLogger,
+) ValidationResponse {
 	uuid := video.GetUUID()
 
 	if uuidutils.ValidateUUID(uuid) != nil {
@@ -60,4 +65,12 @@ func (video Video) GetType() string {
 
 func (video Video) GetUUID() string {
 	return video.ID
+}
+
+func (video Video) GetEditorialDesk() string {
+	return video.EditorialDesk
+}
+
+func (video Video) GetPublication() []string {
+	return video.Publication
 }

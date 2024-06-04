@@ -12,9 +12,7 @@ import (
 	"github.com/Financial-Times/publish-availability-monitor/metrics"
 )
 
-var (
-	AbsoluteURLRegex = regexp.MustCompile("(?i)https?://.*")
-)
+var AbsoluteURLRegex = regexp.MustCompile("(?i)https?://.*")
 
 type SchedulerParam struct {
 	contentToCheck  content.Content
@@ -66,8 +64,10 @@ func ScheduleChecks(
 					continue
 				}
 
-				var publishMetric = metrics.PublishMetric{
+				publishMetric := metrics.PublishMetric{
 					UUID:            p.contentToCheck.GetUUID(),
+					EditorialDesk:   p.contentToCheck.GetEditorialDesk(),
+					Publication:     p.contentToCheck.GetPublication(),
 					PublishOK:       false,
 					PublishDate:     p.publishDate,
 					Platform:        name,
@@ -79,8 +79,8 @@ func ScheduleChecks(
 					Capability:      capability,
 				}
 
-				var checkInterval = appConfig.Threshold / metric.Granularity
-				var publishCheck = NewPublishCheck(
+				checkInterval := appConfig.Threshold / metric.Granularity
+				publishCheck := NewPublishCheck(
 					publishMetric,
 					env.Username,
 					env.Password,
@@ -94,8 +94,10 @@ func ScheduleChecks(
 			}
 		} else {
 			// generate a generic failure metric so that the absence of monitoring is logged
-			var publishMetric = metrics.PublishMetric{
+			publishMetric := metrics.PublishMetric{
 				UUID:            p.contentToCheck.GetUUID(),
+				EditorialDesk:   p.contentToCheck.GetEditorialDesk(),
+				Publication:     p.contentToCheck.GetPublication(),
 				PublishOK:       false,
 				PublishDate:     p.publishDate,
 				Platform:        "none",
@@ -113,11 +115,11 @@ func ScheduleChecks(
 }
 
 func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
-	//the date the SLA expires for this publish event
+	// the date the SLA expires for this publish event
 	publishSLA := check.Metric.PublishDate.Add(time.Duration(check.Threshold) * time.Second)
 
-	//compute the actual seconds left until the SLA to compensate for the
-	//time passed between publish and the message reaching this point
+	// compute the actual seconds left until the SLA to compensate for the
+	// time passed between publish and the message reaching this point
 	secondsUntilSLA := time.Until(publishSLA).Seconds()
 	check.log.Infof("Checking %s. [%v] seconds until SLA.",
 		LoggingContextForCheck(check.Metric.Config.Alias,
@@ -126,7 +128,7 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 			check.Metric.TID),
 		int(secondsUntilSLA))
 
-	//used to signal the ticker to stop after the threshold duration is reached
+	// used to signal the ticker to stop after the threshold duration is reached
 	quitChan := make(chan bool)
 	go func() {
 		<-time.After(time.Duration(secondsUntilSLA) * time.Second)
@@ -187,7 +189,7 @@ func scheduleCheck(check PublishCheck, metricContainer *metrics.History) {
 			continue
 		case <-quitChan:
 			tickerChan.Stop()
-			//if we get here, checks were unsuccessful
+			// if we get here, checks were unsuccessful
 			check.Metric.PublishOK = false
 			check.ResultSink <- check.Metric
 			metricContainer.Update(check.Metric)

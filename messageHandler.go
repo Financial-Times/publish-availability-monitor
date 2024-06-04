@@ -81,18 +81,28 @@ func (h *kafkaMessageHandler) HandleMessage(msg kafka.FTMessage) {
 	var paramsToSchedule []*checks.SchedulerParam
 
 	for _, preCheck := range checks.MainPreChecks() {
-		ok, scheduleParam := preCheck(publishedContent, tid, publishDate, h.appConfig, h.metricContainer, h.environments, h.log)
+		ok, scheduleParam := preCheck(
+			publishedContent,
+			tid,
+			publishDate,
+			h.appConfig,
+			h.metricContainer,
+			h.environments,
+			h.log,
+		)
 		if ok {
 			paramsToSchedule = append(paramsToSchedule, scheduleParam)
 		} else {
-			//if a main check is not ok, additional checks make no sense
+			// if a main check is not ok, additional checks make no sense
 			return
 		}
 	}
 
 	hC := httpcaller.NewCaller(10)
 
-	//key is the endpoint alias from the config
+	ml := strings.Split(h.appConfig.NotificationsPushPublicationMonitorList, ",")
+
+	// key is the endpoint alias from the config
 	endpointSpecificChecks := map[string]checks.EndpointSpecificCheck{
 		"content":                  checks.NewContentCheck(hC),
 		"content-neo4j":            checks.NewContentNeo4jCheck(hC),
@@ -103,16 +113,53 @@ func (h *kafkaMessageHandler) HandleMessage(msg kafka.FTMessage) {
 		"lists":                    checks.NewContentCheck(hC),
 		"pages":                    checks.NewContentCheck(hC),
 		"contentrelations":         checks.NewContentCheck(hC),
-		"notifications":            checks.NewNotificationsCheck(hC, h.subscribedFeeds, "notifications"),
-		"notifications-push":       checks.NewNotificationsCheck(hC, h.subscribedFeeds, "notifications-push"),
-		"list-notifications":       checks.NewNotificationsCheck(hC, h.subscribedFeeds, "list-notifications"),
-		"list-notifications-push":  checks.NewNotificationsCheck(hC, h.subscribedFeeds, "list-notifications-push"),
-		"page-notifications":       checks.NewNotificationsCheck(hC, h.subscribedFeeds, "page-notifications"),
-		"page-notifications-push":  checks.NewNotificationsCheck(hC, h.subscribedFeeds, "page-notifications-push"),
+		"notifications": checks.NewNotificationsCheck(
+			hC,
+			h.subscribedFeeds,
+			ml,
+			"notifications",
+		),
+		"notifications-push": checks.NewNotificationsCheck(
+			hC,
+			h.subscribedFeeds,
+			ml,
+			"notifications-push",
+		),
+		"list-notifications": checks.NewNotificationsCheck(
+			hC,
+			h.subscribedFeeds,
+			ml,
+			"list-notifications",
+		),
+		"list-notifications-push": checks.NewNotificationsCheck(
+			hC,
+			h.subscribedFeeds,
+			ml,
+			"list-notifications-push",
+		),
+		"page-notifications": checks.NewNotificationsCheck(
+			hC,
+			h.subscribedFeeds,
+			ml,
+			"page-notifications",
+		),
+		"page-notifications-push": checks.NewNotificationsCheck(
+			hC,
+			h.subscribedFeeds,
+			ml,
+			"page-notifications-push",
+		),
 	}
 
 	for _, scheduleParam := range paramsToSchedule {
-		checks.ScheduleChecks(scheduleParam, endpointSpecificChecks, h.appConfig, h.metricSink, h.e2eTestUUIDs, h.log)
+		checks.ScheduleChecks(
+			scheduleParam,
+			endpointSpecificChecks,
+			h.appConfig,
+			h.metricSink,
+			h.e2eTestUUIDs,
+			h.log,
+		)
 	}
 }
 
@@ -157,7 +204,10 @@ func (h *kafkaMessageHandler) unmarshalContent(msg kafka.FTMessage) (content.Con
 			return nil, err
 		}
 		return video.Initialize(binaryContent), nil
-	case "http://cmdb.ft.com/systems/cct", "http://cmdb.ft.com/systems/spark-lists", "http://cmdb.ft.com/systems/spark", "http://cmdb.ft.com/systems/spark-clips":
+	case "http://cmdb.ft.com/systems/cct",
+		"http://cmdb.ft.com/systems/spark-lists",
+		"http://cmdb.ft.com/systems/spark",
+		"http://cmdb.ft.com/systems/spark-clips":
 		return unmarshalGenericContent(msg)
 	default:
 		return nil, fmt.Errorf("unsupported content with system ID: [%s]", systemID)

@@ -27,9 +27,11 @@ func (f testFeed) Stop()  {}
 func (f testFeed) FeedName() string {
 	return f.feedName
 }
+
 func (f testFeed) FeedType() string {
 	return f.feedType
 }
+
 func (f testFeed) FeedURL() string {
 	return f.feedName
 }
@@ -56,6 +58,7 @@ func TestFeedContainsMatchingNotification(t *testing.T) {
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(t, "", nil),
 		subscribedFeeds,
+		[]string{FTPinkPublication},
 		feedName,
 	}
 	log := logger.NewUPPLogger("test", "PANIC")
@@ -85,6 +88,7 @@ func TestFeedMissingNotification(t *testing.T) {
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(t, "", nil),
 		subscribedFeeds,
+		[]string{FTPinkPublication},
 		feedName,
 	}
 	log := logger.NewUPPLogger("test", "PANIC")
@@ -110,7 +114,11 @@ func TestFeedContainsEarlierNotification(t *testing.T) {
 	testTID2 := "tid_0123wxyz"
 	testLastModified2, _ := time.Parse(DateLayout, "2016-10-28T14:00:00.000Z")
 
-	n := feeds.Notification{ID: testUUID, PublishReference: testTID1, LastModified: testLastModified1}
+	n := feeds.Notification{
+		ID:               testUUID,
+		PublishReference: testTID1,
+		LastModified:     testLastModified1,
+	}
 	notifications := []*feeds.Notification{&n}
 	f := mockFeed(feedName, testUUID, notifications)
 	subscribedFeeds := make(map[string][]feeds.Feed)
@@ -119,12 +127,18 @@ func TestFeedContainsEarlierNotification(t *testing.T) {
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(t, "", nil),
 		subscribedFeeds,
+		[]string{FTPinkPublication},
 		feedName,
 	}
 	log := logger.NewUPPLogger("test", "PANIC")
 
 	pc := NewPublishCheck(
-		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTID2).withPublishDate(testLastModified2).build(),
+		newPublishMetricBuilder().withUUID(testUUID).
+			withPlatform(testEnv).
+			withTID(testTID2).
+			withPublishDate(testLastModified2).
+			withPublication([]string{FTPinkPublication}).
+			build(),
 		"",
 		"",
 		0,
@@ -145,7 +159,11 @@ func TestFeedContainsLaterNotification(t *testing.T) {
 	testTID2 := "tid_0123wxyz"
 	testLastModified2, _ := time.Parse(DateLayout, "2016-10-28T13:59:00.000Z")
 
-	n := feeds.Notification{ID: testUUID, PublishReference: testTID1, LastModified: testLastModified1}
+	n := feeds.Notification{
+		ID:               testUUID,
+		PublishReference: testTID1,
+		LastModified:     testLastModified1,
+	}
 	notifications := []*feeds.Notification{&n}
 	f := mockFeed(feedName, testUUID, notifications)
 	subscribedFeeds := make(map[string][]feeds.Feed)
@@ -154,12 +172,17 @@ func TestFeedContainsLaterNotification(t *testing.T) {
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(t, "", nil),
 		subscribedFeeds,
+		[]string{FTPinkPublication},
 		feedName,
 	}
 	log := logger.NewUPPLogger("test", "PANIC")
 
 	pc := NewPublishCheck(
-		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTID2).withPublishDate(testLastModified2).build(),
+		newPublishMetricBuilder().withUUID(testUUID).
+			withPlatform(testEnv).
+			withTID(testTID2).
+			withPublishDate(testLastModified2).
+			build(),
 		"",
 		"",
 		0,
@@ -179,7 +202,11 @@ func TestFeedContainsUnparseableNotification(t *testing.T) {
 	testTID2 := "tid_0123wxyz"
 	testLastModified2, _ := time.Parse(DateLayout, "2016-10-28T13:59:00.000Z")
 
-	n := feeds.Notification{ID: testUUID, PublishReference: testTID1, LastModified: testLastModified1}
+	n := feeds.Notification{
+		ID:               testUUID,
+		PublishReference: testTID1,
+		LastModified:     testLastModified1,
+	}
 	notifications := []*feeds.Notification{&n}
 	f := mockFeed(feedName, testUUID, notifications)
 	subscribedFeeds := make(map[string][]feeds.Feed)
@@ -188,12 +215,18 @@ func TestFeedContainsUnparseableNotification(t *testing.T) {
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(t, "", nil),
 		subscribedFeeds,
+		[]string{FTPinkPublication},
 		feedName,
 	}
 	log := logger.NewUPPLogger("test", "PANIC")
 
 	pc := NewPublishCheck(
-		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTID2).withPublishDate(testLastModified2).build(),
+		newPublishMetricBuilder().withUUID(testUUID).
+			withPlatform(testEnv).
+			withTID(testTID2).
+			withPublishDate(testLastModified2).
+			withPublication([]string{FTPinkPublication}).
+			build(),
 		"",
 		"",
 		0,
@@ -221,12 +254,17 @@ func TestMissingFeed(t *testing.T) {
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(t, "", nil),
 		subscribedFeeds,
+		[]string{FTPinkPublication},
 		feedName,
 	}
 	log := logger.NewUPPLogger("test", "PANIC")
 
 	pc := NewPublishCheck(
-		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTID).build(),
+		newPublishMetricBuilder().withUUID(testUUID).
+			withPlatform(testEnv).
+			withPublication([]string{FTPinkPublication}).
+			withTID(testTID).
+			build(),
 		"",
 		"",
 		0,
@@ -254,12 +292,17 @@ func TestMissingEnvironment(t *testing.T) {
 	notificationsCheck := &NotificationsCheck{
 		mockHTTPCaller(t, "", nil),
 		subscribedFeeds,
+		[]string{FTPinkPublication},
 		feedName,
 	}
 	log := logger.NewUPPLogger("test", "PANIC")
 
 	pc := NewPublishCheck(
-		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTID).build(),
+		newPublishMetricBuilder().withUUID(testUUID).
+			withPlatform(testEnv).
+			withPublication([]string{FTPinkPublication}).
+			withTID(testTID).
+			build(),
 		"",
 		"",
 		0,
@@ -285,11 +328,18 @@ func TestShouldSkipCheck_ContentIsNotMarkedAsDeleted_CheckNotSkipped(t *testing.
 	}
 }
 
-func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsExist_CheckNotSkipped(t *testing.T) {
-	pm := newPublishMetricBuilder().withMarkedDeleted(true).withEndpoint("http://notifications-endpoint:8080/content/notifications").build()
+func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsExist_CheckNotSkipped(
+	t *testing.T,
+) {
+	pm := newPublishMetricBuilder().withMarkedDeleted(true).
+		withEndpoint("http://notifications-endpoint:8080/content/notifications").
+		build()
 	log := logger.NewUPPLogger("test", "PANIC")
 	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil, log)
-	response := buildResponse(200, `[{"id": "foobar", "lastModified" : "foobaz", "publishReference" : "unitTestRef" }]`)
+	response := buildResponse(
+		200,
+		`[{"id": "foobar", "lastModified" : "foobaz", "publishReference" : "unitTestRef" }]`,
+	)
 	defer response.Body.Close()
 	notificationsCheck := NotificationsCheck{
 		httpCaller: mockHTTPCaller(t, "", response),
@@ -300,8 +350,12 @@ func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsExist_Chec
 	}
 }
 
-func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsDoesNotExist_CheckSkipped(t *testing.T) {
-	pm := newPublishMetricBuilder().withMarkedDeleted(true).withEndpoint("http://notifications-endpoint:8080/content/notifications").build()
+func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsDoesNotExist_CheckSkipped(
+	t *testing.T,
+) {
+	pm := newPublishMetricBuilder().withMarkedDeleted(true).
+		withEndpoint("http://notifications-endpoint:8080/content/notifications").
+		build()
 	log := logger.NewUPPLogger("test", "PANIC")
 	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil, log)
 	response := buildResponse(200, `[]`)

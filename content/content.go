@@ -12,9 +12,14 @@ import (
 // Content is the interface for different type of contents from different CMSs.
 type Content interface {
 	Initialize(binaryContent []byte) Content
-	Validate(externalValidationEndpoint, tid, username, password string, log *logger.UPPLogger) ValidationResponse
+	Validate(
+		externalValidationEndpoint, tid, username, password string,
+		log *logger.UPPLogger,
+	) ValidationResponse
 	GetType() string
 	GetUUID() string
+	GetEditorialDesk() string
+	GetPublication() []string
 }
 
 type ValidationResponse struct {
@@ -39,11 +44,19 @@ func init() {
 	httpCaller = httpcaller.NewCaller(10)
 }
 
-func doExternalValidation(p validationParam, validCheck func(int) bool, deletedCheck func(...int) bool, log *logger.UPPLogger) ValidationResponse {
+func doExternalValidation(
+	p validationParam,
+	validCheck func(int) bool,
+	deletedCheck func(...int) bool,
+	log *logger.UPPLogger,
+) ValidationResponse {
 	logEntry := log.WithUUID(p.uuid).WithTransactionID(p.tid)
 
 	if p.validationURL == "" {
-		logEntry.Warnf("External validation for content. Validation endpoint URL is missing for content type=[%s]", p.contentType)
+		logEntry.Warnf(
+			"External validation for content. Validation endpoint URL is missing for content type=[%s]",
+			p.contentType,
+		)
 		return ValidationResponse{false, deletedCheck()}
 	}
 
@@ -63,9 +76,9 @@ func doExternalValidation(p validationParam, validCheck func(int) bool, deletedC
 		ContentType: contentType,
 		Entity:      bytes.NewReader(p.binaryContent),
 	})
-
 	if err != nil {
-		logEntry.WithError(err).Warn("External validation for content failed while creating validation request. Skipping external validation.")
+		logEntry.WithError(err).
+			Warn("External validation for content failed while creating validation request. Skipping external validation.")
 		return ValidationResponse{true, deletedCheck()}
 	}
 	defer resp.Body.Close()
@@ -78,11 +91,18 @@ func doExternalValidation(p validationParam, validCheck func(int) bool, deletedC
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNotFound {
-		logEntry.Infof("External validation received statusCode [%d], received error: [%v]", resp.StatusCode, string(bs))
+		logEntry.Infof(
+			"External validation received statusCode [%d], received error: [%v]",
+			resp.StatusCode,
+			string(bs),
+		)
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
-		logEntry.Infof("External validation received statusCode [%d], content is marked as deleted.", resp.StatusCode)
+		logEntry.Infof(
+			"External validation received statusCode [%d], content is marked as deleted.",
+			resp.StatusCode,
+		)
 	}
 
 	return ValidationResponse{validCheck(resp.StatusCode), deletedCheck(resp.StatusCode)}

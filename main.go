@@ -22,10 +22,30 @@ import (
 )
 
 var configFileName = flag.String("config", "", "Path to configuration file")
-var envsFileName = flag.String("envs-file-name", "/etc/pam/envs/read-environments.json", "Path to json file that contains environments configuration")
-var envCredentialsFileName = flag.String("envs-credentials-file-name", "/etc/pam/credentials/read-environments-credentials.json", "Path to json file that contains environments credentials")
-var validatorCredentialsFileName = flag.String("validator-credentials-file-name", "/etc/pam/credentials/validator-credentials.json", "Path to json file that contains validation endpoints configuration")
-var configRefreshPeriod = flag.Int("config-refresh-period", 1, "Refresh period for configuration in minutes. By default it is 1 minute.")
+
+var envsFileName = flag.String(
+	"envs-file-name",
+	"/etc/pam/envs/read-environments.json",
+	"Path to json file that contains environments configuration",
+)
+
+var envCredentialsFileName = flag.String(
+	"envs-credentials-file-name",
+	"/etc/pam/credentials/read-environments-credentials.json",
+	"Path to json file that contains environments credentials",
+)
+
+var validatorCredentialsFileName = flag.String(
+	"validator-credentials-file-name",
+	"/etc/pam/credentials/validator-credentials.json",
+	"Path to json file that contains validation endpoints configuration",
+)
+
+var configRefreshPeriod = flag.Int(
+	"config-refresh-period",
+	1,
+	"Refresh period for configuration in minutes. By default it is 1 minute.",
+)
 
 var carouselTransactionIDRegExp = regexp.MustCompile(`^.+_carousel_[\d]{10}.*$`)
 
@@ -41,10 +61,10 @@ func main() {
 		return
 	}
 
-	var environments = envs.NewEnvironments()
-	var subscribedFeeds = make(map[string][]feeds.Feed)
-	var metricSink = make(chan metrics.PublishMetric)
-	var configFilesHashValues = make(map[string]string)
+	environments := envs.NewEnvironments()
+	subscribedFeeds := make(map[string][]feeds.Feed)
+	metricSink := make(chan metrics.PublishMetric)
+	configFilesHashValues := make(map[string]string)
 
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
@@ -82,7 +102,15 @@ func main() {
 		arn = &appConfig.QueueConf.ClusterARN
 	}
 
-	messageHandler := NewKafkaMessageHandler(appConfig, environments, subscribedFeeds, metricSink, metricContainer, e2eTestUUIDs, log)
+	messageHandler := NewKafkaMessageHandler(
+		appConfig,
+		environments,
+		subscribedFeeds,
+		metricSink,
+		metricContainer,
+		e2eTestUUIDs,
+		log,
+	)
 	consumer, err := kafka.NewConsumer(
 		kafka.ConsumerConfig{
 			ClusterArn:              arn,
@@ -91,7 +119,10 @@ func main() {
 			Options:                 kafka.DefaultConsumerOptions(),
 		},
 		[]*kafka.Topic{
-			kafka.NewTopic(appConfig.QueueConf.Topic, kafka.WithLagTolerance(int64(appConfig.QueueConf.LagTolerance))),
+			kafka.NewTopic(
+				appConfig.QueueConf.Topic,
+				kafka.WithLagTolerance(int64(appConfig.QueueConf.LagTolerance)),
+			),
 		},
 		log,
 	)
@@ -109,7 +140,12 @@ func main() {
 		metrics.NewGraphiteSender(appConfig, log),
 	}
 
-	aggregator := metrics.NewAggregator(metricSink, publishMetricDestinations, capabilityMetricDestinations, log)
+	aggregator := metrics.NewAggregator(
+		metricSink,
+		publishMetricDestinations,
+		capabilityMetricDestinations,
+		log,
+	)
 	go aggregator.Run()
 
 	for !environments.AreReady() {
