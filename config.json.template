@@ -79,6 +79,15 @@
       ]
     },
     {
+      "endpoint": "CONTENT_RELATION_URL",
+      "granularity": 40,
+      "alias": "content-relation",
+      "health": "/__public-content-relation-api/__health",
+      "contentTypes": [
+        "application/vnd.ft-upp-content-relation+json"
+      ]
+    },
+    {
       "endpoint": "NOTIFICATIONS_URL",
       "granularity": 40,
       "alias": "notifications",

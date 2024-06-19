@@ -16,6 +16,7 @@ envs:
   internal_components_url: ""
   lists_url: ""
   pages_url: ""
+  content_relation_url: ""
   notifications_url: ""
   notifications_push_url: ""
   list_notifications_url: ""
