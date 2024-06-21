@@ -3,6 +3,7 @@ package checks
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Financial-Times/publish-availability-monitor/config"
 	"io"
 	"slices"
 	"time"
@@ -248,6 +249,7 @@ func (n NotificationsCheck) isCurrentOperationFinished(
 	pc *PublishCheck,
 ) (operationFinished, ignoreCheck bool) {
 	notifications := n.checkFeed(pc.Metric.UUID, pc.Metric.Platform)
+	pc.log.Info("Current notifications: ", notifications, pc.Metric.UUID)
 	for _, e := range notifications {
 		checkData := map[string]interface{}{
 			"publishReference": e.PublishReference,
@@ -258,7 +260,7 @@ func (n NotificationsCheck) isCurrentOperationFinished(
 			return operationFinished, ignoreCheck
 		}
 	}
-
+	pc.log.Info("Current notifications end: ", notifications, pc.Metric.UUID)
 	return false, n.shouldSkipCheck(pc)
 }
 
@@ -277,10 +279,11 @@ func (n NotificationsCheck) shouldSkipCheck(pc *PublishCheck) bool {
 	url := pm.Endpoint.String() + "/" + pm.UUID
 	resp, err := n.httpCaller.DoCall(
 		httpcaller.Config{
-			URL:      url,
-			Username: pc.username,
-			Password: pc.password,
-			TID:      httpcaller.ConstructPamTID(pm.TID),
+			URL:       url,
+			Username:  pc.username,
+			Password:  pc.password,
+			TID:       httpcaller.ConstructPamTID(pm.TID),
+			XPolicies: config.BuildXPolicyArray(pc.Metric.Publication),
 		},
 	)
 	if err != nil {
@@ -297,10 +300,14 @@ func (n NotificationsCheck) shouldSkipCheck(pc *PublishCheck) bool {
 	}
 
 	var notifications []feeds.Notification
+	pc.log.Info("Checking notifications request body", pm.UUID)
+	pc.log.Info(resp.Body, pm.UUID)
 	err = json.NewDecoder(resp.Body).Decode(&notifications)
 	if err != nil {
 		return false
 	}
+	pc.log.Info("Checking notifications array")
+	pc.log.Info(notifications, pm.UUID)
 	// ignore check if there are no previous notifications for this UUID
 	if len(notifications) == 0 {
 		return true

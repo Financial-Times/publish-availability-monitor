@@ -8,6 +8,7 @@
     "topic": "KAFKA_TOPIC"
   },
   "notificationsPushPublicationMonitorList": "NOTIFICATIONS_PUSH_PUBLICATION_MONITOR_LIST",
+  "publicationUUIDs": "PUBLICATION_UUIDS",
   "metricConfig": [
     {
       "endpoint": "CONTENT_URL",
@@ -26,7 +27,6 @@
         "application/vnd.ft-upp-audio+json",
         "application/vnd.ft-upp-clip+json",
         "application/vnd.ft-upp-clip-set+json",
-        "application/vnd.ft-upp-content-relation+json",
         "application/vnd.ft-upp-custom-code-component+json"
       ]
     },
