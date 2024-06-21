@@ -26,7 +26,6 @@
         "application/vnd.ft-upp-audio+json",
         "application/vnd.ft-upp-clip+json",
         "application/vnd.ft-upp-clip-set+json",
-        "application/vnd.ft-upp-content-relation+json",
         "application/vnd.ft-upp-custom-code-component+json"
       ]
     },
