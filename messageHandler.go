@@ -112,7 +112,7 @@ func (h *kafkaMessageHandler) HandleMessage(msg kafka.FTMessage) {
 		"enrichedContent":          checks.NewContentCheck(hC),
 		"lists":                    checks.NewContentCheck(hC),
 		"pages":                    checks.NewContentCheck(hC),
-		"contentrelations":         checks.NewContentCheck(hC),
+		"content-relation":         checks.NewContentCheck(hC),
 		"notifications": checks.NewNotificationsCheck(
 			hC,
 			h.subscribedFeeds,

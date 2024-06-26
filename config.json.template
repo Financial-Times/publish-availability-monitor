@@ -26,7 +26,6 @@
         "application/vnd.ft-upp-audio+json",
         "application/vnd.ft-upp-clip+json",
         "application/vnd.ft-upp-clip-set+json",
-        "application/vnd.ft-upp-content-relation+json",
         "application/vnd.ft-upp-custom-code-component+json"
       ]
     },
@@ -76,6 +75,15 @@
       "health": "/__public-pages-api/__health",
       "contentTypes": [
         "application/vnd.ft-upp-page+json"
+      ]
+    },
+    {
+      "endpoint": "CONTENT_RELATION_URL",
+      "granularity": 40,
+      "alias": "content-relation",
+      "health": "/__public-content-relation-api/__health",
+      "contentTypes": [
+        "application/vnd.ft-upp-content-relation+json"
       ]
     },
     {

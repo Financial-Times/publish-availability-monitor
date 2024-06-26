@@ -16,6 +16,7 @@ envs:
   internal_components_url: "/__document-store-api/internalcomponents/"
   lists_url: "/__public-lists-api/lists/"
   pages_url: "/__public-pages-api/pages/"
+  content_relation_url: "/__public-content-relation-api/contentrelations/"
   notifications_url: "/__notifications-rw/content/notifications?type=all"
   notifications_url_param2: "monitor=true"
   # I had to split the URL into 2 parts because I couldn't find a way to put the exact string \& in the value

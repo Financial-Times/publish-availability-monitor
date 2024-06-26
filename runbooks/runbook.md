@@ -42,6 +42,8 @@ The Publish Availability Monitor listens to new content messages via the Kafka t
 * The Lists Notifications /__list-notifications-rw/lists/notifications endpoint.
 * The Lists Notification Push /lists/notifications-push endpoint.
 
+* The Content Relation Public Read /__public-content-relation-api/contentrelations/ 
+
 If two of the last ten pieces of content failed any of these checks, then the PAM healthcheck will
 switch to RED and therefore cause the cluster healthchecks and good-to-go
 endpoints to show RED.

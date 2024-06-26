@@ -10,6 +10,7 @@ sed -i "s \"CONTENT_COLLECTION_NEO4J_URL\" \"$CONTENT_COLLECTION_NEO4J_URL\" " /
 sed -i "s \"COMPLEMENTARY_CONTENT_URL\" \"$COMPLEMENTARY_CONTENT_URL\" " /config.json
 sed -i "s \"LISTS_URL\" \"$LISTS_URL\" " /config.json
 sed -i "s \"PAGES_URL\" \"$PAGES_URL\" " /config.json
+sed -i "s \"CONTENT_RELATION_URL\" \"$CONTENT_RELATION_URL\" " /config.json
 sed -i "s \"LIST_NOTIFICATIONS_URL\" \"$LIST_NOTIFICATIONS_URL\" " /config.json
 sed -i "s \"PAGE_NOTIFICATIONS_URL\" \"$PAGE_NOTIFICATIONS_URL\" " /config.json
 sed -i "s \"NOTIFICATIONS_PUSH_PUBLICATION_MONITOR_LIST\" \"$NOTIFICATIONS_PUSH_PUBLICATION_MONITOR_LIST\" " /config.json

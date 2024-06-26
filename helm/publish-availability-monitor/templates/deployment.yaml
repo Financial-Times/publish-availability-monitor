@@ -70,6 +70,8 @@ spec:
           value: "{{ .Values.envs.lists_url }}"
         - name: PAGES_URL
           value: "{{ .Values.envs.pages_url }}"
+        - name: CONTENT_RELATION_URL
+          value: "{{ .Values.envs.content_relation_url }}"
         - name: NOTIFICATIONS_PUSH_PUBLICATION_MONITOR_LIST
           value: {{ .Values.envs.notifications_push_publication_monitor_list }}
         - name: NOTIFICATIONS_URL
