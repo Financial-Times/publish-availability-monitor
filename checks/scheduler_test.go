@@ -132,6 +132,7 @@ func runScheduleChecks(t *testing.T, content content.Content, mockEnvironments *
 		param,
 		endpointSpecificChecks,
 		appConfig,
+		&config.PublicationsConfig{},
 		metricSink,
 		nil,
 		log,

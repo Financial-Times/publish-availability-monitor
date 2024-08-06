@@ -172,6 +172,9 @@ spec:
           items:
           - key: pam.read.environments
             path: {{ .Values.volumes.read_envs_config_file_name }}
+          - key: upp.publications.config
+            path: {{ .Values.volumes.publications_config_file_name }}
+
 
 # corresponding secret template
 # kind: Secret

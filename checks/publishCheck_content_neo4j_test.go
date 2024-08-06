@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Financial-Times/publish-availability-monitor/config"
+
 	"github.com/Financial-Times/go-logger/v2"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,7 +21,7 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_InvalidContent(t *testing.
 	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil, log))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", &config.PublicationsConfig{}, 0, 0, nil, nil, log))
 	assert.False(t, finished, "Expected error.")
 }
 
@@ -34,7 +36,7 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_InvalidUUID(t *testing.T) 
 	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil, log))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", &config.PublicationsConfig{}, 0, 0, nil, nil, log))
 	assert.False(t, finished, "Expected error.")
 }
 
@@ -49,7 +51,7 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_Finished(t *testing.T) {
 	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withUUID("1234-1234").withTID(currentTid).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil, log))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", &config.PublicationsConfig{}, 0, 0, nil, nil, log))
 	assert.True(t, finished, "operation should have finished successfully")
 }
 
@@ -66,7 +68,7 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_WithAuthentication(t *test
 	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withUUID("1234-1234").withTID(currentTid).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, username, password, 0, 0, nil, nil, log))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, username, password, &config.PublicationsConfig{}, 0, 0, nil, nil, log))
 	assert.True(t, finished, "operation should have finished successfully")
 }
 
@@ -81,7 +83,7 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_NotFinished(t *testing.T) 
 	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil, log))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", &config.PublicationsConfig{}, 0, 0, nil, nil, log))
 	assert.False(t, finished, "Expected failure.")
 }
 
@@ -96,7 +98,7 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_MarkedDeleted_Finished(t *
 	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).withMarkedDeleted(true).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil, log))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", &config.PublicationsConfig{}, 0, 0, nil, nil, log))
 	assert.True(t, finished, "operation should have finished successfully.")
 }
 
@@ -111,6 +113,6 @@ func TestIsCurrentOperationFinished_ContentNeo4jCheck_MarkedDeleted_NotFinished(
 	log := logger.NewUPPLogger("test", "PANIC")
 
 	pm := newPublishMetricBuilder().withTID(currentTid).withMarkedDeleted(true).build()
-	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", 0, 0, nil, nil, log))
+	finished, _ := contentCheck.isCurrentOperationFinished(NewPublishCheck(pm, "", "", &config.PublicationsConfig{}, 0, 0, nil, nil, log))
 	assert.False(t, finished, "operation should not have finished")
 }

@@ -7,8 +7,11 @@ import (
 	"slices"
 	"time"
 
+	"github.com/Financial-Times/publish-availability-monitor/config"
+
 	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
+
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/Financial-Times/publish-availability-monitor/metrics"
 )
@@ -31,6 +34,7 @@ type PublishCheck struct {
 	Metric                 metrics.PublishMetric
 	username               string
 	password               string
+	publicationsConfig     *config.PublicationsConfig
 	Threshold              int
 	CheckInterval          int
 	ResultSink             chan metrics.PublishMetric
@@ -42,6 +46,7 @@ type PublishCheck struct {
 func NewPublishCheck(
 	metric metrics.PublishMetric,
 	username, password string,
+	publicationsConfig *config.PublicationsConfig,
 	threshold, checkInterval int,
 	resultSink chan metrics.PublishMetric,
 	endpointSpecificChecks map[string]EndpointSpecificCheck,
@@ -51,6 +56,7 @@ func NewPublishCheck(
 		Metric:                 metric,
 		username:               username,
 		password:               password,
+		publicationsConfig:     publicationsConfig,
 		Threshold:              threshold,
 		CheckInterval:          checkInterval,
 		ResultSink:             resultSink,
@@ -277,10 +283,11 @@ func (n NotificationsCheck) shouldSkipCheck(pc *PublishCheck) bool {
 	url := pm.Endpoint.String() + "/" + pm.UUID
 	resp, err := n.httpCaller.DoCall(
 		httpcaller.Config{
-			URL:      url,
-			Username: pc.username,
-			Password: pc.password,
-			TID:      httpcaller.ConstructPamTID(pm.TID),
+			URL:       url,
+			Username:  pc.username,
+			Password:  pc.password,
+			TID:       httpcaller.ConstructPamTID(pm.TID),
+			XPolicies: pc.publicationsConfig.GetXReadPolicies(),
 		},
 	)
 	if err != nil {

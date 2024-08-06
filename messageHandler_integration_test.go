@@ -30,6 +30,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 
 	tests := map[string]struct {
 		AppConfig            *config.AppConfig
+		PublicationConfig    *config.PublicationsConfig
 		E2ETestUUIDs         []string
 		KafkaMessage         kafka.FTMessage
 		NotificationsPayload string
@@ -257,7 +258,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 			}
 
 			baseURL, _ := url.Parse("http://www.example.org")
-			f := feeds.NewNotificationsFeed("notifications-push", *baseURL, 10, 1, "", "", "", log)
+			f := feeds.NewNotificationsFeed("notifications-push", *baseURL, &config.PublicationsConfig{}, 10, 1, "", "", "", log)
 			f.(*feeds.NotificationsPushFeed).SetHTTPCaller(httpCaller)
 			f.Start()
 			defer f.Stop()
@@ -270,6 +271,7 @@ func TestHandleMessage_ProducesMetrics(t *testing.T) {
 
 			mh := NewKafkaMessageHandler(
 				test.AppConfig,
+				test.PublicationConfig,
 				testEnvs,
 				subscribedFeeds,
 				metricsCh,

@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Financial-Times/publish-availability-monitor/config"
+
 	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 	"github.com/google/uuid"
@@ -67,6 +69,7 @@ func TestFeedContainsMatchingNotification(t *testing.T) {
 		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTID).build(),
 		"",
 		"",
+		&config.PublicationsConfig{},
 		0,
 		0,
 		nil,
@@ -97,6 +100,7 @@ func TestFeedMissingNotification(t *testing.T) {
 		newPublishMetricBuilder().withUUID(testUUID).withPlatform(testEnv).withTID(testTID).build(),
 		"",
 		"",
+		&config.PublicationsConfig{},
 		0,
 		0,
 		nil,
@@ -141,6 +145,7 @@ func TestFeedContainsEarlierNotification(t *testing.T) {
 			build(),
 		"",
 		"",
+		&config.PublicationsConfig{},
 		0,
 		0,
 		nil,
@@ -185,6 +190,7 @@ func TestFeedContainsLaterNotification(t *testing.T) {
 			build(),
 		"",
 		"",
+		&config.PublicationsConfig{},
 		0,
 		0,
 		nil,
@@ -229,6 +235,7 @@ func TestFeedContainsUnparseableNotification(t *testing.T) {
 			build(),
 		"",
 		"",
+		&config.PublicationsConfig{},
 		0,
 		0,
 		nil,
@@ -267,6 +274,7 @@ func TestMissingFeed(t *testing.T) {
 			build(),
 		"",
 		"",
+		&config.PublicationsConfig{},
 		0,
 		0,
 		nil,
@@ -305,6 +313,7 @@ func TestMissingEnvironment(t *testing.T) {
 			build(),
 		"",
 		"",
+		&config.PublicationsConfig{},
 		0,
 		0,
 		nil,
@@ -321,7 +330,7 @@ func TestShouldSkipCheck_ContentIsNotMarkedAsDeleted_CheckNotSkipped(t *testing.
 	notificationsCheck := NotificationsCheck{}
 	log := logger.NewUPPLogger("test", "PANIC")
 
-	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil, log)
+	pc := NewPublishCheck(pm, "", "", &config.PublicationsConfig{}, 0, 0, nil, nil, log)
 
 	if notificationsCheck.shouldSkipCheck(pc) {
 		t.Errorf("Expected failure")
@@ -335,7 +344,7 @@ func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsExist_Chec
 		withEndpoint("http://notifications-endpoint:8080/content/notifications").
 		build()
 	log := logger.NewUPPLogger("test", "PANIC")
-	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil, log)
+	pc := NewPublishCheck(pm, "", "", &config.PublicationsConfig{}, 0, 0, nil, nil, log)
 	response := buildResponse(
 		200,
 		`[{"id": "foobar", "lastModified" : "foobaz", "publishReference" : "unitTestRef" }]`,
@@ -357,7 +366,7 @@ func TestShouldSkipCheck_ContentIsMarkedAsDeletedPreviousNotificationsDoesNotExi
 		withEndpoint("http://notifications-endpoint:8080/content/notifications").
 		build()
 	log := logger.NewUPPLogger("test", "PANIC")
-	pc := NewPublishCheck(pm, "", "", 0, 0, nil, nil, log)
+	pc := NewPublishCheck(pm, "", "", &config.PublicationsConfig{}, 0, 0, nil, nil, log)
 	response := buildResponse(200, `[]`)
 	defer response.Body.Close()
 	notificationsCheck := NotificationsCheck{

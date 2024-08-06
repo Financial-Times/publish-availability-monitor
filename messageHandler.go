@@ -25,6 +25,7 @@ type MessageHandler interface {
 
 func NewKafkaMessageHandler(
 	appConfig *config.AppConfig,
+	publicationsConfig *config.PublicationsConfig,
 	environments *envs.Environments,
 	subscribedFeeds map[string][]feeds.Feed,
 	metricSink chan metrics.PublishMetric,
@@ -33,24 +34,26 @@ func NewKafkaMessageHandler(
 	log *logger.UPPLogger,
 ) MessageHandler {
 	return &kafkaMessageHandler{
-		appConfig:       appConfig,
-		environments:    environments,
-		subscribedFeeds: subscribedFeeds,
-		metricSink:      metricSink,
-		metricContainer: metricContainer,
-		e2eTestUUIDs:    e2eTestUUIDs,
-		log:             log,
+		appConfig:          appConfig,
+		publicationsConfig: publicationsConfig,
+		environments:       environments,
+		subscribedFeeds:    subscribedFeeds,
+		metricSink:         metricSink,
+		metricContainer:    metricContainer,
+		e2eTestUUIDs:       e2eTestUUIDs,
+		log:                log,
 	}
 }
 
 type kafkaMessageHandler struct {
-	appConfig       *config.AppConfig
-	environments    *envs.Environments
-	subscribedFeeds map[string][]feeds.Feed
-	metricSink      chan metrics.PublishMetric
-	metricContainer *metrics.History
-	e2eTestUUIDs    []string
-	log             *logger.UPPLogger
+	appConfig          *config.AppConfig
+	publicationsConfig *config.PublicationsConfig
+	environments       *envs.Environments
+	subscribedFeeds    map[string][]feeds.Feed
+	metricSink         chan metrics.PublishMetric
+	metricContainer    *metrics.History
+	e2eTestUUIDs       []string
+	log                *logger.UPPLogger
 }
 
 func (h *kafkaMessageHandler) HandleMessage(msg kafka.FTMessage) {
@@ -156,6 +159,7 @@ func (h *kafkaMessageHandler) HandleMessage(msg kafka.FTMessage) {
 			scheduleParam,
 			endpointSpecificChecks,
 			h.appConfig,
+			h.publicationsConfig,
 			h.metricSink,
 			h.e2eTestUUIDs,
 			h.log,

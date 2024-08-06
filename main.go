@@ -29,6 +29,12 @@ var envsFileName = flag.String(
 	"Path to json file that contains environments configuration",
 )
 
+var publicationsConfigFileName = flag.String(
+	"publications-config-file-name",
+	"/etc/pam/envs/publications-config.json",
+	"Path to json file that contains array of enabled publications uuids",
+)
+
 var envCredentialsFileName = flag.String(
 	"envs-credentials-file-name",
 	"/etc/pam/credentials/read-environments-credentials.json",
@@ -65,7 +71,7 @@ func main() {
 	subscribedFeeds := make(map[string][]feeds.Feed)
 	metricSink := make(chan metrics.PublishMetric)
 	configFilesHashValues := make(map[string]string)
-
+	publicationsConfig := &config.PublicationsConfig{}
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
 
@@ -73,6 +79,7 @@ func main() {
 
 	go envs.WatchConfigFiles(
 		wg,
+		*publicationsConfigFileName,
 		*envsFileName,
 		*envCredentialsFileName,
 		*validatorCredentialsFileName,
@@ -81,6 +88,7 @@ func main() {
 		environments,
 		subscribedFeeds,
 		appConfig,
+		publicationsConfig,
 		log,
 	)
 
@@ -104,6 +112,7 @@ func main() {
 
 	messageHandler := NewKafkaMessageHandler(
 		appConfig,
+		publicationsConfig,
 		environments,
 		subscribedFeeds,
 		metricSink,
