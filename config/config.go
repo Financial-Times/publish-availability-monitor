@@ -24,6 +24,10 @@ type AppConfig struct {
 	PublicationUUIDs                        []string          `json:"publicationUUIDs"`
 }
 
+type PublicationConfig struct {
+	PublicationUUIDs []string `json:"publicationUUIDs"`
+}
+
 // QueueConfig is the configuration for kafka consumer queue
 type QueueConfig struct {
 	ClusterARN       string `json:"clusterARN"`
@@ -76,6 +80,10 @@ func NewAppConfig(configFileName string, log *logger.UPPLogger) (*AppConfig, err
 	}
 
 	return &conf, nil
+}
+
+func NewPublicationConfig() *PublicationConfig {
+	return &PublicationConfig{PublicationUUIDs: []string{}}
 }
 
 func (cfg *AppConfig) GetCapability(metricAlias string) *Capability {

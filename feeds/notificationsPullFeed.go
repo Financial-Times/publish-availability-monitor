@@ -2,6 +2,7 @@ package feeds
 
 import (
 	"encoding/json"
+	"github.com/Financial-Times/publish-availability-monitor/config"
 	"net/url"
 	"sync"
 	"time"
@@ -22,6 +23,7 @@ type NotificationsPullFeed struct {
 	poller                   chan struct{}
 	log                      *logger.UPPLogger
 	xpolicies                []string
+	publicationConfig        *config.PublicationConfig
 }
 
 // ignore unused field (e.g. requestUrl)
@@ -69,12 +71,12 @@ func (f *NotificationsPullFeed) pollNotificationsFeed() {
 	tid := f.buildNotificationsTID()
 	log := f.log.WithTransactionID(tid)
 	notificationsURL := f.notificationsURL + "?" + f.notificationsQueryString
-	//f.log.Info("policies ", f.xpolicies)
+	f.log.Info("policies ", f.publicationConfig.PublicationUUIDs)
 	resp, err := f.httpCaller.DoCall(httpcaller.Config{
 		URL:       notificationsURL,
 		Username:  f.username,
 		Password:  f.password,
-		XPolicies: f.xpolicies,
+		XPolicies: config.BuildXPolicyArray(f.publicationConfig.PublicationUUIDs),
 		TID:       tid,
 	})
 	if err != nil {

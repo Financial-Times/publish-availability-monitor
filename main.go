@@ -71,7 +71,7 @@ func main() {
 	subscribedFeeds := make(map[string][]feeds.Feed)
 	metricSink := make(chan metrics.PublishMetric)
 	configFilesHashValues := make(map[string]string)
-
+	publicationConfig := config.NewPublicationConfig()
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
 
@@ -88,6 +88,7 @@ func main() {
 		environments,
 		subscribedFeeds,
 		appConfig,
+		publicationConfig,
 		log,
 	)
 

@@ -34,6 +34,7 @@ func WatchConfigFiles(
 	environments *Environments,
 	subscribedFeeds map[string][]feeds.Feed,
 	appConfig *config.AppConfig,
+	publicationConfig *config.PublicationConfig,
 	log *logger.UPPLogger,
 ) {
 	ticker := newTicker(0, time.Minute*time.Duration(configRefreshPeriod))
@@ -43,7 +44,7 @@ func WatchConfigFiles(
 	}()
 
 	for range ticker.C {
-		err := updateEnvsIfChanged(publicationUUIDFileName, envsFileName, envCredentialsFileName, configFilesHashValues, environments, subscribedFeeds, appConfig, log)
+		err := updateEnvsIfChanged(publicationUUIDFileName, envsFileName, envCredentialsFileName, configFilesHashValues, environments, subscribedFeeds, appConfig, publicationConfig, log)
 		if err != nil {
 			log.WithError(err).Errorf("Could not update envs config")
 		}
@@ -113,6 +114,7 @@ func updateEnvsIfChanged(
 	environments *Environments,
 	subscribedFeeds map[string][]feeds.Feed,
 	appConfig *config.AppConfig,
+	publicationConfig *config.PublicationConfig,
 	log *logger.UPPLogger,
 ) error {
 	var publicationUUIDFileChanged, envsFileChanged, envCredentialsChanged bool
@@ -149,7 +151,7 @@ func updateEnvsIfChanged(
 		return nil
 	}
 
-	err = updateEnvs(publicationFileContent, envsfileContents, credsFileContents, environments, subscribedFeeds, appConfig, log)
+	err = updateEnvs(publicationFileContent, envsfileContents, credsFileContents, environments, subscribedFeeds, appConfig, publicationConfig, log)
 	if err != nil {
 		return fmt.Errorf("cannot update environments and credentials because [%s]", err)
 	}
@@ -182,7 +184,7 @@ func computeMD5Hash(data []byte) (string, error) {
 	return hex.EncodeToString(hashValue), nil
 }
 
-func updateEnvs(publicationUUIDFileData []byte, envsFileData []byte, credsFileData []byte, environments *Environments, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig, log *logger.UPPLogger) error {
+func updateEnvs(publicationUUIDFileData []byte, envsFileData []byte, credsFileData []byte, environments *Environments, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig, publicationConfig *config.PublicationConfig, log *logger.UPPLogger) error {
 	log.Infof("Env config files changed. Updating envs")
 
 	jsonParser := json.NewDecoder(bytes.NewReader(publicationUUIDFileData))
@@ -192,7 +194,7 @@ func updateEnvs(publicationUUIDFileData []byte, envsFileData []byte, credsFileDa
 		return fmt.Errorf("cannot parse environmente because [%s]", err)
 	}
 	log.Info("Publication IDs: ", publicationUUIDFromFile)
-	appConfig.PublicationUUIDs = publicationUUIDFromFile
+	publicationConfig.PublicationUUIDs = publicationUUIDFromFile
 
 	jsonParser = json.NewDecoder(bytes.NewReader(envsFileData))
 	envsFromFile := []Environment{}
@@ -212,7 +214,7 @@ func updateEnvs(publicationUUIDFileData []byte, envsFileData []byte, credsFileDa
 	}
 
 	removedEnvs := parseEnvsIntoMap(validEnvs, envCredentials, environments, log)
-	configureFileFeeds(environments.Values(), removedEnvs, subscribedFeeds, appConfig, log)
+	configureFileFeeds(environments.Values(), removedEnvs, subscribedFeeds, appConfig, publicationConfig, log)
 	environments.SetReady(true)
 
 	return nil
@@ -232,7 +234,7 @@ func updateValidationCredentials(data []byte, log *logger.UPPLogger) error {
 }
 
 //nolint:gocognit
-func configureFileFeeds(envs []Environment, removedEnvs []string, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig, log *logger.UPPLogger) {
+func configureFileFeeds(envs []Environment, removedEnvs []string, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig, publicationConfig *config.PublicationConfig, log *logger.UPPLogger) {
 	for _, envName := range removedEnvs {
 		feeds, found := subscribedFeeds[envName]
 		if found {
@@ -269,7 +271,7 @@ func configureFileFeeds(envs []Environment, removedEnvs []string, subscribedFeed
 				}
 
 				interval := appConfig.Threshold / metric.Granularity
-				if f := feeds.NewNotificationsFeed(metric.Alias, *endpointURL, config.BuildXPolicyArray(appConfig.PublicationUUIDs), appConfig.Threshold, interval, env.Username, env.Password, metric.APIKey, log); f != nil {
+				if f := feeds.NewNotificationsFeed(metric.Alias, *endpointURL, config.BuildXPolicyArray(appConfig.PublicationUUIDs), publicationConfig, appConfig.Threshold, interval, env.Username, env.Password, metric.APIKey, log); f != nil {
 					subscribedFeeds[env.Name] = append(envFeeds, f)
 					f.Start()
 				}
