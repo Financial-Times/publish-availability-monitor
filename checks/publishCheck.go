@@ -3,6 +3,7 @@ package checks
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Financial-Times/publish-availability-monitor/config"
 	"io"
 	"slices"
 	"time"
@@ -277,10 +278,11 @@ func (n NotificationsCheck) shouldSkipCheck(pc *PublishCheck) bool {
 	url := pm.Endpoint.String() + "/" + pm.UUID
 	resp, err := n.httpCaller.DoCall(
 		httpcaller.Config{
-			URL:      url,
-			Username: pc.username,
-			Password: pc.password,
-			TID:      httpcaller.ConstructPamTID(pm.TID),
+			URL:       url,
+			Username:  pc.username,
+			Password:  pc.password,
+			TID:       httpcaller.ConstructPamTID(pm.TID),
+			XPolicies: config.BuildXPolicyArray(pm.Publication),
 		},
 	)
 	if err != nil {
