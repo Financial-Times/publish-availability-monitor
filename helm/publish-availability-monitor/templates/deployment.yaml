@@ -161,7 +161,7 @@ spec:
         - name: read-envs-config
           mountPath: {{ .Values.volumes.read_envs_config_mount_path }}
         - name: publication-uuid-config
-          mountPath: {{ .Values.volumes.read_envs_config_mount_path }}
+          mountPath: {{ .Values.volumes.publication_config_mount_path }}
         - name: pam-secrets
           mountPath: {{ .Values.volumes.secrets_mount_path }}
       volumes:

@@ -120,7 +120,7 @@ func updateEnvsIfChanged(
 
 	publicationFileContent, err := os.ReadFile(publicationUUIDFileName)
 	if err != nil {
-		return fmt.Errorf("could not read envs file [%s] because [%s]", envsFileName, err)
+		return fmt.Errorf("could not read envs file [%s] because [%s]", publicationUUIDFileName, err)
 	}
 
 	if publicationUUIDFileChanged, publicationUUIDNewHash, err = isFileChanged(publicationFileContent, envsFileName, configFilesHashValues); err != nil {
