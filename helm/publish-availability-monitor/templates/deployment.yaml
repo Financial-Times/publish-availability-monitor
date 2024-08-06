@@ -160,8 +160,6 @@ spec:
         volumeMounts:
         - name: read-envs-config
           mountPath: {{ .Values.volumes.read_envs_config_mount_path }}
-        - name: publication-uuid-config
-          mountPath: {{ .Values.volumes.publication_config_mount_path }}
         - name: pam-secrets
           mountPath: {{ .Values.volumes.secrets_mount_path }}
       volumes:
@@ -179,12 +177,9 @@ spec:
           items:
           - key: pam.read.environments
             path: {{ .Values.volumes.read_envs_config_file_name }}
-      - name: publication-uuid-config
-        configMap:
-          name: global-config
-          items:
           - key: publication.uuids.json
             path: {{ .Values.volumes.publication_uuid_file_name }}
+
 
 # corresponding secret template
 # kind: Secret

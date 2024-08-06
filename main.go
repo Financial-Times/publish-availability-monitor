@@ -31,7 +31,7 @@ var envsFileName = flag.String(
 
 var publicationUUIDfileName = flag.String(
 	"publication-uuid-config",
-	"/etc/pam/publications/publication-uuids.json",
+	"/etc/pam/envs/publication-uuids.json",
 	"Path to json file that contains environments configuration",
 )
 
