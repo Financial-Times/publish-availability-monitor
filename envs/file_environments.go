@@ -191,6 +191,7 @@ func updateEnvs(publicationUUIDFileData []byte, envsFileData []byte, credsFileDa
 	if err != nil {
 		return fmt.Errorf("cannot parse environmente because [%s]", err)
 	}
+	log.Info("Publication IDs: ", publicationUUIDFromFile)
 	appConfig.PublicationUUIDs = publicationUUIDFromFile
 
 	jsonParser = json.NewDecoder(bytes.NewReader(envsFileData))
