@@ -42,5 +42,6 @@ sed -i "s \"GRAPHITE_ADDRESS\" \"$GRAPHITE_ADDRESS\" " /config.json
 sed -i "s \"GRAPHITE_UUID\" \"$GRAPHITE_UUID\" " /config.json
 sed -i "s \"ENVIRONMENT\" \"$ENVIRONMENT\" " /config.json
 sed -i "s \"LOG_LEVEL\" \"$LOG_LEVEL\" " /config.json
+sed -i "s \"PUBLICATION_UUIDS\" \"$PUBLICATION_UUIDS\" " /config.json
 
 exec ./publish-availability-monitor -config /config.json

@@ -251,7 +251,7 @@ func configureFileFeeds(envs []Environment, removedEnvs []string, subscribedFeed
 
 				interval := appConfig.Threshold / metric.Granularity
 
-				if f := feeds.NewNotificationsFeed(metric.Alias, *endpointURL, appConfig.Threshold, interval, env.Username, env.Password, metric.APIKey, log); f != nil {
+				if f := feeds.NewNotificationsFeed(metric.Alias, *endpointURL, config.BuildXPolicyArray(appConfig.PublicationUUIDs), appConfig.Threshold, interval, env.Username, env.Password, metric.APIKey, log); f != nil {
 					subscribedFeeds[env.Name] = append(envFeeds, f)
 					f.Start()
 				}

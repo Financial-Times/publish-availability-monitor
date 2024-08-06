@@ -56,6 +56,11 @@ spec:
             configMapKeyRef:
               name: global-config
               key: msk.kafka.cluster.arn
+        - name: PUBLICATION_UUIDS
+          valueFrom:
+            configMapKeyRef:
+              name: global-config
+              key: publication.uuids
         - name: CONTENT_URL
           value: "{{ .Values.envs.content_url }}"
         - name: CONTENT_NEO4J_URL
