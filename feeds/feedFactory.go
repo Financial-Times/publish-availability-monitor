@@ -52,6 +52,7 @@ func newNotificationsPullFeed(name string, baseURL url.URL, xPolicies []string, 
 		notificationsURLLock:     &sync.Mutex{},
 		interval:                 interval,
 		log:                      log,
+		xpolicies:                xPolicies,
 	}
 }
 
