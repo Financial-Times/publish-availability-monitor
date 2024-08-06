@@ -8,6 +8,7 @@
     "topic": "KAFKA_TOPIC"
   },
   "notificationsPushPublicationMonitorList": "NOTIFICATIONS_PUSH_PUBLICATION_MONITOR_LIST",
+  "publicationUUIDs": "PUBLICATION_UUIDS",
   "metricConfig": [
     {
       "endpoint": "CONTENT_URL",
