@@ -29,6 +29,12 @@ var envsFileName = flag.String(
 	"Path to json file that contains environments configuration",
 )
 
+var publicationUUIDfileName = flag.String(
+	"publication-uuid-config",
+	"/etc/pam/envs/publication-uuids.json",
+	"Path to json file that contains environments configuration",
+)
+
 var envCredentialsFileName = flag.String(
 	"envs-credentials-file-name",
 	"/etc/pam/credentials/read-environments-credentials.json",
@@ -73,6 +79,7 @@ func main() {
 
 	go envs.WatchConfigFiles(
 		wg,
+		*publicationUUIDfileName,
 		*envsFileName,
 		*envCredentialsFileName,
 		*validatorCredentialsFileName,

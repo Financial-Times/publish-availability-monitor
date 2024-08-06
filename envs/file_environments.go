@@ -28,7 +28,7 @@ type Credentials struct {
 
 func WatchConfigFiles(
 	wg *sync.WaitGroup,
-	envsFileName, envCredentialsFileName, validationCredentialsFileName string,
+	publicationUUIDFileName, envsFileName, envCredentialsFileName, validationCredentialsFileName string,
 	configRefreshPeriod int,
 	configFilesHashValues map[string]string,
 	environments *Environments,
@@ -43,7 +43,7 @@ func WatchConfigFiles(
 	}()
 
 	for range ticker.C {
-		err := updateEnvsIfChanged(envsFileName, envCredentialsFileName, configFilesHashValues, environments, subscribedFeeds, appConfig, log)
+		err := updateEnvsIfChanged(publicationUUIDFileName, envsFileName, envCredentialsFileName, configFilesHashValues, environments, subscribedFeeds, appConfig, log)
 		if err != nil {
 			log.WithError(err).Errorf("Could not update envs config")
 		}
@@ -108,15 +108,24 @@ func updateValidationCredentialsIfChanged(validationCredentialsFileName string, 
 }
 
 func updateEnvsIfChanged(
-	envsFileName, envCredentialsFileName string,
+	publicationUUIDFileName, envsFileName, envCredentialsFileName string,
 	configFilesHashValues map[string]string,
 	environments *Environments,
 	subscribedFeeds map[string][]feeds.Feed,
 	appConfig *config.AppConfig,
 	log *logger.UPPLogger,
 ) error {
-	var envsFileChanged, envCredentialsChanged bool
-	var envsNewHash, credsNewHash string
+	var publicationUUIDFileChanged, envsFileChanged, envCredentialsChanged bool
+	var publicationUUIDNewHash, envsNewHash, credsNewHash string
+
+	publicationFileContent, err := os.ReadFile(publicationUUIDFileName)
+	if err != nil {
+		return fmt.Errorf("could not read envs file [%s] because [%s]", envsFileName, err)
+	}
+
+	if publicationUUIDFileChanged, publicationUUIDNewHash, err = isFileChanged(publicationFileContent, envsFileName, configFilesHashValues); err != nil {
+		return fmt.Errorf("could not detect if envs file [%s] was changed because [%s]", envsFileName, err)
+	}
 
 	envsfileContents, err := os.ReadFile(envsFileName)
 	if err != nil {
@@ -136,16 +145,17 @@ func updateEnvsIfChanged(
 		return fmt.Errorf("could not detect if credentials file [%s] was changed because [%s]", envCredentialsFileName, err)
 	}
 
-	if !envsFileChanged && !envCredentialsChanged {
+	if !publicationUUIDFileChanged && !envsFileChanged && !envCredentialsChanged {
 		return nil
 	}
 
-	err = updateEnvs(envsfileContents, credsFileContents, environments, subscribedFeeds, appConfig, log)
+	err = updateEnvs(publicationFileContent, envsfileContents, credsFileContents, environments, subscribedFeeds, appConfig, log)
 	if err != nil {
 		return fmt.Errorf("cannot update environments and credentials because [%s]", err)
 	}
 	configFilesHashValues[envsFileName] = envsNewHash
 	configFilesHashValues[envCredentialsFileName] = credsNewHash
+	configFilesHashValues[publicationUUIDFileName] = publicationUUIDNewHash
 	return nil
 }
 
@@ -172,12 +182,20 @@ func computeMD5Hash(data []byte) (string, error) {
 	return hex.EncodeToString(hashValue), nil
 }
 
-func updateEnvs(envsFileData []byte, credsFileData []byte, environments *Environments, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig, log *logger.UPPLogger) error {
+func updateEnvs(publicationUUIDFileData []byte, envsFileData []byte, credsFileData []byte, environments *Environments, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig, log *logger.UPPLogger) error {
 	log.Infof("Env config files changed. Updating envs")
 
-	jsonParser := json.NewDecoder(bytes.NewReader(envsFileData))
+	jsonParser := json.NewDecoder(bytes.NewReader(publicationUUIDFileData))
+	publicationUUIDFromFile := []string{}
+	err := jsonParser.Decode(&publicationUUIDFromFile)
+	if err != nil {
+		return fmt.Errorf("cannot parse environmente because [%s]", err)
+	}
+	appConfig.PublicationUUIDs = publicationUUIDFromFile
+
+	jsonParser = json.NewDecoder(bytes.NewReader(envsFileData))
 	envsFromFile := []Environment{}
-	err := jsonParser.Decode(&envsFromFile)
+	err = jsonParser.Decode(&envsFromFile)
 	if err != nil {
 		return fmt.Errorf("cannot parse environmente because [%s]", err)
 	}

@@ -69,7 +69,7 @@ func (f *NotificationsPullFeed) pollNotificationsFeed() {
 	tid := f.buildNotificationsTID()
 	log := f.log.WithTransactionID(tid)
 	notificationsURL := f.notificationsURL + "?" + f.notificationsQueryString
-	log.Info("request policy", f.xpolicies)
+	f.log.Info("policies ", f.xpolicies)
 	resp, err := f.httpCaller.DoCall(httpcaller.Config{
 		URL:       notificationsURL,
 		Username:  f.username,
