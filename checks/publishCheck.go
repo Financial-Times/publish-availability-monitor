@@ -3,13 +3,14 @@ package checks
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Financial-Times/publish-availability-monitor/config"
 	"io"
 	"slices"
 	"time"
 
 	"github.com/Financial-Times/go-logger/v2"
+	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
+
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 	"github.com/Financial-Times/publish-availability-monitor/metrics"
 )
