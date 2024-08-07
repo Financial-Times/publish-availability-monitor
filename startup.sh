@@ -38,6 +38,7 @@ sed -i "s \"UPP_CLIP_VALIDATOR_URL\" \"$UPP_CLIP_VALIDATOR_URL\" " /config.json
 sed -i "s \"UPP_CLIP_SET_VALIDATOR_URL\" \"$UPP_CLIP_SET_VALIDATOR_URL\" " /config.json
 sed -i "s \"UPP_CONTENT_RELATION_VALIDATOR_URL\" \"$UPP_CONTENT_RELATION_VALIDATOR_URL\" " /config.json
 sed -i "s \"UPP_CUSTOM_CODE_COMPONENT_VALIDATOR_URL\" \"$UPP_CUSTOM_CODE_COMPONENT_VALIDATOR_URL\" " /config.json
+sed -i "s \"UPP_CONTENT_PACKAGE_VALIDATOR_URL\" \"UPP_CONTENT_PACKAGE_VALIDATOR_URL\" " /config.json
 sed -i "s \"GRAPHITE_ADDRESS\" \"$GRAPHITE_ADDRESS\" " /config.json
 sed -i "s \"GRAPHITE_UUID\" \"$GRAPHITE_UUID\" " /config.json
 sed -i "s \"ENVIRONMENT\" \"$ENVIRONMENT\" " /config.json
