@@ -85,7 +85,7 @@ func ScheduleChecks(
 					publishMetric,
 					env.Username,
 					env.Password,
-					publicationsConfig.GetXReadPolicies(),
+					publicationsConfig,
 					appConfig.Threshold,
 					checkInterval,
 					metricSink,
