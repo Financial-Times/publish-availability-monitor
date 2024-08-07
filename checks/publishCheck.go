@@ -3,6 +3,7 @@ package checks
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Financial-Times/publish-availability-monitor/config"
 	"io"
 	"slices"
 	"time"
@@ -32,7 +33,7 @@ type PublishCheck struct {
 	Metric                 metrics.PublishMetric
 	username               string
 	password               string
-	xReadPolicies          []string
+	publicationsConfig     *config.PublicationsConfig
 	Threshold              int
 	CheckInterval          int
 	ResultSink             chan metrics.PublishMetric
@@ -44,7 +45,7 @@ type PublishCheck struct {
 func NewPublishCheck(
 	metric metrics.PublishMetric,
 	username, password string,
-	xReadPolicies []string,
+	publicationsConfig *config.PublicationsConfig,
 	threshold, checkInterval int,
 	resultSink chan metrics.PublishMetric,
 	endpointSpecificChecks map[string]EndpointSpecificCheck,
@@ -54,7 +55,7 @@ func NewPublishCheck(
 		Metric:                 metric,
 		username:               username,
 		password:               password,
-		xReadPolicies:          xReadPolicies,
+		publicationsConfig:     publicationsConfig,
 		Threshold:              threshold,
 		CheckInterval:          checkInterval,
 		ResultSink:             resultSink,
@@ -285,7 +286,7 @@ func (n NotificationsCheck) shouldSkipCheck(pc *PublishCheck) bool {
 			Username:  pc.username,
 			Password:  pc.password,
 			TID:       httpcaller.ConstructPamTID(pm.TID),
-			XPolicies: pc.xReadPolicies,
+			XPolicies: pc.publicationsConfig.GetXReadPolicies(),
 		},
 	)
 	if err != nil {
