@@ -30,12 +30,11 @@ envs:
   notifications_push_publication_monitor_list: "88fdde6c-2aa4-4f78-af02-9f680097cfd6"
 volumes:
   read_envs_config_mount_path: "/etc/pam/envs"
-  publication_config_mount_path: "/etc/pam/publications"
   secrets_mount_path: "/etc/pam/credentials"
   read_env_credentials_file_name: "read-environments-credentials.json"
   validation_credentials_file_name: "validator-credentials.json"
   read_envs_config_file_name: "read-environments.json"
-  publication_uuid_file_name: "publication-uuids.json"
+  publications_config_file_name: "publications-config.json"
 resources:
   limits:
     memory: 512Mi

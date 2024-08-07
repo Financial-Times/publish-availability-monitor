@@ -10,9 +10,9 @@ import (
 	"github.com/Financial-Times/go-logger/v2"
 )
 
-func NewNotificationsFeed(name string, baseURL url.URL, xPolicies []string, publicationConfig *config.PublicationConfig, expiry, interval int, username, password, apiKey string, log *logger.UPPLogger) Feed {
+func NewNotificationsFeed(name string, baseURL url.URL, publicationConfig *config.PublicationsConfig, expiry, interval int, username, password, apiKey string, log *logger.UPPLogger) Feed {
 	if IsNotificationsPullFeed(name) {
-		return newNotificationsPullFeed(name, baseURL, xPolicies, publicationConfig, expiry, interval, username, password, log)
+		return newNotificationsPullFeed(name, baseURL, publicationConfig, expiry, interval, username, password, log)
 	} else if isNotificationsPushFeed(name) {
 		return newNotificationsPushFeed(name, baseURL, expiry, interval, username, password, apiKey, log)
 	}
@@ -30,7 +30,7 @@ func isNotificationsPushFeed(feedName string) bool {
 	return strings.HasSuffix(feedName, "notifications-push")
 }
 
-func newNotificationsPullFeed(name string, baseURL url.URL, xPolicies []string, publicationConfig *config.PublicationConfig, expiry, interval int, username, password string, log *logger.UPPLogger) *NotificationsPullFeed {
+func newNotificationsPullFeed(name string, baseURL url.URL, publicationsConfig *config.PublicationsConfig, expiry, interval int, username, password string, log *logger.UPPLogger) *NotificationsPullFeed {
 	feedURL := baseURL.String()
 
 	bootstrapValues := baseURL.Query()
@@ -53,7 +53,7 @@ func newNotificationsPullFeed(name string, baseURL url.URL, xPolicies []string, 
 		notificationsURLLock:     &sync.Mutex{},
 		interval:                 interval,
 		log:                      log,
-		publicationConfig:        publicationConfig,
+		publicationsConfig:       publicationsConfig,
 	}
 }
 

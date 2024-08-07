@@ -38,6 +38,10 @@ const (
 			"password": "test-pwd"
 		}`
 	invalidJSONConfig = `invalid-config`
+
+	enabledPublicationsUUIDs = `
+		["8e6c705e-1132-42a2-8db0-c295e29e8658","88fdde6c-2aa4-4f78-af02-9f680097cfd6","724b5e36-6d45-4cf1-b1c2-3f676b21f21b"]
+		`
 )
 
 func TestParseEnvsIntoMap(t *testing.T) {
@@ -225,9 +229,10 @@ func TestConfigureFeedsWithEmptyListOfMetrics(t *testing.T) {
 		MockFeed{},
 	}
 	appConfig := &config.AppConfig{}
+	publicationsConfig := &config.PublicationsConfig{}
 	log := logger.NewUPPLogger("test", "PANIC")
 
-	configureFileFeeds(make([]Environment, 0), []string{"test-feed"}, subscribedFeeds, appConfig, log)
+	configureFileFeeds(make([]Environment, 0), []string{"test-feed"}, subscribedFeeds, appConfig, publicationsConfig, log)
 
 	assert.Equal(t, 0, len(subscribedFeeds))
 }
@@ -238,14 +243,18 @@ func TestUpdateEnvsHappyFlow(t *testing.T) {
 		MockFeed{},
 	}
 	appConfig := &config.AppConfig{}
+	publicationsConfig := &config.PublicationsConfig{}
 	envsFileName := prepareFile(validEnvConfig)
 	envsFileContents, _ := os.ReadFile(envsFileName)
+
+	enabledPublicationsFileName := prepareFile(enabledPublicationsUUIDs)
+	enabledPublicationsFileContent, _ := os.ReadFile(enabledPublicationsFileName)
 
 	envCredsFileName := prepareFile(validEnvCredentialsConfig)
 	credsFileContents, _ := os.ReadFile(envCredsFileName)
 	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateEnvs(envsFileContents, credsFileContents, NewEnvironments(), subscribedFeeds, appConfig, log)
+	err := updateEnvs(enabledPublicationsFileContent, envsFileContents, credsFileContents, NewEnvironments(), subscribedFeeds, appConfig, publicationsConfig, log)
 
 	assert.Nil(t, err)
 	os.Remove(envsFileName)
@@ -255,11 +264,16 @@ func TestUpdateEnvsHappyFlow(t *testing.T) {
 func TestUpdateEnvsHappyNilEnvsFile(t *testing.T) {
 	envCredsFileName := prepareFile(validEnvCredentialsConfig)
 	credsFileContents, _ := os.ReadFile(envCredsFileName)
+
+	enabledPublicationsFileName := prepareFile(enabledPublicationsUUIDs)
+	enabledPublicationsFileContent, _ := os.ReadFile(enabledPublicationsFileName)
+
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
+	publicationsConfig := &config.PublicationsConfig{}
 	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateEnvs(nil, credsFileContents, NewEnvironments(), subscribedFeeds, appConfig, log)
+	err := updateEnvs(enabledPublicationsFileContent, nil, credsFileContents, NewEnvironments(), subscribedFeeds, appConfig, publicationsConfig, log)
 
 	assert.NotNil(t, err)
 	os.Remove(envCredsFileName)
@@ -268,11 +282,14 @@ func TestUpdateEnvsHappyNilEnvsFile(t *testing.T) {
 func TestUpdateEnvsNilEnvCredentialsFile(t *testing.T) {
 	envsFileName := prepareFile(validEnvConfig)
 	envsFileContents, _ := os.ReadFile(envsFileName)
+	enabledPublicationsFileName := prepareFile(enabledPublicationsUUIDs)
+	enabledPublicationsFileContent, _ := os.ReadFile(enabledPublicationsFileName)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
+	publicationsConfig := &config.PublicationsConfig{}
 	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateEnvs(envsFileContents, nil, NewEnvironments(), subscribedFeeds, appConfig, log)
+	err := updateEnvs(enabledPublicationsFileContent, envsFileContents, nil, NewEnvironments(), subscribedFeeds, appConfig, publicationsConfig, log)
 
 	assert.NotNil(t, err)
 	os.Remove(envsFileName)
@@ -370,15 +387,17 @@ func TestIsFileChanged(t *testing.T) {
 
 func TestUpdateEnvsIfChangedEnvFileDoesntExist(t *testing.T) {
 	credsFile := prepareFile(validEnvCredentialsConfig)
+	enabledPublicationsFileName := prepareFile(enabledPublicationsUUIDs)
 	defer os.Remove(credsFile)
 
 	environments := NewEnvironments()
 	configFilesHashValues := make(map[string]string)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
+	publicationsConfig := &config.PublicationsConfig{}
 	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateEnvsIfChanged("thisFileDoesntexist", credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig, log)
+	err := updateEnvsIfChanged(enabledPublicationsFileName, "thisFileDoesntexist", credsFile, configFilesHashValues, environments, subscribedFeeds, appConfig, publicationsConfig, log)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying file which doesn't exist")
 	assert.Equal(t, 0, environments.Len(), "No new environments should've been added")
@@ -387,15 +406,17 @@ func TestUpdateEnvsIfChangedEnvFileDoesntExist(t *testing.T) {
 
 func TestUpdateEnvsIfChangedCredsFileDoesntExist(t *testing.T) {
 	envsFile := prepareFile(validEnvConfig)
+	enabledPublicationsFileName := prepareFile(enabledPublicationsUUIDs)
 	defer os.Remove(envsFile)
 
 	environments := NewEnvironments()
 	configFilesHashValues := make(map[string]string)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
+	publicationsConfig := &config.PublicationsConfig{}
 	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateEnvsIfChanged(envsFile, "thisFileDoesntexist", configFilesHashValues, environments, subscribedFeeds, appConfig, log)
+	err := updateEnvsIfChanged(enabledPublicationsFileName, envsFile, "thisFileDoesntexist", configFilesHashValues, environments, subscribedFeeds, appConfig, publicationsConfig, log)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying file which doesn't exist")
 	assert.Equal(t, 0, environments.Len(), "No new environments should've been added")
@@ -407,9 +428,10 @@ func TestUpdateEnvsIfChangedFilesDontExist(t *testing.T) {
 	configFilesHashValues := make(map[string]string)
 	subscribedFeeds := map[string][]feeds.Feed{}
 	appConfig := &config.AppConfig{}
+	publicationsConfig := &config.PublicationsConfig{}
 	log := logger.NewUPPLogger("test", "PANIC")
 
-	err := updateEnvsIfChanged("thisFileDoesntExist", "thisDoesntExistEither", configFilesHashValues, environments, subscribedFeeds, appConfig, log)
+	err := updateEnvsIfChanged("thisFileDoesntExist", "thisFileDoesntExist", "thisDoesntExistEither", configFilesHashValues, environments, subscribedFeeds, appConfig, publicationsConfig, log)
 
 	assert.NotNil(t, err, "Didn't get an error after supplying files which don't exist")
 	assert.Equal(t, 0, environments.Len(), "No new environments should've been added")

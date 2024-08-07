@@ -23,7 +23,7 @@ type NotificationsPullFeed struct {
 	poller                   chan struct{}
 	log                      *logger.UPPLogger
 	xpolicies                []string
-	publicationConfig        *config.PublicationConfig
+	publicationsConfig       *config.PublicationsConfig
 }
 
 // ignore unused field (e.g. requestUrl)
@@ -71,12 +71,12 @@ func (f *NotificationsPullFeed) pollNotificationsFeed() {
 	tid := f.buildNotificationsTID()
 	log := f.log.WithTransactionID(tid)
 	notificationsURL := f.notificationsURL + "?" + f.notificationsQueryString
-	f.log.Info("policies ", f.publicationConfig.PublicationUUIDs)
+	f.log.Info("policies ", f.publicationsConfig.EnabledPublications)
 	resp, err := f.httpCaller.DoCall(httpcaller.Config{
 		URL:       notificationsURL,
 		Username:  f.username,
 		Password:  f.password,
-		XPolicies: config.BuildXPolicyArray(f.publicationConfig.PublicationUUIDs),
+		XPolicies: f.publicationsConfig.GetXReadPolicies(),
 		TID:       tid,
 	})
 	if err != nil {

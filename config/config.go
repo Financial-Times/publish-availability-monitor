@@ -21,11 +21,6 @@ type AppConfig struct {
 	GraphiteUUID                            string            `json:"graphiteUUID"`
 	Environment                             string            `json:"environment"`
 	NotificationsPushPublicationMonitorList string            `json:"notificationsPushPublicationMonitorList"`
-	PublicationUUIDs                        []string          `json:"publicationUUIDs"`
-}
-
-type PublicationConfig struct {
-	PublicationUUIDs []string `json:"publicationUUIDs"`
 }
 
 // QueueConfig is the configuration for kafka consumer queue
@@ -82,10 +77,6 @@ func NewAppConfig(configFileName string, log *logger.UPPLogger) (*AppConfig, err
 	return &conf, nil
 }
 
-func NewPublicationConfig() *PublicationConfig {
-	return &PublicationConfig{PublicationUUIDs: []string{}}
-}
-
 func (cfg *AppConfig) GetCapability(metricAlias string) *Capability {
 	for _, c := range cfg.Capabilities {
 		if c.MetricAlias == metricAlias {
@@ -104,12 +95,4 @@ func IsE2ETestTransactionID(tid string, e2eTestUUIDs []string) bool {
 	}
 
 	return false
-}
-
-func BuildXPolicyArray(publicationUUIDs []string) []string {
-	prefixedUUIDs := make([]string, len(publicationUUIDs))
-	for i, uuid := range publicationUUIDs {
-		prefixedUUIDs[i] = "PBLC_READ_" + uuid
-	}
-	return prefixedUUIDs
 }

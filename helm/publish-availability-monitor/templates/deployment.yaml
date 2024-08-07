@@ -56,11 +56,6 @@ spec:
             configMapKeyRef:
               name: global-config
               key: msk.kafka.cluster.arn
-        - name: PUBLICATION_UUIDS
-          valueFrom:
-            configMapKeyRef:
-              name: global-config
-              key: publication.uuids
         - name: CONTENT_URL
           value: "{{ .Values.envs.content_url }}"
         - name: CONTENT_NEO4J_URL
@@ -177,8 +172,8 @@ spec:
           items:
           - key: pam.read.environments
             path: {{ .Values.volumes.read_envs_config_file_name }}
-          - key: publication.uuids.json
-            path: {{ .Values.volumes.publication_uuid_file_name }}
+          - key: upp.publications.config
+            path: {{ .Values.volumes.publications_config_file_name }}
 
 
 # corresponding secret template

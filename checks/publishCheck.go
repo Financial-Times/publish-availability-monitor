@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Financial-Times/go-logger/v2"
-	"github.com/Financial-Times/publish-availability-monitor/config"
 	"github.com/Financial-Times/publish-availability-monitor/feeds"
 
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
@@ -33,6 +32,7 @@ type PublishCheck struct {
 	Metric                 metrics.PublishMetric
 	username               string
 	password               string
+	xReadPolicies          []string
 	Threshold              int
 	CheckInterval          int
 	ResultSink             chan metrics.PublishMetric
@@ -44,6 +44,7 @@ type PublishCheck struct {
 func NewPublishCheck(
 	metric metrics.PublishMetric,
 	username, password string,
+	xReadPolicies []string,
 	threshold, checkInterval int,
 	resultSink chan metrics.PublishMetric,
 	endpointSpecificChecks map[string]EndpointSpecificCheck,
@@ -53,6 +54,7 @@ func NewPublishCheck(
 		Metric:                 metric,
 		username:               username,
 		password:               password,
+		xReadPolicies:          xReadPolicies,
 		Threshold:              threshold,
 		CheckInterval:          checkInterval,
 		ResultSink:             resultSink,
@@ -283,7 +285,7 @@ func (n NotificationsCheck) shouldSkipCheck(pc *PublishCheck) bool {
 			Username:  pc.username,
 			Password:  pc.password,
 			TID:       httpcaller.ConstructPamTID(pm.TID),
-			XPolicies: config.BuildXPolicyArray(pm.Publication),
+			XPolicies: pc.xReadPolicies,
 		},
 	)
 	if err != nil {
