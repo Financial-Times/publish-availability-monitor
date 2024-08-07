@@ -26,7 +26,8 @@
         "application/vnd.ft-upp-audio+json",
         "application/vnd.ft-upp-clip+json",
         "application/vnd.ft-upp-clip-set+json",
-        "application/vnd.ft-upp-custom-code-component+json"
+        "application/vnd.ft-upp-custom-code-component+json",
+        "application/vnd.ft-upp-content-package+json"
       ]
     },
     {
@@ -184,7 +185,8 @@
     "application/vnd.ft-upp-clip+json": "UPP_CLIP_VALIDATOR_URL",
     "application/vnd.ft-upp-clip-set+json": "UPP_CLIP_SET_VALIDATOR_URL",
     "application/vnd.ft-upp-content-relation+json": "UPP_CONTENT_RELATION_VALIDATOR_URL",
-    "application/vnd.ft-upp-custom-code-component+json": "UPP_CUSTOM_CODE_COMPONENT_VALIDATOR_URL"
+    "application/vnd.ft-upp-custom-code-component+json": "UPP_CUSTOM_CODE_COMPONENT_VALIDATOR_URL",
+    "application/vnd.ft-upp-content-package+json": "UPP_CONTENT_PACKAGE_VALIDATOR_URL"
   },
   "capabilities": [
     {
