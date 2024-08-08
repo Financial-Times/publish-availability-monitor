@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Financial-Times/publish-availability-monitor/config"
+
 	"github.com/Financial-Times/go-logger/v2"
 	"github.com/Financial-Times/publish-availability-monitor/httpcaller"
 )
@@ -21,6 +23,7 @@ type NotificationsPullFeed struct {
 	ticker                   *time.Ticker
 	poller                   chan struct{}
 	log                      *logger.UPPLogger
+	publicationsConfig       *config.PublicationsConfig
 }
 
 // ignore unused field (e.g. requestUrl)
@@ -68,15 +71,12 @@ func (f *NotificationsPullFeed) pollNotificationsFeed() {
 	tid := f.buildNotificationsTID()
 	log := f.log.WithTransactionID(tid)
 	notificationsURL := f.notificationsURL + "?" + f.notificationsQueryString
-
 	resp, err := f.httpCaller.DoCall(httpcaller.Config{
-		URL:      notificationsURL,
-		Username: f.username,
-		Password: f.password,
-		XPolicies: []string{
-			"PBLC_READ_8e6c705e-1132-42a2-8db0-c295e29e8658,PBLC_READ_88fdde6c-2aa4-4f78-af02-9f680097cfd6",
-		},
-		TID: tid,
+		URL:       notificationsURL,
+		Username:  f.username,
+		Password:  f.password,
+		XPolicies: f.publicationsConfig.GetXReadPolicies(),
+		TID:       tid,
 	})
 	if err != nil {
 		log.WithError(err).Errorf("error calling notifications %s", notificationsURL)

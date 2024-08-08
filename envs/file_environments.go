@@ -28,12 +28,13 @@ type Credentials struct {
 
 func WatchConfigFiles(
 	wg *sync.WaitGroup,
-	envsFileName, envCredentialsFileName, validationCredentialsFileName string,
+	publicationsConfigFileName, envsFileName, envCredentialsFileName, validationCredentialsFileName string,
 	configRefreshPeriod int,
 	configFilesHashValues map[string]string,
 	environments *Environments,
 	subscribedFeeds map[string][]feeds.Feed,
 	appConfig *config.AppConfig,
+	publicationsConfig *config.PublicationsConfig,
 	log *logger.UPPLogger,
 ) {
 	ticker := newTicker(0, time.Minute*time.Duration(configRefreshPeriod))
@@ -43,7 +44,7 @@ func WatchConfigFiles(
 	}()
 
 	for range ticker.C {
-		err := updateEnvsIfChanged(envsFileName, envCredentialsFileName, configFilesHashValues, environments, subscribedFeeds, appConfig, log)
+		err := updateEnvsIfChanged(publicationsConfigFileName, envsFileName, envCredentialsFileName, configFilesHashValues, environments, subscribedFeeds, appConfig, publicationsConfig, log)
 		if err != nil {
 			log.WithError(err).Errorf("Could not update envs config")
 		}
@@ -108,15 +109,25 @@ func updateValidationCredentialsIfChanged(validationCredentialsFileName string, 
 }
 
 func updateEnvsIfChanged(
-	envsFileName, envCredentialsFileName string,
+	publicationsConfigFileName, envsFileName, envCredentialsFileName string,
 	configFilesHashValues map[string]string,
 	environments *Environments,
 	subscribedFeeds map[string][]feeds.Feed,
 	appConfig *config.AppConfig,
+	publicationsConfig *config.PublicationsConfig,
 	log *logger.UPPLogger,
 ) error {
-	var envsFileChanged, envCredentialsChanged bool
-	var envsNewHash, credsNewHash string
+	var publicationsConfigFileChanged, envsFileChanged, envCredentialsChanged bool
+	var publicationsConfigNewHash, envsNewHash, credsNewHash string
+
+	publicationsConfigFileContent, err := os.ReadFile(publicationsConfigFileName)
+	if err != nil {
+		return fmt.Errorf("could not read publications config file [%s] because [%s]", publicationsConfigFileName, err)
+	}
+
+	if publicationsConfigFileChanged, publicationsConfigNewHash, err = isFileChanged(publicationsConfigFileContent, publicationsConfigFileName, configFilesHashValues); err != nil {
+		return fmt.Errorf("could not detect if publications config file [%s] was changed because [%s]", publicationsConfigFileName, err)
+	}
 
 	envsfileContents, err := os.ReadFile(envsFileName)
 	if err != nil {
@@ -136,16 +147,17 @@ func updateEnvsIfChanged(
 		return fmt.Errorf("could not detect if credentials file [%s] was changed because [%s]", envCredentialsFileName, err)
 	}
 
-	if !envsFileChanged && !envCredentialsChanged {
+	if !publicationsConfigFileChanged && !envsFileChanged && !envCredentialsChanged {
 		return nil
 	}
 
-	err = updateEnvs(envsfileContents, credsFileContents, environments, subscribedFeeds, appConfig, log)
+	err = updateEnvs(publicationsConfigFileContent, envsfileContents, credsFileContents, environments, subscribedFeeds, appConfig, publicationsConfig, log)
 	if err != nil {
 		return fmt.Errorf("cannot update environments and credentials because [%s]", err)
 	}
 	configFilesHashValues[envsFileName] = envsNewHash
 	configFilesHashValues[envCredentialsFileName] = credsNewHash
+	configFilesHashValues[publicationsConfigFileName] = publicationsConfigNewHash
 	return nil
 }
 
@@ -172,12 +184,20 @@ func computeMD5Hash(data []byte) (string, error) {
 	return hex.EncodeToString(hashValue), nil
 }
 
-func updateEnvs(envsFileData []byte, credsFileData []byte, environments *Environments, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig, log *logger.UPPLogger) error {
+func updateEnvs(publicationsConfigFileContent []byte, envsFileData []byte, credsFileData []byte, environments *Environments, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig, publicationsConfig *config.PublicationsConfig, log *logger.UPPLogger) error {
 	log.Infof("Env config files changed. Updating envs")
 
-	jsonParser := json.NewDecoder(bytes.NewReader(envsFileData))
+	jsonParser := json.NewDecoder(bytes.NewReader(publicationsConfigFileContent))
+	err := jsonParser.Decode(&publicationsConfig)
+	if err != nil {
+		return fmt.Errorf("cannot parse environmente because [%s]", err)
+	}
+
+	log.Infof("publications config file contents: %v", publicationsConfig)
+
+	jsonParser = json.NewDecoder(bytes.NewReader(envsFileData))
 	envsFromFile := []Environment{}
-	err := jsonParser.Decode(&envsFromFile)
+	err = jsonParser.Decode(&envsFromFile)
 	if err != nil {
 		return fmt.Errorf("cannot parse environmente because [%s]", err)
 	}
@@ -193,7 +213,7 @@ func updateEnvs(envsFileData []byte, credsFileData []byte, environments *Environ
 	}
 
 	removedEnvs := parseEnvsIntoMap(validEnvs, envCredentials, environments, log)
-	configureFileFeeds(environments.Values(), removedEnvs, subscribedFeeds, appConfig, log)
+	configureFileFeeds(environments.Values(), removedEnvs, subscribedFeeds, appConfig, publicationsConfig, log)
 	environments.SetReady(true)
 
 	return nil
@@ -213,7 +233,7 @@ func updateValidationCredentials(data []byte, log *logger.UPPLogger) error {
 }
 
 //nolint:gocognit
-func configureFileFeeds(envs []Environment, removedEnvs []string, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig, log *logger.UPPLogger) {
+func configureFileFeeds(envs []Environment, removedEnvs []string, subscribedFeeds map[string][]feeds.Feed, appConfig *config.AppConfig, publicationsConfig *config.PublicationsConfig, log *logger.UPPLogger) {
 	for _, envName := range removedEnvs {
 		feeds, found := subscribedFeeds[envName]
 		if found {
@@ -250,8 +270,7 @@ func configureFileFeeds(envs []Environment, removedEnvs []string, subscribedFeed
 				}
 
 				interval := appConfig.Threshold / metric.Granularity
-
-				if f := feeds.NewNotificationsFeed(metric.Alias, *endpointURL, appConfig.Threshold, interval, env.Username, env.Password, metric.APIKey, log); f != nil {
+				if f := feeds.NewNotificationsFeed(metric.Alias, *endpointURL, publicationsConfig, appConfig.Threshold, interval, env.Username, env.Password, metric.APIKey, log); f != nil {
 					subscribedFeeds[env.Name] = append(envFeeds, f)
 					f.Start()
 				}

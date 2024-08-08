@@ -64,7 +64,7 @@ func TestTestIsIgnorableMessage_SyntheticE2ETest(t *testing.T) {
 	e2eTestUUIDs := []string{"e4d2885f-1140-400b-9407-921e1c7378cd"}
 	log := logger.NewUPPLogger("publish-availability-monitor", "INFO")
 
-	mh := NewKafkaMessageHandler(nil, nil, nil, nil, nil, e2eTestUUIDs, log)
+	mh := NewKafkaMessageHandler(nil, nil, nil, nil, nil, nil, e2eTestUUIDs, log)
 	kmh := mh.(*kafkaMessageHandler)
 
 	kafkaMessage := kafka.FTMessage{
